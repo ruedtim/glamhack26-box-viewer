@@ -1,0 +1,420 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Provenance Pursuit – labels on the backs of SKKG works</title>
+<meta name="description" content="Have I seen this label before? Provenance labels, stamps and marks located on the backs of works in the SKKG collection – GLAMhack 2026, challenge 304.">
+<style>
+  :root { --bg: #f5f3ef; --panel: #fff; --ink: #1d1d1b; --muted: #6b6860; --line: #e2ded6; --accent: #1f4e8c;
+          --register: #2166ac; --photo: #c0392b; --sheet: #762a83; --model: #a86b00; --again: #1a7f4b;
+          --chip: #efece6; --shadow: 0 1px 2px rgba(0,0,0,.06), 0 3px 10px rgba(0,0,0,.05); }
+  :root[data-theme="dark"] { --bg: #171716; --panel: #222220; --ink: #ecebe7; --muted: #a8a59d; --line: #36342f;
+          --accent: #9cc2ff; --register: #6aa8e8; --photo: #ff8a7a; --sheet: #cf9be0; --model: #e8b54a;
+          --again: #52c891; --chip: #2d2b28; --shadow: none; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg: #171716; --panel: #222220;
+          --ink: #ecebe7; --muted: #a8a59d; --line: #36342f; --accent: #9cc2ff; --register: #6aa8e8; --photo: #ff8a7a;
+          --sheet: #cf9be0; --model: #e8b54a; --again: #52c891; --chip: #2d2b28; --shadow: none; } }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  a { color: var(--accent); }
+  .wrap { max-width: 1280px; margin: 0 auto; padding: 0 16px; }
+  header { background: var(--panel); border-bottom: 1px solid var(--line); position: sticky; top: 0; z-index: 5; }
+  .top { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 6px 24px; padding-top: 14px; }
+  h1 { font-size: 22px; margin: 0; letter-spacing: -.01em; }
+  .tagline { color: var(--muted); margin: 0; font-size: 14px; }
+  nav { display: flex; flex-wrap: wrap; }
+  nav a { padding: 10px 12px 9px; text-decoration: none; color: var(--muted); border-bottom: 3px solid transparent; font-weight: 600; font-size: 14px; }
+  nav a[aria-current="page"] { color: var(--ink); border-bottom-color: var(--accent); }
+  main { padding: 18px 0 40px; }
+  section[hidden] { display: none; }
+  .intro { max-width: 860px; color: var(--muted); margin: 0 0 14px; }
+  .controls { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; margin-bottom: 14px; }
+  input[type=search] { font: inherit; padding: 7px 10px; border: 1px solid var(--line); border-radius: 6px; background: var(--panel); color: var(--ink); width: 280px; max-width: 100%; }
+  .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; background: var(--panel); }
+  .seg button { font: inherit; font-size: 13px; border: 0; background: none; color: var(--muted); padding: 6px 10px; cursor: pointer; }
+  .seg button[aria-pressed="true"] { background: var(--accent); color: #fff; }
+  label.tg { font-size: 13px; color: var(--muted); display: inline-flex; gap: 5px; align-items: center; cursor: pointer; }
+  .count { font-size: 13px; color: var(--muted); }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 14px; }
+  .card { all: unset; box-sizing: border-box; display: flex; flex-direction: column; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; overflow: hidden; cursor: pointer; box-shadow: var(--shadow); }
+  .card:hover, .card:focus-visible { border-color: var(--accent); outline: none; }
+  .thumb { height: 170px; display: grid; place-items: center; background: var(--chip); overflow: hidden; }
+  .thumb img { max-width: 100%; max-height: 100%; display: block; }
+  .cap { padding: 8px 10px 10px; display: flex; flex-direction: column; gap: 3px; font-size: 13px; }
+  .cap b { font-size: 14px; line-height: 1.3; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow-wrap: anywhere; }
+  .meta { color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .badges { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 2px; }
+  .b { font-style: normal; font-size: 11px; font-weight: 600; padding: 1px 7px; border-radius: 99px; color: #fff; background: var(--muted); }
+  .b.register { background: var(--register); } .b.photo { background: var(--photo); } .b.sheet { background: var(--sheet); }
+  .b.model { background: var(--model); } .b.again { background: var(--again); } .b.warn { background: transparent; color: var(--model); border: 1px solid var(--model); }
+  .more { display: block; margin: 18px auto 0; font: inherit; padding: 8px 18px; border-radius: 6px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); cursor: pointer; }
+  svg.back { display: block; width: 100%; height: auto; background: var(--chip); border-radius: 4px; }
+  .wcard svg.back { height: 200px; border-radius: 0; }
+  .ov { fill: transparent; stroke: var(--sheet); stroke-width: 2.5; vector-effect: non-scaling-stroke; cursor: pointer; filter: drop-shadow(0 0 1px #fff); }
+  .ov.register { stroke: var(--register); } .ov.photo { stroke: var(--photo); } .ov.model { stroke: var(--model); stroke-dasharray: 6 4; }
+  .ov.hit { stroke: var(--again); stroke-dasharray: 6 4; } .ov.sel { stroke-width: 4; }
+  .ov:hover { stroke-width: 4; }
+  .group { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 12px; margin-bottom: 14px; box-shadow: var(--shadow); }
+  .group h3 { margin: 0 0 8px; font-size: 15px; }
+  .row { display: flex; gap: 12px; overflow-x: auto; padding-bottom: 4px; }
+  .row .card { flex: 0 0 180px; }
+  .arrow { align-self: center; color: var(--muted); font-size: 22px; flex: 0 0 auto; }
+  .ev { display: flex; flex-direction: column; gap: 2px; font-size: 12px; }
+  .ev span { color: var(--again); overflow: hidden; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; }
+  dialog { width: min(1100px, 96vw); max-height: 92vh; border: 1px solid var(--line); border-radius: 10px; padding: 0; background: var(--panel); color: var(--ink); }
+  dialog::backdrop { background: rgba(0,0,0,.45); }
+  .dhead { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; padding: 14px 18px; border-bottom: 1px solid var(--line); position: sticky; top: 0; background: var(--panel); z-index: 2; }
+  .dhead h2 { margin: 0; font-size: 19px; overflow-wrap: anywhere; }
+  .close { font: inherit; font-size: 20px; line-height: 1; border: 0; background: none; color: var(--muted); cursor: pointer; padding: 4px 8px; }
+  .dbody { padding: 16px 18px 22px; }
+  .two { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 18px; }
+  @media (max-width: 760px) { .two { grid-template-columns: 1fr; } .top { padding-top: 10px; } }
+  .big { background: var(--chip); border-radius: 6px; display: grid; place-items: center; min-height: 180px; overflow: hidden; }
+  .big img { max-width: 100%; max-height: 420px; display: block; }
+  dl { display: grid; grid-template-columns: max-content 1fr; gap: 6px 14px; margin: 0; font-size: 14px; }
+  dt { color: var(--muted); } dd { margin: 0; overflow-wrap: anywhere; }
+  h4 { margin: 20px 0 8px; font-size: 15px; }
+  .links { display: flex; flex-wrap: wrap; gap: 6px 14px; margin-top: 10px; font-size: 14px; }
+  .stats { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; margin: 10px 0 20px; }
+  .stat { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; box-shadow: var(--shadow); }
+  .stat b { display: block; font-size: 26px; line-height: 1.1; }
+  .stat span { color: var(--muted); font-size: 13px; }
+  .prose { max-width: 860px; } .prose h2 { font-size: 18px; margin: 26px 0 6px; } .prose li { margin: 4px 0; }
+  footer { border-top: 1px solid var(--line); color: var(--muted); font-size: 13px; padding: 16px 0 28px; }
+  .empty { color: var(--muted); padding: 30px 0; }
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap top">
+    <div>
+      <h1>Provenance Pursuit</h1>
+      <p class="tagline">Have I seen this label before? Labels, stamps and marks on the backs of works in the SKKG collection</p>
+    </div>
+    <nav aria-label="Sections">
+      <a href="#labels" data-tab="labels">Labels</a>
+      <a href="#works" data-tab="works">Works</a>
+      <a href="#again" data-tab="again">Found again</a>
+      <a href="#about" data-tab="about">About</a>
+    </nav>
+  </div>
+</header>
+<main class="wrap">
+  <section id="labels" hidden>
+    <p class="intro">Every picture is cut out of the original photograph of a work's back by the SKKG image server.
+      Click a label to see where it sits on the back, which work it belongs to, and on which other works the same label
+      was found.</p>
+    <div class="controls">
+      <input type="search" id="lq" placeholder="Search: issuer, text, Inv. no., title …" aria-label="Search labels">
+      <div class="seg" id="lsrc" role="group" aria-label="Source">
+        <button data-v="all" aria-pressed="true">All</button><button data-v="register">Label register</button><button data-v="photo">Label photos</button><button data-v="data sheet">Data sheets</button>
+      </div>
+      <label class="tg"><input type="checkbox" id="lagain"> found on other works</label>
+      <label class="tg"><input type="checkbox" id="lok"> only reliable</label>
+      <label class="tg"><input type="checkbox" id="lmodel"> include unverified model boxes</label>
+      <span class="count" id="lcount"></span>
+    </div>
+    <div class="grid" id="lgrid"></div>
+    <button class="more" id="lmore" hidden>Show more</button>
+  </section>
+  <section id="works" hidden>
+    <p class="intro">The backs of the works with the labels and marks located on them. Colours: <i class="b register">label register</i>
+      <i class="b photo">label photo</i> <i class="b sheet">data sheet</i> <i class="b model">model (unverified)</i>
+      <i class="b again">same label as on another work</i></p>
+    <div class="controls">
+      <input type="search" id="wq" placeholder="Search: Inv. no., title, actor, exhibition …" aria-label="Search works">
+      <label class="tg"><input type="checkbox" id="wlab" checked> only works with located labels</label>
+      <label class="tg"><input type="checkbox" id="wagain"> only works that share a label</label>
+      <span class="count" id="wcount"></span>
+    </div>
+    <div class="grid" id="wgrid"></div>
+    <button class="more" id="wmore" hidden>Show more</button>
+  </section>
+  <section id="again" hidden>
+    <p class="intro" id="againintro"></p>
+    <div class="controls">
+      <div class="seg" id="aev" role="group" aria-label="Evidence">
+        <button data-v="all" aria-pressed="true">All hits</button><button data-v="exhibition">Shared exhibition</button><button data-v="seller">Same seller</button><button data-v="provenance">Provenance</button><button data-v="none">No evidence yet</button>
+      </div>
+      <span class="count" id="acount"></span>
+    </div>
+    <div id="alist"></div>
+  </section>
+  <section id="about" hidden class="prose">
+    <h2 style="margin-top:0">What this is</h2>
+    <p>Labels of dealers, auction houses, exhibitions and transport firms on the backs of artworks are traces of their
+      history. This site shows where such labels, stamps and marks sit on the backs of works in the collection of the
+      Stiftung für Kunst, Kultur und Geschichte (SKKG), Winterthur, and which works carry the same label. It was made
+      at GLAMhack 2026 for challenge 304 «Provenance Pursuit».</p>
+    <div class="stats" id="stats"></div>
+    <h2>How it was found</h2>
+    <ol>
+      <li><b>Image index.</b> All <span data-n="backs"></span> photographs of backs were cut into overlapping windows and
+        described with DINOv2 (an image model), so that a photo of a label can be searched like a picture search.</li>
+      <li><b>Image matching.</b> The most similar windows are checked with SuperPoint + LightGlue + MAGSAC: the same
+        physical label has dozens to hundreds of points that agree geometrically. This places the photos of labels and
+        the pictures in SKKG's label register on the backs (as when locating aerial photographs on a map).</li>
+      <li><b>Reading the text.</b> The 236 provenance data sheets describe <span data-n="marks"></span> marks with their
+        position («o. r. Zierrahmen» = top right of the frame) and text. Text recognition (OCR) on the backs finds many
+        of them by their text.</li>
+      <li><b>Templates.</b> Labels whose position is known serve as templates for the same label elsewhere.</li>
+      <li><b>A vision-language model</b> (Qwen3-VL, running locally) proposes a box for the remaining marks from the
+        data sheet's description. These boxes are leads and marked as unverified.</li>
+      <li><b>Found again.</b> Every reliably located label is searched on all other backs. A hit is backed when the
+        records of both works explain it: a shared exhibition, the same seller to SKKG, or the provenance.</li>
+    </ol>
+    <h2>How to read it</h2>
+    <ul>
+      <li>Boxes are in pixels of the original image (x, y, width, height) on the SKKG IIIF server; nothing is copied.
+        «Whole back» opens the full photograph with the box in a zoomable viewer.</li>
+      <li><i class="b warn">check</i> marks boxes that are not reliable: uncertain matches, text found elsewhere than
+        expected, similar (not identical) labels, and the vision-language model's proposals.</li>
+      <li>A label found on another work is a lead, not proof: it can be the same design used for many years, or SKKG's
+        own loan documentation.</li>
+    </ul>
+    <h2>Data and downloads</h2>
+    <ul>
+      <li><a href="provenance_pursuit_results.xlsx">All results as a workbook (Excel)</a>, with a guide on its first sheet.</li>
+      <li><a href="viewer.html">Box viewer</a> for any IIIF image: <code>viewer.html?iiif=…&amp;xywh=x,y,w,h</code></li>
+      <li><a href="https://github.com/ruedtim/glamhack26-box-viewer">Source of this site on GitHub</a></li>
+    </ul>
+    <h2>Sources and licences</h2>
+    <p>Data and images: SKKG Stiftung für Kunst, Kultur und Geschichte, Winterthur (<a href="https://digital.skkg.ch">SKKG Sammlung digital</a>,
+      knowledge graph and IIIF image server). Object metadata and photographs of backs CC0; provenance data sheets
+      CC BY 4.0, SKKG provenance research team; label register and object list from the challenge. Exhibitions and
+      acquisitions were read from the knowledge graph following <a href="https://github.com/kintopp/skkg-mcp">skkg-mcp</a>
+      (RISE, University of Basel). Private persons are not named.</p>
+  </section>
+</main>
+<footer><div class="wrap" id="foot">Provenance Pursuit · GLAMhack 2026, challenge 304 · data and images: SKKG, Winterthur</div></footer>
+
+<dialog id="dlg" aria-labelledby="dtitle">
+  <div class="dhead"><h2 id="dtitle"></h2><button class="close" id="dclose" aria-label="Close">✕</button></div>
+  <div class="dbody" id="dbody"></div>
+</dialog>
+
+<script>
+(() => {
+  'use strict';
+  const $ = s => document.querySelector(s);
+  const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+  const PAGE = 96;
+  const SRC = { register: 'Label register', photo: 'Label photo', 'data sheet': 'Data sheet' };
+  const COLOUR = { register: '3d9bff', photo: 'ff3b30', 'data sheet': 'bf5af2' };
+  let D, LAB = {}, WORK = {}, DIM = {}, HAY = {}, current = 'labels';
+  const state = { lq: '', lsrc: 'all', lagain: false, lok: false, lmodel: false, lpage: 1,
+                  wq: '', wlab: true, wagain: false, wpage: 1, aev: 'all' };
+
+  const region = (iiif, b, s = 320) => `${iiif}/${b.join(',')}/${b[2] > s || b[3] > s ? `!${s},${s}` : 'max'}/0/default.jpg`;
+  const full = (iiif, s = 700) => `${iiif}/full/!${s},${s}/0/default.jpg`;
+  const kind = l => l.how === 'vision-language model' ? 'model' : l.src === 'data sheet' ? 'sheet' : l.src;
+  function viewer(iiif, boxes, title, note, colour, dashed) {
+    const p = new URLSearchParams({ iiif });
+    boxes.forEach(b => p.append('xywh', b.join(',')));
+    if (title) p.set('title', title);
+    if (note) p.set('note', note);
+    if (colour) p.set('colour', colour);
+    if (dashed) p.set('style', 'dashed');
+    return 'viewer.html?' + p;
+  }
+  const workTitle = w => `Inv. ${w.inv} · ${w.title}`;
+  const howText = l => l.src === 'data sheet' ? l.how : (l.st === 'retrieval only' ? 'most similar window' : `image match, ${l.n} inliers`);
+
+  function labelCard(l) {
+    const w = WORK[l.w], again = (l.hits || []).length;
+    return `<button class="card" data-label="${l.id}"><span class="thumb"><img loading="lazy" alt="" src="${esc(region(l.iiif, l.box))}"></span>
+      <span class="cap"><b>${esc(l.t)}</b><span class="meta">${esc(workTitle(w))}</span><span class="badges">
+      <i class="b ${kind(l)}">${esc(SRC[l.src])}</i>${l.ok ? '' : '<i class="b warn">check</i>'}${again ? `<i class="b again">on ${again} other work${again > 1 ? 's' : ''}</i>` : ''}</span></span></button>`;
+  }
+  function hitCard(h, title) {
+    const w = WORK[h.w];
+    const ev = Object.entries(h.ev).map(([k, v]) => `<span>${esc({ exhibition: 'Exhibition', seller: 'Same seller', provenance: 'Provenance' }[k])}: ${esc(v.split(' | ')[0])}</span>`).join('');
+    return `<button class="card" data-work="${h.w}"><span class="thumb"><img loading="lazy" alt="" src="${esc(region(h.iiif, h.box))}"></span>
+      <span class="cap"><b>${esc(title || workTitle(w))}</b><span class="meta">${h.n} inliers</span><span class="ev">${ev || '<i class="meta">no evidence in the records yet</i>'}</span></span></button>`;
+  }
+  function backWithBoxes(iiif, boxes, size = 700) {  // boxes: [{box, cls, label, title}] in original pixels
+    const [W, H] = DIM[iiif] || [1000, 1000];
+    const rects = boxes.map(o => `<rect class="ov ${o.cls}"${o.label ? ` data-label="${o.label}"` : ''} x="${o.box[0]}" y="${o.box[1]}" width="${Math.max(o.box[2], W / 150)}" height="${Math.max(o.box[3], H / 150)}"><title>${esc(o.title || '')}</title></rect>`).join('');
+    return `<svg class="back" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Back of the work with the located labels"><image href="${esc(full(iiif, size))}" width="${W}" height="${H}"/>${rects}</svg>`;
+  }
+
+  // ---------------------------------------------------------------- Labels
+  function labelList() {
+    const q = state.lq.toLowerCase().trim();
+    return D.labels.filter(l => (state.lsrc === 'all' || l.src === state.lsrc)
+      && (state.lmodel || l.how !== 'vision-language model') && (!state.lagain || (l.hits || []).length)
+      && (!state.lok || l.ok) && (!q || HAY[l.id].includes(q)));
+  }
+  function renderLabels() {
+    const list = labelList(), shown = list.slice(0, state.lpage * PAGE);
+    $('#lgrid').innerHTML = shown.map(labelCard).join('') || '<p class="empty">No labels match.</p>';
+    $('#lcount').textContent = `${list.length} of ${D.labels.length}`;
+    $('#lmore').hidden = shown.length >= list.length;
+  }
+
+  // ---------------------------------------------------------------- Works
+  function workList() {
+    const q = state.wq.toLowerCase().trim();
+    return Object.entries(WORK).filter(([, w]) => (!state.wlab || w.labels.length) && (!state.wagain || w.shared)
+      && (!q || w.hay.includes(q))).sort((a, b) => b[1].labels.length - a[1].labels.length || a[1].inv.localeCompare(b[1].inv));
+  }
+  function workCard([oid, w]) {
+    const back = w.backs.map(b => b[0]).sort((a, b) => w.labels.filter(l => l.iiif === b).length - w.labels.filter(l => l.iiif === a).length)[0];
+    const boxes = w.labels.filter(l => l.iiif === back).map(l => ({ box: l.box, cls: kind(l) }));
+    return `<button class="card wcard" data-work="${oid}">${backWithBoxes(back, boxes, 400)}<span class="cap"><b>${esc(workTitle(w))}</b>
+      <span class="meta">${esc(w.type)} · ${w.labels.length} label${w.labels.length === 1 ? '' : 's'} located</span>
+      ${w.shared ? '<span class="badges"><i class="b again">shares a label with another work</i></span>' : ''}</span></button>`;
+  }
+  function renderWorks() {
+    const list = workList(), shown = list.slice(0, state.wpage * PAGE / 2);
+    $('#wgrid').innerHTML = shown.map(workCard).join('') || '<p class="empty">No works match.</p>';
+    $('#wcount').textContent = `${list.length} works`;
+    $('#wmore').hidden = shown.length >= list.length;
+  }
+
+  // ---------------------------------------------------------------- Found again
+  function renderAgain() {
+    const groups = {};
+    D.hits.forEach(h => {
+      const keys = Object.keys(h.ev);
+      if (state.aev === 'all' || (state.aev === 'none' ? !keys.length : keys.includes(state.aev))) (groups[h.q] ||= []).push(h);
+    });
+    const ids = Object.keys(groups).sort((a, b) => groups[b].length - groups[a].length);
+    $('#alist').innerHTML = ids.map(id => {
+      const l = LAB[id], w = WORK[l.w];
+      return `<div class="group"><h3>${esc(l.t)} <span class="meta">· ${esc(workTitle(w))}</span></h3><div class="row">${labelCard(l)}<span class="arrow" aria-hidden="true">→</span>
+        ${groups[id].map(h => hitCard(h)).join('')}</div></div>`;
+    }).join('') || '<p class="empty">No hits with this evidence.</p>';
+    $('#acount').textContent = `${ids.length} labels, ${ids.reduce((s, id) => s + groups[id].length, 0)} hits`;
+  }
+
+  // ---------------------------------------------------------------- Details
+  const dlg = $('#dlg');
+  function openDialog(title, body) {
+    $('#dtitle').textContent = title;
+    $('#dbody').innerHTML = body;
+    $('#dbody').scrollTop = 0;
+    if (!dlg.open) dlg.showModal();
+  }
+  function showLabel(id) {
+    const l = LAB[id];
+    if (!l) return;
+    const w = WORK[l.w];
+    const facts = [['Work', `<a href="#work=${l.w}">${esc(workTitle(w))}</a> (${esc(w.type)}) · <a href="${esc(w.url)}" target="_blank" rel="noopener">SKKG collection</a>`],
+      ['Source', esc(SRC[l.src]) + (l.sub && l.sub !== l.t ? ` · ${esc(l.sub)}` : '')],
+      ['Located by', esc(howText(l)) + (l.tpl ? ` (template from Inv. ${esc(l.tpl)})` : '') + (l.ok ? '' : ' · <i class="b warn">check</i>')],
+      l.pos && ['Position', esc(l.pos)], l.type && l.src !== 'photo' && ['Type', esc(l.type)],
+      l.d && ['Description', esc(l.d)]].filter(Boolean);
+    const others = w.labels.filter(o => o.id !== l.id && (state.lmodel || o.how !== 'vision-language model'));
+    const hits = (l.hits || []).map(i => D.hits[i]);
+    const view = viewer(l.iiif, [l.box], workTitle(w), `${SRC[l.src]}: ${l.t}`, COLOUR[l.src], l.how === 'vision-language model');
+    openDialog(l.t, `<div class="two"><div><div class="big"><a href="${esc(view)}" target="_blank" rel="noopener" title="Whole back, zoomable"><img alt="${esc(l.t)}" src="${esc(region(l.iiif, l.box, 900))}"></a></div>
+      ${l.photo ? `<h4>SKKG's photograph of this label</h4><div class="big"><img alt="Detail photograph" loading="lazy" src="${esc(full(l.photo, 800))}"></div>` : ''}</div>
+      <div><dl>${facts.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join('')}</dl>
+      <h4>Where it sits on the back</h4>${backWithBoxes(l.iiif, [{ box: l.box, cls: kind(l) + ' sel' }], 700)}
+      <div class="links"><a href="${esc(view)}" target="_blank" rel="noopener">Whole back, zoomable</a><a href="${esc(`${l.iiif}/${l.box.join(',')}/max/0/default.jpg`)}" target="_blank" rel="noopener">Label in full resolution (IIIF)</a></div></div></div>
+      ${hits.length ? `<h4>The same label on ${hits.length} other work${hits.length > 1 ? 's' : ''}</h4><div class="row">${hits.map(h => hitCard(h)).join('')}</div>` : ''}
+      ${others.length ? `<h4>Other marks on this work</h4><div class="row">${others.slice(0, 20).map(labelCard).join('')}</div>` : ''}`);
+  }
+  function showWork(oid) {
+    const w = WORK[oid];
+    if (!w) return;
+    const hitsHere = D.hits.filter(h => h.w === oid);
+    const backs = w.backs.map(([iiif]) => {
+      const mine = w.labels.filter(l => l.iiif === iiif && (state.lmodel || l.how !== 'vision-language model'));
+      const boxes = mine.map(l => ({ box: l.box, cls: kind(l), label: l.id, title: l.t }))
+        .concat(hitsHere.filter(h => h.iiif === iiif).map(h => ({ box: h.box, cls: 'hit', label: h.q, title: 'same label as on Inv. ' + WORK[LAB[h.q].w].inv })));
+      const all = viewer(iiif, mine.map(l => l.box), workTitle(w), 'all located labels and marks', '762a83');
+      return `${backWithBoxes(iiif, boxes, 900)}<div class="links"><a href="${esc(all)}" target="_blank" rel="noopener">Open zoomable with all boxes</a></div>`;
+    }).join('<br>');
+    const facts = [['Object type', esc(w.type)], ['Collection', `<a href="${esc(w.url)}" target="_blank" rel="noopener">${esc(w.url)}</a>`],
+      w.acq && ['Acquired by SKKG', esc(w.acq)], w.actors.length && ['Provenance actors', esc(w.actors.join(', '))],
+      w.ex.length && ['Exhibitions', w.ex.map(esc).join('<br>')]].filter(Boolean);
+    const shown = w.labels.filter(l => state.lmodel || l.how !== 'vision-language model');
+    openDialog(workTitle(w), `<div class="two"><div>${backs}</div><div><dl>${facts.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join('')}</dl>
+      ${hitsHere.length ? `<h4>Labels it shares with other works</h4><div class="row">${hitsHere.map(h => `<button class="card" data-label="${h.q}"><span class="thumb"><img loading="lazy" alt="" src="${esc(region(h.iiif, h.box))}"></span><span class="cap"><b>${esc(LAB[h.q].t)}</b><span class="meta">also on Inv. ${esc(WORK[LAB[h.q].w].inv)}</span></span></button>`).join('')}</div>` : ''}</div></div>
+      <h4>${shown.length} label${shown.length === 1 ? '' : 's'} and marks located${state.lmodel ? '' : ' (without unverified model boxes)'}</h4><div class="grid">${shown.map(labelCard).join('') || '<p class="empty">None located yet.</p>'}</div>`);
+  }
+
+  // ---------------------------------------------------------------- Navigation
+  function tab(name) {
+    if (!['labels', 'works', 'again', 'about'].includes(name)) name = 'labels';
+    current = name;
+    document.querySelectorAll('main > section').forEach(s => { s.hidden = s.id !== name; });
+    document.querySelectorAll('nav a').forEach(a => {
+      if (a.dataset.tab === name) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current');
+    });
+    if (name === 'labels') renderLabels();
+    if (name === 'works') renderWorks();
+    if (name === 'again') renderAgain();
+  }
+  function route() {
+    const h = decodeURIComponent(location.hash.slice(1));
+    if (h.startsWith('label=')) { if (document.querySelector('main > section:not([hidden])') === null) tab(current); showLabel(h.slice(6)); return; }
+    if (h.startsWith('work=')) { if (document.querySelector('main > section:not([hidden])') === null) tab(current); showWork(h.slice(5)); return; }
+    if (dlg.open) dlg.close();
+    tab(h || 'labels');
+  }
+  document.addEventListener('click', e => {
+    const ov = e.target.closest('.ov[data-label]'), card = e.target.closest('[data-label],[data-work]');
+    const el = ov || card;
+    if (!el || e.target.closest('a')) return;
+    e.preventDefault();
+    location.hash = el.dataset.label ? 'label=' + el.dataset.label : 'work=' + el.dataset.work;
+  });
+  $('#dclose').addEventListener('click', () => { location.hash = current; });
+  dlg.addEventListener('cancel', e => { e.preventDefault(); location.hash = current; });
+  dlg.addEventListener('click', e => { if (e.target === dlg) location.hash = current; });
+  window.addEventListener('hashchange', route);
+  function seg(id, key, render) {
+    $(id).addEventListener('click', e => {
+      const b = e.target.closest('button');
+      if (!b) return;
+      state[key] = b.dataset.v;
+      $(id).querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', x === b));
+      render();
+    });
+  }
+  seg('#lsrc', 'lsrc', () => { state.lpage = 1; renderLabels(); });
+  seg('#aev', 'aev', renderAgain);
+  [['#lq', 'lq'], ['#wq', 'wq']].forEach(([id, key]) => $(id).addEventListener('input', e => { state[key] = e.target.value; state.lpage = state.wpage = 1; key === 'lq' ? renderLabels() : renderWorks(); }));
+  [['#lagain', 'lagain'], ['#lok', 'lok'], ['#lmodel', 'lmodel']].forEach(([id, key]) => $(id).addEventListener('change', e => { state[key] = e.target.checked; state.lpage = 1; renderLabels(); }));
+  [['#wlab', 'wlab'], ['#wagain', 'wagain']].forEach(([id, key]) => $(id).addEventListener('change', e => { state[key] = e.target.checked; state.wpage = 1; renderWorks(); }));
+  $('#lmore').addEventListener('click', () => { state.lpage++; renderLabels(); });
+  $('#wmore').addEventListener('click', () => { state.wpage++; renderWorks(); });
+
+  fetch('data.json', { cache: 'no-cache' }).then(r => r.json()).then(data => {
+    D = data;
+    const order = { register: 0, photo: 1, 'data sheet': 2 };
+    D.labels.sort((a, b) => (b.hits || []).length - (a.hits || []).length || b.ok - a.ok || order[a.src] - order[b.src]);
+    for (const [oid, w] of Object.entries(D.works)) {
+      w.labels = []; w.shared = false;
+      w.backs.forEach(([iiif, W, H]) => { DIM[iiif] = [W, H]; });
+      WORK[oid] = w;
+    }
+    D.labels.forEach(l => { LAB[l.id] = l; WORK[l.w].labels.push(l); });
+    D.hits.forEach(h => { WORK[h.w].shared = true; WORK[LAB[h.q].w].shared = true; });
+    D.labels.forEach(l => { const w = WORK[l.w]; HAY[l.id] = [l.t, l.sub, l.d, l.pos, l.type, w.inv, w.title, w.type, w.actors.join(' ')].join(' ').toLowerCase(); });
+    for (const w of Object.values(WORK)) w.hay = [w.inv, w.title, w.type, w.actors.join(' '), w.ex.join(' '), w.acq, w.labels.map(l => l.t).join(' ')].join(' ').toLowerCase();
+    const n = D.numbers, pct = v => v == null ? '–' : Math.round(v * 100) + ' %';
+    document.querySelectorAll('[data-n]').forEach(el => { el.textContent = (n[el.dataset.n] ?? '').toLocaleString('en'); });
+    $('#stats').innerHTML = [
+      [n.located.toLocaleString('en'), `labels, stamps and marks located on the backs (${n.reliable} reliable), plus ${n.marks_model.toLocaleString('en')} unverified proposals of the model`],
+      [n.marks_located.toLocaleString('en'), `of ${n.marks.toLocaleString('en')} marks described in the data sheets placed on the backs (${n.marks_ocr} by their text)`],
+      [n.labels_found_again, `labels found again on other works, ${n.hits} hits`],
+      [n.hits_backed, `hits backed by the records: ${n.hits_exhibition} by a shared exhibition, ${n.hits_seller} by the same seller`],
+      [pct(n.r1), `of label photos find their back at rank 1 among ${n.backs} (${pct(n.r1_coarse)} before LightGlue)`],
+      [n.exhibitions, 'exhibitions the works were lent to (knowledge graph)']]
+      .map(([v, t]) => `<div class="stat"><b>${esc(v)}</b><span>${esc(t)}</span></div>`).join('');
+    $('#againintro').textContent = `${n.labels_found_again} located labels were found again on the backs of other works (${n.hits} hits). ` +
+      `${n.hits_backed} hits are backed by the records of both works: ${n.hits_exhibition} by an exhibition both were lent to, ${n.hits_seller} by the same seller to SKKG. ` +
+      'Hits without evidence are leads: the same label design of an issuer, or SKKG\'s own documentation.';
+    $('#foot').innerHTML = `Provenance Pursuit · GLAMhack 2026, challenge 304 · built ${esc(D.built)} · data and images: SKKG Stiftung für Kunst, Kultur und Geschichte, Winterthur ` +
+      '(metadata and backs CC0, data sheets CC BY 4.0) · <a href="provenance_pursuit_results.xlsx">Excel</a> · <a href="#about">About</a>';
+    route();
+  }).catch(() => { document.querySelector('main').innerHTML = '<p class="empty">The data could not be loaded.</p>'; });
+})();
+</script>
+</body>
+</html>
