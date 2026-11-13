@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Etikettenverzeichnis – Erfassungsformular (Entwurf)</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;700&family=Fraunces:opsz,wght@9..144,600&display=swap">
+<style>
+:root{--bg:#eef1f4;--card:#fff;--ink:#1d2733;--mute:#5d6b7a;--line:#cfd7df;--blue:#1f4fa3;--red:#c23a2e;--wash:#e3eaf5;--ok:#2f7a4d;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#12171d;--card:#1a212a;--ink:#e6ebf0;--mute:#98a6b5;--line:#2c3744;--blue:#7ea6ec;--red:#ef7a6e;--wash:#223248;--ok:#6fc28f;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#12171d;--card:#1a212a;--ink:#e6ebf0;--mute:#98a6b5;--line:#2c3744;--blue:#7ea6ec;--red:#ef7a6e;--wash:#223248;--ok:#6fc28f;color-scheme:dark}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:inherit}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 15px/1.5 "Hanken Grotesk",system-ui,sans-serif}
+.wrap{max-width:1180px;margin:0 auto;padding:20px 16px 48px}
+h1{font:600 26px/1.2 Fraunces,Georgia,serif;margin:0 0 4px}
+.sub{color:var(--mute);margin:0 0 18px;max-width:70ch}
+.work{display:flex;gap:14px;align-items:center;background:var(--card);border:1px solid var(--line);border-left:6px solid var(--blue);padding:12px 14px;margin-bottom:18px}
+.ph{width:64px;height:64px;flex:none;border:1px dashed var(--line);display:grid;place-items:center;color:var(--mute);font-size:11px;text-align:center}
+.work b{display:block}.work span{color:var(--mute)}
+.grid{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:20px;align-items:start}
+@media(max-width:860px){.grid{grid-template-columns:1fr}}
+fieldset{border:1px solid var(--line);background:var(--card);margin:0 0 14px;padding:14px 16px 16px}
+legend{font-weight:700;padding:0 6px;color:var(--blue)}
+legend small{font-weight:400;color:var(--mute);margin-left:6px}
+label{display:block;font-size:13px;color:var(--mute);margin:10px 0 3px}
+input[type=text],select,textarea{width:100%;font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);padding:8px 10px;border-radius:3px}
+textarea{min-height:64px;resize:vertical}
+input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-visible,.pos input:focus-visible+span{outline:2px solid var(--blue);outline-offset:1px}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.pos{display:grid;grid-template-columns:repeat(3,44px);gap:4px;margin-top:4px}
+.pos label{margin:0}
+.pos input{position:absolute;opacity:0}
+.pos span{display:grid;place-items:center;height:36px;border:1px solid var(--line);background:var(--bg);color:var(--mute);font-size:12px;cursor:pointer}
+.pos input:checked+span{background:var(--blue);border-color:var(--blue);color:#fff}
+.posbox{display:flex;gap:16px;align-items:flex-end;flex-wrap:wrap}
+.seg{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px}
+.seg label{margin:0;position:relative}
+.seg input{position:absolute;opacity:0}
+.seg span{display:block;padding:7px 14px;border:1px solid var(--line);background:var(--bg);color:var(--ink);cursor:pointer}
+.seg input:checked+span{background:var(--wash);border-color:var(--blue);font-weight:700}
+.seg input:focus-visible+span{outline:2px solid var(--blue)}
+.chk{display:flex;gap:8px;align-items:center;margin-top:8px;color:var(--ink);font-size:14px}
+.tags{display:flex;flex-wrap:wrap;gap:6px;border:1px solid var(--line);background:var(--bg);padding:6px;border-radius:3px}
+.tags input{flex:1;min-width:120px;border:0;background:transparent;padding:4px}
+.tag{background:var(--wash);padding:2px 4px 2px 10px;display:flex;gap:4px;align-items:center}
+.tag button{border:0;background:none;color:var(--mute);cursor:pointer;font-size:16px;line-height:1}
+.hint{font-size:12px;color:var(--mute);margin-top:3px}
+.side{position:sticky;top:12px}
+@media(max-width:860px){.side{position:static}}
+.prev{background:var(--card);border:1px solid var(--line);padding:14px 16px}
+.prev h2{font:600 17px/1.2 Fraunces,Georgia,serif;margin:0 0 10px}
+.prev dl{margin:0}
+.prev dt{font-size:12px;color:var(--mute);margin-top:9px}
+.prev dd{margin:0;min-height:1.4em;overflow-wrap:anywhere}
+.empty{color:var(--mute);font-style:italic}
+.btns{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
+button.main{background:var(--blue);color:#fff;border:0;padding:9px 16px;font:700 14px inherit;font-family:inherit;cursor:pointer;border-radius:3px}
+button.alt{background:transparent;color:var(--ink);border:1px solid var(--line);padding:9px 16px;font-family:inherit;font-size:14px;cursor:pointer;border-radius:3px}
+.msg{font-size:13px;color:var(--ok);margin-top:8px;min-height:1.2em}
+.note{font-size:13px;color:var(--mute);margin-top:12px}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>Etikett erfassen</h1>
+<p class="sub">Entwurf eines Formulars für die Spalten F bis L. Die Angaben rechts entsprechen der Zeile, die später in die Tabelle übernommen wird.</p>
+
+<div class="work">
+  <div class="ph">Foto Etikette</div>
+  <div><b>Inv. 3887 · François Diday (1801–1877)</b><span>Badende am Genfersee (Les Baigneuses) · Beispieldaten aus Spalten A–E, nur lesbar</span></div>
+</div>
+
+<div class="grid">
+<div>
+  <fieldset><legend>Etikett <small>Spalte F</small></legend>
+    <div class="row">
+      <div><label for="form">Form</label>
+        <select id="form"><option value="">–</option><option>Klebeetikett, viereckig</option><option>Klebeetikett, viereckig mit abgerundeten Ecken</option><option>Klebeetikett, langrechteckig</option><option>Klebeetikett, rund</option><option>Etikett mit gezacktem Rand</option><option>Klebstreifen (Malerband)</option><option>Zettel, angeheftet</option><option>Stempel</option><option>Beschriftung direkt auf dem Objekt</option></select></div>
+      <div><label for="farbe">Farbe</label>
+        <select id="farbe"><option value="">–</option><option>weiss</option><option>beige</option><option>weiss mit blauer Umrandung</option><option>weiss mit roter Umrandung</option><option>rot / orange</option><option>blau</option><option>andere</option></select></div>
+    </div>
+    <label>Aufschrift ist</label>
+    <div class="seg" id="tech">
+      <label><input type="checkbox" value="gedruckt"><span>gedruckt</span></label>
+      <label><input type="checkbox" value="gestempelt"><span>gestempelt</span></label>
+      <label><input type="checkbox" value="handschriftlich"><span>handschriftlich</span></label>
+      <label><input type="checkbox" value="maschinengeschrieben"><span>Schreibmaschine</span></label>
+    </div>
+    <label for="trans">Transkription</label>
+    <textarea id="trans" placeholder="Wortlaut so übernehmen, wie er auf dem Etikett steht. Unleserliches als […] markieren."></textarea>
+  </fieldset>
+
+  <fieldset><legend>Position <small>Spalte G</small></legend>
+    <div class="posbox">
+      <div><label style="margin-top:0">Lage auf dem Träger (von vorn gesehen)</label>
+        <div class="pos" id="pos">
+          <label><input type="radio" name="p" value="o. l."><span>o. l.</span></label>
+          <label><input type="radio" name="p" value="o. m."><span>o. m.</span></label>
+          <label><input type="radio" name="p" value="o. r."><span>o. r.</span></label>
+          <label><input type="radio" name="p" value="m. l."><span>m. l.</span></label>
+          <label><input type="radio" name="p" value="m."><span>m.</span></label>
+          <label><input type="radio" name="p" value="m. r."><span>m. r.</span></label>
+          <label><input type="radio" name="p" value="u. l."><span>u. l.</span></label>
+          <label><input type="radio" name="p" value="u. m."><span>u. m.</span></label>
+          <label><input type="radio" name="p" value="u. r."><span>u. r.</span></label>
+        </div></div>
+      <div style="flex:1;min-width:200px">
+        <label for="traeger" style="margin-top:0">Träger</label>
+        <select id="traeger"><option value="">–</option><option>Zierrahmen</option><option>Keilrahmen</option><option>Schutzkarton</option><option>Leinwand</option><option>Holztafel</option><option>Malkarton</option><option>Mittelleiste Keilrahmen</option><option>Verstrebung Keilrahmen</option></select>
+        <label>Seite</label>
+        <div class="seg" id="seite">
+          <label><input type="radio" name="s" value="recto"><span>recto</span></label>
+          <label><input type="radio" name="s" value="verso"><span>verso</span></label>
+        </div>
+      </div>
+    </div>
+  </fieldset>
+
+  <fieldset><legend>Zuordnung <small>Spalten H bis J</small></legend>
+    <label for="person">Person / Körperschaft</label>
+    <input type="text" id="person" placeholder="z. B. Galerie Bruno Meissner, Zürich">
+    <div class="hint">Später mit einem Normdatensatz (GND, SIKART) verknüpfbar.</div>
+    <div class="row">
+      <div><label for="evtyp">Ereignis</label>
+        <select id="evtyp"><option value="">–</option><option>Auktion</option><option>Ausstellung</option><option>Ankauf / Verkauf</option><option>Nachlass</option><option>Leihgabe</option><option>Unbekannt</option></select></div>
+      <div><label for="lot">Lot- / Katalognummer</label>
+        <input type="text" id="lot" placeholder="z. B. 157"></div>
+    </div>
+    <label for="evbez">Bezeichnung des Ereignisses</label>
+    <input type="text" id="evbez" placeholder="z. B. Auktion 69, Koller Zürich">
+    <div class="row">
+      <div><label for="datum">Datum / Zeitraum</label>
+        <input type="text" id="datum" placeholder="z. B. 24.–27. Oktober 1984"></div>
+      <div><label>&nbsp;</label><div class="chk"><input type="checkbox" id="od"><label for="od" style="margin:0;color:var(--ink)">ohne Datum (o. D.)</label></div></div>
+    </div>
+    <label>Evidenz der Zuordnung</label>
+    <div class="seg" id="evid">
+      <label><input type="radio" name="e" value="gesichert"><span>gesichert</span></label>
+      <label><input type="radio" name="e" value="vermutlich"><span>vermutlich</span></label>
+      <label><input type="radio" name="e" value="unklar"><span>unklar</span></label>
+    </div>
+  </fieldset>
+
+  <fieldset><legend>Weitere Angaben <small>Spalten K und L</small></legend>
+    <label for="tagin">Weitere Werke SKKG mit dieser Etikette</label>
+    <div class="tags" id="tags"><input type="text" id="tagin" placeholder="Inv.-Nr. eingeben, Enter drücken"></div>
+    <div class="hint">Jede Nummer wird zu einem Eintrag. Später könnte hier geprüft werden, ob die Nummer existiert.</div>
+    <label for="komm">Kommentar</label>
+    <textarea id="komm" placeholder="Begründung, Vergleiche mit anderen Werken, offene Fragen"></textarea>
+  </fieldset>
+</div>
+
+<div class="side">
+  <div class="prev">
+    <h2>Vorschau der Tabellenzeile</h2>
+    <dl id="out"></dl>
+    <div class="btns">
+      <button class="main" id="copy" type="button">Zeile kopieren</button>
+      <button class="alt" id="reset" type="button">Zurücksetzen</button>
+    </div>
+    <div class="msg" id="msg" role="status"></div>
+  </div>
+  <p class="note">Die Zeile wird mit Tabulatoren getrennt kopiert und lässt sich direkt in Spalte F der Excel-Tabelle einfügen. Entwurf: Werte werden nicht gespeichert.</p>
+</div>
+</div>
+</div>
+
+<script>
+const $=s=>document.querySelector(s);
+const heads=['Beschreibung Etikette / Beschriftung','Position','Zugeordnete Person/Körperschaft','Zugeordnetes Ereignis','Evidenz der Zuordnung','Weitere Werke SKKG mit dieser Etikette','Kommentar'];
+let tags=[];
+function val(id){return $('#'+id).value.trim()}
+function checked(sel){return [...document.querySelectorAll(sel+' input:checked')].map(i=>i.value)}
+function compute(){
+  const tech=checked('#tech');
+  const f=[val('form'),val('farbe'),tech.join(' / ')].filter(Boolean).join(', ');
+  const t=val('trans');
+  const F=[f,t?'«'+t+'»':''].filter(Boolean).join(', ');
+  const pos=(checked('#pos')[0]||'');
+  const seite=(checked('#seite')[0]||'');
+  const G=[pos,[val('traeger'),seite].filter(Boolean).join(' ')].filter(Boolean).join(' ');
+  const H=val('person');
+  const date=$('#od').checked?'o. D.':val('datum');
+  const lot=val('lot');
+  const I=[val('evtyp'),val('evbez'),date,lot?'(Lot '+lot+')':''].filter(Boolean).join(', ');
+  const J=checked('#evid')[0]||'';
+  return [F,G,H,I,J,tags.join(', '),val('komm')];
+}
+function render(){
+  const v=compute();
+  $('#out').innerHTML=heads.map((h,i)=>'<dt>'+'FGHIJKL'[i]+' · '+h+'</dt><dd>'+(v[i]?esc(v[i]):'<span class="empty">noch leer</span>')+'</dd>').join('');
+}
+function esc(s){return s.replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]))}
+function renderTags(){
+  document.querySelectorAll('.tag').forEach(n=>n.remove());
+  const box=$('#tags'),inp=$('#tagin');
+  tags.forEach((t,i)=>{const d=document.createElement('span');d.className='tag';d.textContent=t;
+    const b=document.createElement('button');b.type='button';b.textContent='×';b.setAttribute('aria-label',t+' entfernen');
+    b.onclick=()=>{tags.splice(i,1);renderTags();render()};d.appendChild(b);box.insertBefore(d,inp)});
+}
+function addTag(){const t=$('#tagin').value.replace(/,/g,'').trim();if(t&&!tags.includes(t)){tags.push(t);renderTags()}$('#tagin').value='';render()}
+$('#tagin').addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===','){e.preventDefault();addTag()}});
+$('#tagin').addEventListener('blur',addTag);
+document.addEventListener('input',render);document.addEventListener('change',render);
+$('#copy').onclick=async()=>{
+  const text=compute().map(x=>x.replace(/[\t\n]/g,' ')).join('\t');
+  try{await navigator.clipboard.writeText(text);$('#msg').textContent='Zeile kopiert.'}
+  catch(e){const ta=document.createElement('textarea');ta.value=text;document.body.appendChild(ta);ta.select();
+    try{document.execCommand('copy');$('#msg').textContent='Zeile kopiert.'}catch(_){$('#msg').textContent='Kopieren nicht möglich. Bitte manuell markieren.'}ta.remove()}
+};
+$('#reset').onclick=()=>{document.querySelectorAll('input[type=text],textarea').forEach(i=>i.value='');
+  document.querySelectorAll('select').forEach(s=>s.selectedIndex=0);
+  document.querySelectorAll('input[type=radio],input[type=checkbox]').forEach(i=>i.checked=false);
+  tags=[];renderTags();$('#msg').textContent='';render()};
+render();
+</script>
+</body>
+</html>
