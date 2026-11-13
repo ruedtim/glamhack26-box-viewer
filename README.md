@@ -11,6 +11,12 @@ works carry the same label. *Have I seen this label before?*
   – all results in one Excel file; its first sheet explains the others.
 - **Review page: [review.html](https://ruedtim.github.io/glamhack26-box-viewer/review.html)** – check the boxes the
   vision-language model proposed (correct, wrong, unsure) and download your decisions for the team.
+- **Label search: [label-search/](https://ruedtim.github.io/glamhack26-box-viewer/label-search/)** – photograph or upload
+  a label; the image model runs in the browser and shows the 20 most similar backs. Nothing is uploaded.
+- **Entry form: `form.html?label=<key>`** – opens from every box: what the data say about the label, and fields for the
+  team to add or correct the details for SKKG's label register (confirm or redraw the box, copy the row, CSV).
+- **What SIK-ISEA adds: [sik_isea.html](https://ruedtim.github.io/glamhack26-box-viewer/sik_isea.html)** – links to
+  SIK-ISEA's records and counts only.
 - **Label box viewer: `viewer.html`** – any image straight from a IIIF server with one or more boxes drawn on it.
 
 All images are loaded live from the SKKG IIIF server (`iiif.digital.skkg.ch`); nothing is copied. Boxes are in
@@ -50,4 +56,5 @@ Data and images: SKKG Stiftung für Kunst, Kultur und Geschichte, Winterthur ([S
 knowledge graph and IIIF image server). Object metadata and photographs of backs CC0; provenance data sheets
 CC BY 4.0, SKKG provenance research team; label register and object list provided for the challenge. Exhibitions
 and acquisitions were read from the knowledge graph following [skkg-mcp](https://github.com/kintopp/skkg-mcp)
-(RISE, University of Basel). Private persons are not named.
+(RISE, University of Basel). Names and addresses of private owners transcribed from labels are masked; SIK-ISEA's
+research portal is only linked and counted, as its content may not be republished without SIK-ISEA's consent.

@@ -3,25 +3,44 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Etikettenverzeichnis – Erfassungsformular (Entwurf)</title>
+<title>Etikett erfassen – Provenance Pursuit</title>
+<meta name="description" content="Erfassungsformular für die Spalten F bis L des Etikettenverzeichnisses der SKKG, vorausgefüllt mit den Ergebnissen von Provenance Pursuit.">
+<!--
+  Etikett erfassen – GLAMhack 2026, Challenge 304 «Provenance Pursuit».
+  Formularentwurf von Amli (Commit 77d0c6a), an die Ergebnis-Website angeschlossen.
+
+  Adresse:  form.html?label=<Schlüssel>   (Schlüssel aus data.json: register:<Zeile>, photo:<Objekt>:<IIIF-ID>,
+            sheet:<Hash>, box:<IIIF-ID>:<x>,<y>,<w>,<h>; siehe build_site.py)
+  Liest data.json, füllt aus, was die Daten schon wissen (markiert), und speichert die Angaben je Schlüssel in
+  diesem Browser (localStorage). CSV herunterladen / laden für das Zusammenführen im Team.
+-->
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;700&family=Fraunces:opsz,wght@9..144,600&display=swap">
 <style>
 :root{--bg:#eef1f4;--card:#fff;--ink:#1d2733;--mute:#5d6b7a;--line:#cfd7df;--blue:#1f4fa3;--red:#c23a2e;--wash:#e3eaf5;--ok:#2f7a4d;
+--pfbg:#e6eefb;--pfline:#b4c7ea;--sug:#875800;--sugbg:#fbf0d8;--sugline:#e6cb8f;
 box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#12171d;--card:#1a212a;--ink:#e6ebf0;--mute:#98a6b5;--line:#2c3744;--blue:#7ea6ec;--red:#ef7a6e;--wash:#223248;--ok:#6fc28f;color-scheme:dark}}
-:root[data-theme="dark"]{--bg:#12171d;--card:#1a212a;--ink:#e6ebf0;--mute:#98a6b5;--line:#2c3744;--blue:#7ea6ec;--red:#ef7a6e;--wash:#223248;--ok:#6fc28f;color-scheme:dark}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#12171d;--card:#1a212a;--ink:#e6ebf0;--mute:#98a6b5;--line:#2c3744;--blue:#7ea6ec;--red:#ef7a6e;--wash:#223248;--ok:#6fc28f;--pfbg:#1b2a42;--pfline:#35507f;--sug:#e6b65c;--sugbg:#33290f;--sugline:#6b5523;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#12171d;--card:#1a212a;--ink:#e6ebf0;--mute:#98a6b5;--line:#2c3744;--blue:#7ea6ec;--red:#ef7a6e;--wash:#223248;--ok:#6fc28f;--pfbg:#1b2a42;--pfline:#35507f;--sug:#e6b65c;--sugbg:#33290f;--sugline:#6b5523;color-scheme:dark}
 html{scroll-padding-top:env(safe-area-inset-top,0px)}
 *,*::before,*::after{box-sizing:inherit}
+[hidden]{display:none!important}
 body{margin:0;background:var(--bg);color:var(--ink);font:400 15px/1.5 "Hanken Grotesk",system-ui,sans-serif}
+a{color:var(--blue)}
 .wrap{max-width:1180px;margin:0 auto;padding:20px 16px 48px}
+.crumbs{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:13px;color:var(--mute);margin-bottom:10px}
+.crumbs a{font-weight:700;text-decoration:none}
 h1{font:600 26px/1.2 Fraunces,Georgia,serif;margin:0 0 4px}
 .sub{color:var(--mute);margin:0 0 18px;max-width:70ch}
-.work{display:flex;gap:14px;align-items:center;background:var(--card);border:1px solid var(--line);border-left:6px solid var(--blue);padding:12px 14px;margin-bottom:18px}
-.ph{width:64px;height:64px;flex:none;border:1px dashed var(--line);display:grid;place-items:center;color:var(--mute);font-size:11px;text-align:center}
+.work{display:flex;flex-wrap:wrap;gap:14px;align-items:center;background:var(--card);border:1px solid var(--line);border-left:6px solid var(--blue);padding:12px 14px;margin-bottom:18px}
+.ph{width:64px;height:64px;flex:none;border:1px dashed var(--line);display:grid;place-items:center;color:var(--mute);font-size:11px;text-align:center;text-decoration:none;overflow:hidden}
+.ph.img{width:150px;height:150px;border:0;background:var(--bg)}
+.ph img{max-width:100%;max-height:100%;display:block}
 .work b{display:block}.work span{color:var(--mute)}
+.wtext{flex:1;min-width:220px}.wtext span{display:block}
+.wl{margin-top:4px;font-size:13px}
 .grid{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:20px;align-items:start}
 @media(max-width:860px){.grid{grid-template-columns:1fr}}
-fieldset{border:1px solid var(--line);background:var(--card);margin:0 0 14px;padding:14px 16px 16px}
+fieldset{border:1px solid var(--line);background:var(--card);margin:0 0 14px;padding:14px 16px 16px;min-width:0}
 legend{font-weight:700;padding:0 6px;color:var(--blue)}
 legend small{font-weight:400;color:var(--mute);margin-left:6px}
 label{display:block;font-size:13px;color:var(--mute);margin:10px 0 3px}
@@ -50,51 +69,120 @@ input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-vis
 .side{position:sticky;top:12px}
 @media(max-width:860px){.side{position:static}}
 .prev{background:var(--card);border:1px solid var(--line);padding:14px 16px}
-.prev h2{font:600 17px/1.2 Fraunces,Georgia,serif;margin:0 0 10px}
+.prev h2,.store h2,.known h2{font:600 17px/1.2 Fraunces,Georgia,serif;margin:0 0 10px}
 .prev dl{margin:0}
 .prev dt{font-size:12px;color:var(--mute);margin-top:9px}
 .prev dd{margin:0;min-height:1.4em;overflow-wrap:anywhere}
 .empty{color:var(--mute);font-style:italic}
-.btns{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
+.btns{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap;align-items:center}
 button.main{background:var(--blue);color:#fff;border:0;padding:9px 16px;font:700 14px inherit;font-family:inherit;cursor:pointer;border-radius:3px}
-button.alt{background:transparent;color:var(--ink);border:1px solid var(--line);padding:9px 16px;font-family:inherit;font-size:14px;cursor:pointer;border-radius:3px}
+button.alt,label.alt{background:transparent;color:var(--ink);border:1px solid var(--line);padding:9px 16px;font-family:inherit;font-size:14px;cursor:pointer;border-radius:3px}
+label.alt{display:inline-block;margin:0;line-height:1.5}
+button:disabled{opacity:.45;cursor:default}
 .msg{font-size:13px;color:var(--ok);margin-top:8px;min-height:1.2em}
+.msg.warn{color:var(--red)}
+.saved{font-size:13px;color:var(--mute);margin-top:4px;min-height:1.2em}
+button.link{border:0;background:none;padding:0;font:inherit;color:var(--blue);text-decoration:underline;cursor:pointer}
 .note{font-size:13px;color:var(--mute);margin-top:12px}
+/* what the data already knows */
+.known{background:var(--card);border:1px solid var(--line);padding:14px 16px;margin:-6px 0 18px}
+.kgrid{display:grid;grid-template-columns:minmax(0,230px) minmax(0,1fr);gap:16px;align-items:start}
+@media(max-width:640px){.kgrid{grid-template-columns:1fr}}
+.kback{display:block}
+.kback svg{display:block;width:100%;height:auto;background:var(--bg)}
+.kbox{fill:none;stroke-width:3;vector-effect:non-scaling-stroke;filter:drop-shadow(0 0 1.5px #000)}
+.kpic{margin-top:10px}.kpic img{display:block;max-width:100%;max-height:220px}
+.kdrawn{stroke:#30d158!important;stroke-dasharray:none}
+/* Box bestätigen / neu ziehen (wie auf der Review-Seite: neue Box grün, in Pixeln des Originalbilds) */
+.bx .btns{margin-top:8px;gap:6px}
+.bx button.alt{padding:6px 10px;font-size:13px}
+.bx button.alt[aria-pressed="true"]{background:var(--ok);border-color:var(--ok);color:#fff;font-weight:700}
+.bx .hint{margin-top:6px}
+dialog#ed{border:1px solid var(--line);border-radius:10px;padding:14px;background:var(--card);color:var(--ink);max-width:96vw}
+dialog#ed::backdrop{background:rgba(0,0,0,.5)}
+#edwrap{position:relative;display:inline-block;touch-action:none;user-select:none;-webkit-user-select:none;cursor:crosshair;margin:10px 0}
+#edimg{display:block;max-width:min(1000px,90vw);max-height:70vh;background:var(--bg)}
+.edbox{position:absolute;pointer-events:none;box-sizing:border-box}
+.edbox.old{border:2px solid #ff3b30}
+.edbox.new{border:3px solid #30d158;box-shadow:0 0 0 1px rgba(0,0,0,.6)}
+.known dl{display:grid;grid-template-columns:max-content minmax(0,1fr);gap:6px 14px;margin:0;font-size:14px}
+.known dt{color:var(--mute)}.known dd{margin:0;overflow-wrap:anywhere}
+.known ul{margin:0;padding-left:18px}.known li{margin:2px 0}
+.known li span,.slist span{color:var(--mute);font-size:13px}
+.check{display:inline-block;font-size:11px;font-weight:700;color:var(--sug);border:1px solid var(--sugline);border-radius:99px;padding:0 7px;margin-left:4px}
+/* prefilled values */
+.legend{font-size:13px;color:var(--mute);margin:0 0 12px;max-width:110ch}
+.pf{display:inline-flex;align-items:center;gap:3px;margin-left:6px;padding:0 7px;border-radius:99px;font-size:11px;font-weight:700;line-height:17px;background:var(--pfbg);color:var(--blue);border:1px solid var(--pfline);vertical-align:1px;white-space:nowrap;cursor:help}
+.pf.sug{background:var(--sugbg);color:var(--sug);border-color:var(--sugline)}
+.pf.ed{background:transparent;color:var(--mute);border-color:var(--line)}
+.pf button{border:0;background:none;color:var(--blue);cursor:pointer;font:700 14px/1 inherit;font-family:inherit;padding:0 0 0 2px}
+.is-pf{background:var(--pfbg)!important;border-color:var(--pfline)!important}
+.is-sug{background:var(--sugbg)!important;border-color:var(--sugline)!important}
+.src{font-size:12px;color:var(--mute);margin-top:12px;padding-top:8px;border-top:1px dashed var(--line);overflow-wrap:anywhere}
+/* saved entries */
+.store{background:var(--card);border:1px solid var(--line);padding:14px 16px;margin-top:20px}
+.srow{display:flex;flex-wrap:wrap;gap:6px 20px;align-items:flex-end}
+.srow>div:first-child{width:180px}
+.srow .btns{margin-top:0}
+.slist{margin:12px 0 0;padding-left:20px;font-size:14px;columns:2 320px;column-gap:28px}
+.slist li{margin:2px 0;break-inside:avoid}
+.slist li.here a{font-weight:700}
 </style>
 </head>
 <body>
 <div class="wrap">
+<div class="crumbs"><a href="./" id="back">← Ergebnisse</a><span>Provenance Pursuit · GLAMhack 2026</span></div>
 <h1>Etikett erfassen</h1>
-<p class="sub">Entwurf eines Formulars für die Spalten F bis L. Die Angaben rechts entsprechen der Zeile, die später in die Tabelle übernommen wird.</p>
+<p class="sub">Formular für die Spalten F bis L des Etikettenverzeichnisses. Was die Daten schon wissen, ist vorausgefüllt und markiert: ergänzen oder korrigieren. Die Angaben rechts entsprechen der Zeile, die später in die Tabelle übernommen wird.</p>
 
 <div class="work">
-  <div class="ph">Foto Etikette</div>
-  <div><b>Inv. 3887 · François Diday (1801–1877)</b><span>Badende am Genfersee (Les Baigneuses) · Beispieldaten aus Spalten A–E, nur lesbar</span></div>
+  <a class="ph" id="ph">Foto Etikette</a>
+  <div class="wtext"><b id="wt">Kein Etikett gewählt</b><span id="ws">Daten werden geladen …</span><span class="wl" id="wl"></span></div>
 </div>
 
+<section class="known" id="known" hidden aria-labelledby="khead">
+  <h2 id="khead">Was die Daten schon sagen</h2>
+  <div class="kgrid">
+    <div><a class="kback" id="kback" target="_blank" rel="noopener" title="Ganze Rückseite mit der Box, zoombar"><svg id="ksvg" role="img" aria-label="Rückseite des Werks mit der Box"></svg></a>
+      <div class="hint">Ganze Rückseite; anklicken zum Zoomen.</div>
+      <div class="bx" id="bx" hidden>
+        <div class="btns"><button class="alt" id="bxok" type="button" aria-pressed="false">✓ Box bestätigen</button><button class="alt" id="bxdraw" type="button">✎ Box neu ziehen</button></div>
+        <div class="hint" id="bxstate" role="status"></div>
+        <button class="link hint" id="bxorig" type="button" hidden>Box aus den Daten wiederherstellen</button>
+      </div>
+      <div class="kpic" id="kpic" hidden></div></div>
+    <dl id="kdl"></dl>
+  </div>
+</section>
+
+<p class="legend" id="legend" hidden>Vorausgefüllte Felder sind markiert: <span class="pf">Register</span> oder <span class="pf">Datenblatt</span> = aus den Daten übernommen,
+  <span class="pf sug">Vorschlag</span> = abgeleitet oder von der Bildsuche gefunden, bitte prüfen, <span class="pf ed">geändert ↺</span> = von Hand geändert (↺ stellt den Wert aus den Daten wieder her).
+  Woher die Werte kommen, steht unter jedem Abschnitt.</p>
+
 <div class="grid">
-<div>
+<div id="fields">
   <fieldset><legend>Etikett <small>Spalte F</small></legend>
     <div class="row">
-      <div><label for="form">Form</label>
+      <div><label for="form" data-f="form">Form</label>
         <select id="form"><option value="">–</option><option>Klebeetikett, viereckig</option><option>Klebeetikett, viereckig mit abgerundeten Ecken</option><option>Klebeetikett, langrechteckig</option><option>Klebeetikett, rund</option><option>Etikett mit gezacktem Rand</option><option>Klebstreifen (Malerband)</option><option>Zettel, angeheftet</option><option>Stempel</option><option>Beschriftung direkt auf dem Objekt</option></select></div>
-      <div><label for="farbe">Farbe</label>
+      <div><label for="farbe" data-f="farbe">Farbe</label>
         <select id="farbe"><option value="">–</option><option>weiss</option><option>beige</option><option>weiss mit blauer Umrandung</option><option>weiss mit roter Umrandung</option><option>rot / orange</option><option>blau</option><option>andere</option></select></div>
     </div>
-    <label>Aufschrift ist</label>
+    <label data-f="tech">Aufschrift ist</label>
     <div class="seg" id="tech">
       <label><input type="checkbox" value="gedruckt"><span>gedruckt</span></label>
       <label><input type="checkbox" value="gestempelt"><span>gestempelt</span></label>
       <label><input type="checkbox" value="handschriftlich"><span>handschriftlich</span></label>
       <label><input type="checkbox" value="maschinengeschrieben"><span>Schreibmaschine</span></label>
     </div>
-    <label for="trans">Transkription</label>
+    <label for="trans" data-f="trans">Transkription</label>
     <textarea id="trans" placeholder="Wortlaut so übernehmen, wie er auf dem Etikett steht. Unleserliches als […] markieren."></textarea>
+    <div class="src" id="srcF" hidden></div>
   </fieldset>
 
   <fieldset><legend>Position <small>Spalte G</small></legend>
     <div class="posbox">
-      <div><label style="margin-top:0">Lage auf dem Träger (von vorn gesehen)</label>
+      <div><label style="margin-top:0" data-f="pos">Lage auf dem Träger (von vorn gesehen)</label>
         <div class="pos" id="pos">
           <label><input type="radio" name="p" value="o. l."><span>o. l.</span></label>
           <label><input type="radio" name="p" value="o. m."><span>o. m.</span></label>
@@ -107,48 +195,51 @@ button.alt{background:transparent;color:var(--ink);border:1px solid var(--line);
           <label><input type="radio" name="p" value="u. r."><span>u. r.</span></label>
         </div></div>
       <div style="flex:1;min-width:200px">
-        <label for="traeger" style="margin-top:0">Träger</label>
+        <label for="traeger" style="margin-top:0" data-f="traeger">Träger</label>
         <select id="traeger"><option value="">–</option><option>Zierrahmen</option><option>Keilrahmen</option><option>Schutzkarton</option><option>Leinwand</option><option>Holztafel</option><option>Malkarton</option><option>Mittelleiste Keilrahmen</option><option>Verstrebung Keilrahmen</option></select>
-        <label>Seite</label>
+        <label data-f="seite">Seite</label>
         <div class="seg" id="seite">
           <label><input type="radio" name="s" value="recto"><span>recto</span></label>
           <label><input type="radio" name="s" value="verso"><span>verso</span></label>
         </div>
       </div>
     </div>
+    <div class="src" id="srcG" hidden></div>
   </fieldset>
 
   <fieldset><legend>Zuordnung <small>Spalten H bis J</small></legend>
-    <label for="person">Person / Körperschaft</label>
+    <label for="person" data-f="person">Person / Körperschaft</label>
     <input type="text" id="person" placeholder="z. B. Galerie Bruno Meissner, Zürich">
     <div class="hint">Später mit einem Normdatensatz (GND, SIKART) verknüpfbar.</div>
     <div class="row">
-      <div><label for="evtyp">Ereignis</label>
+      <div><label for="evtyp" data-f="evtyp">Ereignis</label>
         <select id="evtyp"><option value="">–</option><option>Auktion</option><option>Ausstellung</option><option>Ankauf / Verkauf</option><option>Nachlass</option><option>Leihgabe</option><option>Unbekannt</option></select></div>
-      <div><label for="lot">Lot- / Katalognummer</label>
+      <div><label for="lot" data-f="lot">Lot- / Katalognummer</label>
         <input type="text" id="lot" placeholder="z. B. 157"></div>
     </div>
-    <label for="evbez">Bezeichnung des Ereignisses</label>
+    <label for="evbez" data-f="evbez">Bezeichnung des Ereignisses</label>
     <input type="text" id="evbez" placeholder="z. B. Auktion 69, Koller Zürich">
     <div class="row">
-      <div><label for="datum">Datum / Zeitraum</label>
+      <div><label for="datum" data-f="datum od">Datum / Zeitraum</label>
         <input type="text" id="datum" placeholder="z. B. 24.–27. Oktober 1984"></div>
       <div><label>&nbsp;</label><div class="chk"><input type="checkbox" id="od"><label for="od" style="margin:0;color:var(--ink)">ohne Datum (o. D.)</label></div></div>
     </div>
-    <label>Evidenz der Zuordnung</label>
+    <label data-f="evid">Evidenz der Zuordnung</label>
     <div class="seg" id="evid">
       <label><input type="radio" name="e" value="gesichert"><span>gesichert</span></label>
       <label><input type="radio" name="e" value="vermutlich"><span>vermutlich</span></label>
       <label><input type="radio" name="e" value="unklar"><span>unklar</span></label>
     </div>
+    <div class="src" id="srcHJ" hidden></div>
   </fieldset>
 
   <fieldset><legend>Weitere Angaben <small>Spalten K und L</small></legend>
-    <label for="tagin">Weitere Werke SKKG mit dieser Etikette</label>
+    <label for="tagin" data-f="tags">Weitere Werke SKKG mit dieser Etikette</label>
     <div class="tags" id="tags"><input type="text" id="tagin" placeholder="Inv.-Nr. eingeben, Enter drücken"></div>
     <div class="hint">Jede Nummer wird zu einem Eintrag. Später könnte hier geprüft werden, ob die Nummer existiert.</div>
-    <label for="komm">Kommentar</label>
+    <label for="komm" data-f="komm">Kommentar</label>
     <textarea id="komm" placeholder="Begründung, Vergleiche mit anderen Werken, offene Fragen"></textarea>
+    <div class="src" id="srcKL" hidden></div>
   </fieldset>
 </div>
 
@@ -158,63 +249,785 @@ button.alt{background:transparent;color:var(--ink);border:1px solid var(--line);
     <dl id="out"></dl>
     <div class="btns">
       <button class="main" id="copy" type="button">Zeile kopieren</button>
+      <button class="alt" id="save" type="button">Speichern</button>
       <button class="alt" id="reset" type="button">Zurücksetzen</button>
     </div>
     <div class="msg" id="msg" role="status"></div>
+    <div class="saved" id="saved" role="status"></div>
   </div>
-  <p class="note">Die Zeile wird mit Tabulatoren getrennt kopiert und lässt sich direkt in Spalte F der Excel-Tabelle einfügen. Entwurf: Werte werden nicht gespeichert.</p>
-</div>
+  <p class="note">Die Zeile wird mit Tabulatoren getrennt kopiert und lässt sich direkt in Spalte F der Excel-Tabelle einfügen. Die Angaben werden in diesem Browser gespeichert (bei jeder Änderung); «Zurücksetzen» stellt die Werte aus den Daten wieder her.</p>
 </div>
 </div>
 
+<section class="store" aria-labelledby="shead">
+  <h2 id="shead">Gespeicherte Einträge</h2>
+  <p class="note" id="scount" style="margin-top:0">Noch keine Einträge in diesem Browser.</p>
+  <div class="srow">
+    <div><label for="who" style="margin-top:0">Kürzel (steht in der CSV)</label><input type="text" id="who" maxlength="12" autocomplete="off" placeholder="z. B. AM"></div>
+    <div class="btns"><button class="main" id="export" type="button">CSV herunterladen</button><label class="alt" for="import">CSV laden …</label><input type="file" id="import" accept=".csv,text/csv,text/plain" hidden></div>
+  </div>
+  <div class="msg" id="smsg" role="status"></div>
+  <ol class="slist" id="slist"></ol>
+  <p class="note">Die Einträge bleiben nur in diesem Browser. Für das Team als CSV herunterladen (eine Zeile pro Etikett: Schlüssel, Werk, Box, Spalten F bis L und die einzelnen Felder) und in den Teamordner legen; dort werden sie mit dem Arbeitsbuch zusammengeführt. «CSV laden» übernimmt die Einträge einer solchen Datei; beim selben Etikett gilt der neuere Eintrag.</p>
+</section>
+</div>
+
+<dialog id="ed" aria-labelledby="edtitle">
+  <b id="edtitle">Box um das Etikett ziehen</b>
+  <div class="hint">Auf dem Bild ziehen. Rot: die Box aus den Daten · grün: die neue Box. Gespeichert wird in Pixeln des Originalbilds.</div>
+  <div><div id="edwrap"><img id="edimg" alt="Die ganze Rückseite" draggable="false"><div class="edbox old" id="edold"></div><div class="edbox new" id="ednew" hidden></div></div></div>
+  <div class="btns" style="margin-top:0">
+    <button class="main" id="edsave" type="button" disabled>Box speichern</button>
+    <button class="alt" id="edcancel" type="button">Abbrechen</button>
+    <span class="hint" id="edinfo"></span>
+  </div>
+</dialog>
+
 <script>
-const $=s=>document.querySelector(s);
-const heads=['Beschreibung Etikette / Beschriftung','Position','Zugeordnete Person/Körperschaft','Zugeordnetes Ereignis','Evidenz der Zuordnung','Weitere Werke SKKG mit dieser Etikette','Kommentar'];
-let tags=[];
-function val(id){return $('#'+id).value.trim()}
-function checked(sel){return [...document.querySelectorAll(sel+' input:checked')].map(i=>i.value)}
-function compute(){
-  const tech=checked('#tech');
-  const f=[val('form'),val('farbe'),tech.join(' / ')].filter(Boolean).join(', ');
-  const t=val('trans');
-  const F=[f,t?'«'+t+'»':''].filter(Boolean).join(', ');
-  const pos=(checked('#pos')[0]||'');
-  const seite=(checked('#seite')[0]||'');
-  const G=[pos,[val('traeger'),seite].filter(Boolean).join(' ')].filter(Boolean).join(' ');
-  const H=val('person');
-  const date=$('#od').checked?'o. D.':val('datum');
-  const lot=val('lot');
-  const I=[val('evtyp'),val('evbez'),date,lot?'(Lot '+lot+')':''].filter(Boolean).join(', ');
-  const J=checked('#evid')[0]||'';
-  return [F,G,H,I,J,tags.join(', '),val('komm')];
-}
-function render(){
-  const v=compute();
-  $('#out').innerHTML=heads.map((h,i)=>'<dt>'+'FGHIJKL'[i]+' · '+h+'</dt><dd>'+(v[i]?esc(v[i]):'<span class="empty">noch leer</span>')+'</dd>').join('');
-}
-function esc(s){return s.replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]))}
-function renderTags(){
-  document.querySelectorAll('.tag').forEach(n=>n.remove());
-  const box=$('#tags'),inp=$('#tagin');
-  tags.forEach((t,i)=>{const d=document.createElement('span');d.className='tag';d.textContent=t;
-    const b=document.createElement('button');b.type='button';b.textContent='×';b.setAttribute('aria-label',t+' entfernen');
-    b.onclick=()=>{tags.splice(i,1);renderTags();render()};d.appendChild(b);box.insertBefore(d,inp)});
-}
-function addTag(){const t=$('#tagin').value.replace(/,/g,'').trim();if(t&&!tags.includes(t)){tags.push(t);renderTags()}$('#tagin').value='';render()}
-$('#tagin').addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===','){e.preventDefault();addTag()}});
-$('#tagin').addEventListener('blur',addTag);
-document.addEventListener('input',render);document.addEventListener('change',render);
-$('#copy').onclick=async()=>{
-  const text=compute().map(x=>x.replace(/[\t\n]/g,' ')).join('\t');
-  try{await navigator.clipboard.writeText(text);$('#msg').textContent='Zeile kopiert.'}
-  catch(e){const ta=document.createElement('textarea');ta.value=text;document.body.appendChild(ta);ta.select();
-    try{document.execCommand('copy');$('#msg').textContent='Zeile kopiert.'}catch(_){$('#msg').textContent='Kopieren nicht möglich. Bitte manuell markieren.'}ta.remove()}
+(() => {
+'use strict';
+const $ = s => document.querySelector(s);
+const $$ = s => [...document.querySelectorAll(s)];
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+const heads = ['Beschreibung Etikette / Beschriftung','Position','Zugeordnete Person/Körperschaft','Zugeordnetes Ereignis','Evidenz der Zuordnung','Weitere Werke SKKG mit dieser Etikette','Kommentar'];
+const STORE = 'pp-label-form-v1', WHO = 'pp-label-form-who';
+const store = {
+  get(k, fallback) { try { const v = localStorage.getItem(k); return v === null ? fallback : JSON.parse(v); } catch { return fallback; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch { return false; } },
 };
-$('#reset').onclick=()=>{document.querySelectorAll('input[type=text],textarea').forEach(i=>i.value='');
-  document.querySelectorAll('select').forEach(s=>s.selectedIndex=0);
-  document.querySelectorAll('input[type=radio],input[type=checkbox]').forEach(i=>i.checked=false);
-  tags=[];renderTags();$('#msg').textContent='';render()};
-render();
+const loadEntries = () => { const e = store.get(STORE, {}); return e && typeof e === 'object' ? e : {}; };
+let entries = loadEntries();  // Schlüssel -> {v: Felder, t: Zeit, r: Kürzel, m: Werk/Etikett, d: aus den Daten, e: geändert}
+const key = (new URLSearchParams(location.search).get('label') || '').trim();
+let D = null, L = null, P = { v: {}, s: {}, notes: {} }, tags = [], undo = null;
+let BX = { ok: false, drawn: null };  // die Box: bestätigt? neu gezogen ([x, y, w, h] in Pixeln des Originalbilds)?
+const curBox = () => BX.drawn || (L && L.box);
+const WORK = {}, DIM = {}, LAB_ID = {}, LAB_KEY = {};
+
+// ---------------------------------------------------------------- Felder
+const FIELDS = { form: 'select', farbe: 'select', tech: 'checks', trans: 'text', pos: 'radio', traeger: 'select', seite: 'radio',
+  person: 'text', evtyp: 'select', lot: 'text', evbez: 'text', datum: 'text', od: 'check', evid: 'radio', tags: 'tags', komm: 'text' };
+const GROUP = { tech: '#tech', pos: '#pos', seite: '#seite', evid: '#evid' };
+const NAMES = Object.keys(FIELDS);
+const empty = () => ({ form: '', farbe: '', tech: [], trans: '', pos: '', traeger: '', seite: '', person: '', evtyp: '', lot: '',
+  evbez: '', datum: '', od: false, evid: '', tags: [], komm: '' });
+const filled = v => Array.isArray(v) ? v.length > 0 : !!v;
+const same = (a, b) => Array.isArray(a) || Array.isArray(b)
+  ? [...(a || [])].sort().join('\u0001') === [...(b || [])].sort().join('\u0001') : String(a ?? '') === String(b ?? '');
+
+function read(n) {
+  switch (FIELDS[n]) {
+    case 'select': case 'text': return $('#' + n).value.trim();
+    case 'checks': return $$(GROUP[n] + ' input:checked').map(i => i.value);
+    case 'radio': return (document.querySelector(GROUP[n] + ' input:checked') || {}).value || '';
+    case 'check': return $('#' + n).checked;
+    case 'tags': return tags.slice();
+  }
+}
+function write(n, v) {
+  const el = $('#' + n);
+  switch (FIELDS[n]) {
+    case 'select': option(el, v); el.value = v || ''; break;
+    case 'text': el.value = v || ''; break;
+    case 'checks': $$(GROUP[n] + ' input').forEach(i => { i.checked = (v || []).includes(i.value); }); break;
+    case 'radio': $$(GROUP[n] + ' input').forEach(i => { i.checked = i.value === v; }); break;
+    case 'check': el.checked = !!v; break;
+    case 'tags': tags = (v || []).slice(); renderTags(); break;
+  }
+}
+function option(sel, v) {  // ein Wert aus den Daten, den die Liste nicht hat (z. B. «Spannrahmen»), kommt dazu
+  if (v && ![...sel.options].some(o => o.value === v)) sel.add(new Option(v, v));
+}
+const state = () => Object.fromEntries(NAMES.map(n => [n, read(n)]));
+const apply = v => NAMES.forEach(n => write(n, v && n in v ? v[n] : empty()[n]));
+
+function compute(v) {  // die Zeile F bis L, wie im Entwurf zusammengesetzt
+  const f = [v.form, v.farbe, (v.tech || []).join(' / ')].filter(Boolean).join(', ');
+  const t = v.trans;
+  const F = [f, t ? '«' + t + '»' : ''].filter(Boolean).join(', ');
+  const G = [v.pos, [v.traeger, v.seite].filter(Boolean).join(' ')].filter(Boolean).join(' ');
+  const date = v.od ? 'o. D.' : v.datum;
+  const I = [v.evtyp, v.evbez, date, v.lot ? '(Lot ' + v.lot + ')' : ''].filter(Boolean).join(', ');
+  return [F, G, v.person, I, v.evid, (v.tags || []).join(', '), v.komm];
+}
+function render() {
+  const v = state(), c = compute(v);
+  $('#out').innerHTML = heads.map((h, i) => '<dt>' + 'FGHIJKL'[i] + ' · ' + h + '</dt><dd>' + (c[i] ? esc(c[i]) : '<span class="empty">noch leer</span>') + '</dd>').join('');
+  marks(v);
+  return v;
+}
+function marks(v) {  // Markierung je Feld: aus den Daten, Vorschlag, von Hand geändert
+  $$('[data-f]').forEach(cap => {
+    const names = cap.dataset.f.split(' '), pre = names.filter(n => P.s[n]);
+    const edited = pre.filter(n => !same(v[n], P.v[n]));
+    let pill = cap.querySelector('.pf');
+    if (!pre.length) { if (pill) pill.remove(); return; }
+    if (!pill) { pill = document.createElement('span'); cap.append(pill); }
+    if (edited.length) {
+      pill.className = 'pf ed';
+      pill.title = 'Von Hand geändert. Aus den Daten: ' + pre.map(n => P.s[n].d).join(' · ');
+      pill.innerHTML = 'geändert<button type="button" data-restore="' + pre.join(' ') + '" title="Wert aus den Daten wiederherstellen" aria-label="Wert aus den Daten wiederherstellen">↺</button>';
+    } else {
+      pill.className = pre.some(n => P.s[n].k === 'sug') ? 'pf sug' : 'pf';
+      pill.title = pre.map(n => P.s[n].d).join(' · ');
+      pill.textContent = P.s[pre[0]].t;
+    }
+  });
+  NAMES.forEach(n => {
+    const el = n === 'tags' ? $('#tags') : GROUP[n] || n === 'od' ? null : $('#' + n);
+    if (!el) return;
+    const on = !!P.s[n] && same(v[n], P.v[n]);
+    el.classList.toggle('is-pf', on && P.s[n].k !== 'sug');
+    el.classList.toggle('is-sug', on && P.s[n].k === 'sug');
+  });
+}
+
+// ---------------------------------------------------------------- Weitere Werke (Einträge)
+function renderTags() {
+  document.querySelectorAll('.tag').forEach(n => n.remove());
+  const box = $('#tags'), inp = $('#tagin');
+  tags.forEach((t, i) => {
+    const d = document.createElement('span'); d.className = 'tag'; d.textContent = t;
+    const b = document.createElement('button'); b.type = 'button'; b.textContent = '×'; b.setAttribute('aria-label', t + ' entfernen');
+    b.onclick = () => { tags.splice(i, 1); renderTags(); changed(); };
+    d.appendChild(b); box.insertBefore(d, inp);
+  });
+}
+function addTag() {
+  const t = $('#tagin').value.replace(/,/g, '').trim();
+  $('#tagin').value = '';
+  if (t && !tags.includes(t)) { tags.push(t); renderTags(); changed(); } else render();
+}
+$('#tagin').addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ',') { e.preventDefault(); addTag(); } });
+$('#tagin').addEventListener('blur', addTag);
+
+// ---------------------------------------------------------------- Was die Daten wissen
+const SRC_DE = { register: 'Etikettenverzeichnis', photo: 'Detailfoto', 'data sheet': 'Provenienzdatenblatt', hit: 'Bildsuche (wiedergefunden)' };
+const TYPE_DE = { label: 'Etikett', stamp: 'Stempel', inscription: 'Beschriftung', seal: 'Siegel', other: 'andere Marke' };
+const COLOUR = { register: '3d9bff', photo: 'ff3b30', 'data sheet': 'bf5af2', hit: '1a7f4b' };
+const typeDe = t => (t || '').split(', ').map(x => TYPE_DE[x] || x).join(', ');
+const region = (iiif, b, s) => `${iiif}/${b.join(',')}/${b[2] > s || b[3] > s ? `!${s},${s}` : 'max'}/0/default.jpg`;
+const full = (iiif, s) => `${iiif}/full/!${s},${s}/0/default.jpg`;
+const formUrl = k => 'form.html?label=' + encodeURIComponent(k);
+const points = n => `${n} übereinstimmende Bildpunkte`;
+const invOf = w => (WORK[w] || {}).inv || '?';
+
+function labelTitle(l) {
+  if (l.src === 'hit') return `gleiche Etikette wie auf Inv. ${invOf(LAB_ID[l.hit.q].w)}`;
+  if (l.src === 'photo' && (!l.t || l.t === l.sub)) return l.sub === 'Mark photo' ? 'Marke (Detailfoto)' : 'Etikett (Detailfoto)';
+  if (l.src === 'data sheet' && !l.q) return typeDe(l.type) + (l.pos ? ', ' + l.pos : '');
+  return l.t;
+}
+function howShort(l) {
+  if (l.src === 'register') return l.st === 'retrieval only' ? 'nur ungefähr: ähnlichster Ausschnitt zum Bild im Etikettenverzeichnis'
+    : `Bildabgleich mit dem Bild im Etikettenverzeichnis, ${points(l.n)}`;
+  if (l.src === 'photo') return `Bildabgleich mit dem Detailfoto, ${points(l.n)}`;
+  if (l.src === 'hit') return `Bildsuche und Bildabgleich, ${points(l.n)}`;
+  return { 'text found (OCR)': 'Text aus dem Datenblatt gelesen (Texterkennung)',
+    'text found elsewhere (OCR)': 'Text aus dem Datenblatt gelesen (Texterkennung), aber nicht an der genannten Stelle',
+    'template, same issuer': `Vorlage desselben Ausstellers (Inv. ${l.tpl}), ${points(l.n)}`,
+    'template, similar label': `ähnliches Etikett als Vorlage (Inv. ${l.tpl}), ${points(l.n)}`,
+    'vision-language model': 'Vorschlag eines Bild-Sprach-Modells (Qwen3-VL), ungeprüft',
+    'vision-language model, confirmed': 'Vorschlag eines Bild-Sprach-Modells (Qwen3-VL), vom Team bestätigt' }[l.how] || l.how;
+}
+function howSentence(l) {  // Kommentar (Spalte L): wie die Box gefunden wurde
+  const check = l.ok ? '' : ', unsicher, bitte prüfen';
+  if (l.src === 'register') return l.st === 'retrieval only'
+    ? 'Box nur ungefähr: ähnlichster Ausschnitt des Rückseitenfotos zum Bild im Etikettenverzeichnis, bitte prüfen.'
+    : `Box: Bild aus dem Etikettenverzeichnis auf dem Rückseitenfoto gefunden (Bildabgleich, ${points(l.n)})${check}.`;
+  if (l.src === 'photo') return `Box: Detailfoto der Etikette auf dem Rückseitenfoto gefunden (Bildabgleich, ${points(l.n)})${check}.`;
+  if (l.src === 'hit') return `Box: dieselbe Etikette wie auf Inv. ${invOf(LAB_ID[l.hit.q].w)} auf diesem Rückseitenfoto wiedergefunden (Bildsuche, ${points(l.n)}); ein Hinweis, kein Beweis.`;
+  return { 'text found (OCR)': 'Box: Text aus dem Provenienzdatenblatt auf dem Rückseitenfoto gelesen (Texterkennung).',
+    'text found elsewhere (OCR)': 'Box: Text aus dem Provenienzdatenblatt auf dem Rückseitenfoto gelesen (Texterkennung), aber nicht an der im Datenblatt genannten Stelle, bitte prüfen.',
+    'template, same issuer': `Box: über ein Etikett desselben Ausstellers gefunden (Vorlage auf Inv. ${l.tpl}, Bildabgleich, ${points(l.n)}).`,
+    'template, similar label': `Box: über ein ähnliches Etikett gefunden (Vorlage auf Inv. ${l.tpl}, ${points(l.n)}), bitte prüfen.`,
+    'vision-language model': 'Box: Vorschlag eines Bild-Sprach-Modells (Qwen3-VL) nach der Beschreibung im Datenblatt, ungeprüft.',
+    'vision-language model, confirmed': 'Box: Vorschlag eines Bild-Sprach-Modells (Qwen3-VL) nach der Beschreibung im Datenblatt, vom Team bestätigt.' }[l.how] || '';
+}
+function evText(ev) {
+  const out = [];
+  if (ev.exhibition) out.push('gemeinsame Ausstellung: ' + ev.exhibition.split(' | ').join('; '));
+  if (ev.seller) out.push('gleicher Verkäufer an SKKG: ' + ev.seller);
+  if (ev.provenance) out.push('Provenienz: ' + (ev.provenance === 'issuer named in the provenance' ? 'Aussteller in der Provenienz genannt' : ev.provenance));
+  return out.join(' · ') || 'noch kein Beleg in den Akten';
+}
+function viewerUrl(l, drawn) {  // mit einer neu gezogenen Box: diese grün, die Box aus den Daten gestrichelt
+  const w = WORK[l.w], p = new URLSearchParams({ iiif: l.iiif, xywh: (drawn || l.box).join(','), title: `Inv. ${w.inv} · ${w.title}`,
+    note: `${SRC_DE[l.src]}: ${labelTitle(l)}` + (drawn ? ' · neu gezogene Box (gestrichelt: Box aus den Daten)' : ''),
+    colour: drawn ? '30d158' : COLOUR[l.src] || 'ff3b30', zoom: '1', label: l.key });
+  if (drawn) p.set('area', l.box.join(','));
+  else if (l.how === 'vision-language model' || l.src === 'hit') p.set('style', 'dashed');
+  if (w.url) p.set('page', w.url);
+  return 'viewer.html?' + p;
+}
+const siteUrl = l => l.src === 'hit' ? './#work=' + encodeURIComponent(l.w) : './#label=' + encodeURIComponent(l.key);
+
+// ---------------------------------------------------------------- Vorausfüllen
+const gridOf = (v, h) => v === 'm' && h === 'm' ? 'm.' : v === 'm' ? `m. ${h}.` : `${v}. ${h}.`;
+const NOT_POS = /(?<![a-zäöüß])o\.\s?[ad]\./gi;  // «o. A.», «o. D.»
+function positionsIn(text) {  // «o. m., r. m. und l. m. Zierrahmen» -> ['o. m.', 'm. r.', 'm. l.']
+  const out = [];
+  for (const m of (text || '').toLowerCase().replace(NOT_POS, ' ').matchAll(/(?<![a-zäöüß])([oumlr])\.\s*(?:([oumlr])\.)?/g)) {
+    const letters = [m[1], m[2]].filter(Boolean);
+    const g = gridOf(letters.find(c => c === 'o' || c === 'u') || 'm', letters.find(c => c === 'l' || c === 'r') || 'm');
+    if (!out.includes(g)) out.push(g);
+  }
+  return out;
+}
+function lageGrid(s) {  // «oben links», «Mitte» (Register)
+  s = (s || '').toLowerCase();
+  if (!/oben|unten|links|rechts|mitte/.test(s)) return '';
+  return gridOf(/oben/.test(s) ? 'o' : /unten/.test(s) ? 'u' : 'm', /links/.test(s) ? 'l' : /rechts/.test(s) ? 'r' : 'm');
+}
+function boxGrid(l) {  // Drittel des Rückseitenfotos, in dem die Mitte der Box liegt
+  const d = DIM[l.iiif];
+  if (!d) return '';
+  const cx = (l.box[0] + l.box[2] / 2) / d[0], cy = (l.box[1] + l.box[3] / 2) / d[1];
+  return gridOf(cy < 1 / 3 ? 'o' : cy > 2 / 3 ? 'u' : 'm', cx < 1 / 3 ? 'l' : cx > 2 / 3 ? 'r' : 'm');
+}
+const TRAEGER = () => [...$('#traeger').options].map(o => o.value).filter(Boolean);
+function traegerOf(text) {  // der Träger aus «o. m., r. m. und l. m. Zierrahmen»; ein Wort der Daten, das die Liste nicht hat, wird übernommen
+  const s = (text || '').replace(NOT_POS, ' ')
+    .replace(/(?:(?<![a-zäöüß])[oumlr]\.\s*(?:[oumlr]\.)?[\s,]*(?:(?:und|sowie)\s+)?)+/gi, ' ')
+    .replace(/\s+/g, ' ').trim().replace(/^(?:(?:und|sowie)\s+)?(?:(?:auf|am|an|im|in)\s+)?(?:(?:dem|der|den|des)\s+)?/i, '')
+    .replace(/^[\s,;:]+|[\s,;:.]+$/g, '');
+  if (!s) return '';
+  if (/^holztafel\/-platte$/i.test(s)) return 'Holztafel';
+  return TRAEGER().find(o => o.toLowerCase() === s.toLowerCase()) || s;
+}
+function quotesIn(text) {
+  const out = [];
+  for (const m of (text || '').matchAll(/[«“„"]([^«»“”„"]+)[»”“"]/g)) { const q = m[1].trim(); if (q && !out.includes(q)) out.push(q); }
+  return out;
+}
+function formOf(desc, kind, cat) {  // Form aus der Beschreibung (Vorschlag)
+  const s = (desc || '').toLowerCase(), first = s.split(/[\s,:;]+/).slice(0, 3).join(' '), c = (cat || '').toLowerCase();
+  if (/siegel/.test(first) || kind === 'seal') return '';
+  if (/malerband|klebstreifen/.test(s) || /klebstreifen/.test(c)) return 'Klebstreifen (Malerband)';
+  if (kind === 'stamp' || (/stempel|gestempelt/.test(first) && !/etikett/.test(first))) return 'Stempel';
+  if (kind === 'inscription' || /beschriftung/.test(c) || /^(beschriftung|signatur|handschriftlich|weisses schreibmittel)/.test(s)) return 'Beschriftung direkt auf dem Objekt';
+  if (kind === 'other') return '';
+  const opts = [...$('#form').options].map(o => o.value).filter(Boolean).sort((a, b) => b.length - a.length);
+  const start = opts.find(o => s.startsWith(o.toLowerCase()));
+  if (start) return start;
+  if (/angeheftet/.test(s)) return 'Zettel, angeheftet';
+  if (/gezackt|gezahnt/.test(s)) return 'Etikett mit gezacktem Rand';
+  if (/abgerundet/.test(s)) return 'Klebeetikett, viereckig mit abgerundeten Ecken';
+  if (/langrechteckig/.test(s)) return 'Klebeetikett, langrechteckig';
+  if (/(?<![a-zäöü])rund(e|es|er|em)?(?![a-zäöü])/.test(s) || /(?<![a-zäöü])runde/.test(c)) return 'Klebeetikett, rund';
+  if (/viereckig|rechteckig/.test(s) || /viereckig/.test(c)) return 'Klebeetikett, viereckig';
+  return '';
+}
+function colourOf(text) {  // Farbe des Etiketts aus der Beschreibung (Vorschlag)
+  const s = (text || '').toLowerCase(), weiss = /weiss|weiß/.test(s);
+  if (/blau\w*\s+(umrandung|rand|bordüre)|blau umrandet|weiss-blau/.test(s) && weiss) return 'weiss mit blauer Umrandung';
+  if (/rot\w*\s+(umrandung|rand|bordüre)|rot umrandet/.test(s) && weiss) return 'weiss mit roter Umrandung';
+  if (/blau-weiss|rot-weiss|weiss-rot|schwarz-gold/.test(s)) return '';
+  if (/beige/.test(s)) return 'beige';
+  if (/orange|(?<![a-zäöü])rote[sn]?\s+(klebe)?etikett|(^|,\s*)rot(\s*,|\s*$)|^rote,/.test(s)) return 'rot / orange';
+  if (/(?<![a-zäöü])blaue[sn]?\s+(klebe)?etikett|(^|,\s*)blau(\s*,|\s*$)/.test(s)) return 'blau';
+  return weiss ? 'weiss' : '';
+}
+function techOf(text, kind) {  // Aufschrift ist … (Vorschlag)
+  const s = (text || '').toLowerCase(), out = [];
+  if (/gedruckt|bedruckt|druckschrift|aufdruck/.test(s)) out.push('gedruckt');
+  if (/gestempelt|stempel/.test(s) || kind === 'stamp') out.push('gestempelt');
+  if (/handschrift|bleistift|kugelschreiber|filzstift|tinte|kreide|schreibmittel/.test(s)) out.push('handschriftlich');
+  if (/maschinenschrift|maschinengeschrieben|maschinenbeschrieben|schreibmaschine/.test(s)) out.push('maschinengeschrieben');
+  return out;
+}
+const MONTH = '(?:Januar|Jänner|Februar|März|Maerz|April|Mai|Juni|Juli|August|September|Oktober|November|Dezember)';
+const QUAL = '(?:(?<![a-zäöüß])(?:wohl|vermutlich|verm\\.|frühestens|spätestens|zwischen|um|vor|nach|ca\\.|o\\.\\s?D\\.)\\s*)*';
+const DATE = new RegExp(QUAL + '(?:(?<!\\d)\\d{1,2}\\.?\\s*(?:[–-]\\s*\\d{1,2}\\.?\\s*)?' + MONTH + '|(?<![a-zäöü])' + MONTH +
+  '(?![a-zäöü])|(?<!\\d)\\d{1,2}\\.\\d{1,2}\\.|(?<!\\d)(?:1[5-9]|20)\\d\\d(?!\\d))', 'i');
+const YEARS = /(?<!\d)(?:1[5-9]|20)\d\d(?!\d)/g;
+function parseEvent(text, issuerType) {  // «Auktion 69 10.-19. November 1988 (Lot 6613)» -> Typ, Bezeichnung, Datum, Lot
+  const out = { evtyp: '', evbez: '', datum: '', od: false, lot: '' };
+  let s = (text || '').replace(/\s+/g, ' ').trim();
+  const lot = s.match(/[,;]?\s*\(?(?<![a-zäöü])Lot(?:nummer|-Nr\.?)?\s*:?\s*(\d+\s?[A-Za-z]?)(?![a-zäöü\d])\)?\.?/i);
+  if (lot) { out.lot = lot[1].replace(/\s+/g, ''); s = (s.slice(0, lot.index) + ' ' + s.slice(lot.index + lot[0].length)).trim(); }
+  if (/^o\.\s?D\.?$/i.test(s)) { out.od = true; s = ''; }
+  const m = s.match(DATE);
+  if (m) {
+    let end = m.index + m[0].length;
+    for (const y of s.matchAll(YEARS)) if (y.index >= m.index) end = Math.max(end, y.index + y[0].length);
+    out.datum = s.slice(m.index, end).trim();
+    out.evbez = (s.slice(0, m.index) + ' ' + s.slice(end)).replace(/\s+/g, ' ').replace(/^[\s,.;:–-]+|[\s,;:–-]+$/g, '').replace(/\s+(vom|am|von|bis)$/i, '');
+    if (!/[a-zäöü]/i.test(out.evbez)) { out.datum = s.replace(/[\s,;:]+$/, ''); out.evbez = ''; }
+  } else out.evbez = s.replace(/[\s,;:]+$/, '');
+  const t = (text || '').toLowerCase();
+  out.evtyp = /auktion|vente|versteigerung|(?<![a-z])lot(?![a-z])/.test(t) ? 'Auktion'
+    : /ausstellung|exposition|biennale|exhibition/.test(t) ? 'Ausstellung'
+    : /nachlass/.test(t) ? 'Nachlass' : /leihgabe|leihgeber/.test(t) ? 'Leihgabe' : /verkauf|ankauf/.test(t) ? 'Ankauf / Verkauf'
+    : { 'Auktion': 'Auktion', 'Museum/Ausstellung': 'Ausstellung', 'Nachlass': 'Nachlass' }[issuerType] || '';
+  if (out.evbez.toLowerCase() === out.evtyp.toLowerCase()) out.evbez = '';
+  return out;
+}
+const issuerOf = s => (s || '').replace(/^(?:Etikett(?:e|en)?|Ausstellungsetikett)\s+(?:(?:der|des)\s+)?/i, '').replace(/[\s,;:]+$/, '');  // «Etiketten der Galerie X,» -> «Galerie X»
+function exhibitionParts(s) {  // «Titel (Ort, Stadt, 2014)»
+  const m = s.match(/^(.*)\s\(([^()]*)\)\s*$/);
+  if (!m) return { title: s, venue: '', year: '' };
+  const parts = m[2].split(', '), last = parts[parts.length - 1];
+  const year = /^\d{4}$/.test(last) ? parts.pop() : (last === '?' ? (parts.pop(), '') : '');
+  return { title: m[1].trim(), venue: parts.join(', ').replace(/^\?$/, ''), year };
+}
+function top(list, text, name = x => x) {  // häufigster Wert; zuerst einer, dessen Name auf dem Etikett steht
+  const c = new Map(); list.forEach(x => c.set(x, (c.get(x) || 0) + 1));
+  const named = x => ((name(x) || '').toLowerCase().match(/[a-zäöüéèàç]{5,}/g) || []).some(w => (text || '').includes(w)) ? 1 : 0;
+  let best = ['', 0, -1];
+  c.forEach((n, x) => { const m = named(x); if (m > best[2] || (m === best[2] && n > best[1])) best = [x, n, m]; });
+  return best;
+}
+function hitsOf(l) {  // vorwärts: diese Etikette auf anderen Werken; rückwärts: diese Box ist ein Treffer einer anderen Etikette
+  return { fwd: (l.hits || []).map(i => D.hits[i]), rev: D.hits.filter(h => h.key === l.key) };
+}
+
+function prefill(l) {
+  const v = {}, s = {}, notes = { F: [], G: [], HJ: [], KL: [] };
+  const put = (n, val, k, t, d) => {
+    if (!filled(val) || n in v) return;
+    if (FIELDS[n] === 'radio' && !$$(GROUP[n] + ' input').some(i => i.value === val)) return;  // nur Werte, die es zur Auswahl gibt
+    v[n] = val; s[n] = { k, t, d };
+  };
+  const w = WORK[l.w], { fwd, rev } = hitsOf(l), q = l.src === 'hit' ? LAB_ID[l.hit.q] : null;
+  const qinv = q ? invOf(q.w) : '';
+
+  // F: Transkription; Form, Farbe und Aufschrift aus der Beschreibung (Vorschläge)
+  if (l.src === 'data sheet') {
+    if (l.q) put('trans', l.q.split(' | ').join(' / '), 'data', 'Datenblatt', `Datenblatt: «${l.q.split(' | ').join('», «')}»`);
+    notes.F.push(`Datenblatt (${typeDe(l.type)}): ${l.d}`);
+  } else if (l.src === 'register') {
+    const qs = quotesIn(l.d);
+    if (qs.length) put('trans', qs.join(' / '), 'data', 'Register', `Register, Spalte F: ${l.d}`);
+    notes.F.push(`Register, Spalte F: ${l.d}` + (l.type ? ` (Kategorie: ${l.type})` : ''));
+  } else if (l.src === 'photo' && l.t && l.t !== l.sub) {
+    put('trans', l.t.split(' · ').join(' / '), 'sug', 'Texterkennung', `Von der Texterkennung (OCR) gelesen, nur die Zeilen mit den meisten Buchstaben: ${l.t}`);
+    notes.F.push(`Texterkennung (OCR) auf dem Rückseitenfoto, unvollständig: ${l.t}. Das Detailfoto oben ist meist besser lesbar.`);
+  } else if (q) notes.F.push(`Gleiche Etikette auf Inv. ${qinv}: ${labelTitle(q)}${q.d ? ' – ' + q.d : ''}`);
+  const base = q || l, desc = base.d || '', cat = base.src === 'register' ? base.type : '';
+  const kind = base.src === 'data sheet' ? (base.type || '').split(', ')[0] : '';
+  if (desc || cat) {
+    const why = (q ? `Abgeleitet aus der Beschreibung der gleichen Etikette auf Inv. ${qinv}: ` : 'Abgeleitet aus der Beschreibung: ') + (desc || cat);
+    const form = formOf(desc, kind, cat);
+    put('form', form, 'sug', 'Vorschlag', why);
+    if (!/^(Stempel|Beschriftung)/.test(form) && (!kind || kind === 'label')) put('farbe', colourOf(desc) || colourOf(cat), 'sug', 'Vorschlag', why);
+    put('tech', techOf(desc, kind), 'sug', 'Vorschlag', why);
+  }
+
+  // G: Lage, Träger, Seite
+  const fromBox = boxGrid(l), look = ' Lage so angegeben, wie man auf die Rückseite schaut (wie in Register und Datenblättern).';
+  if (l.src === 'data sheet') {
+    const named = positionsIn(l.pos), g = named.includes(fromBox) ? fromBox : named[0];
+    if (g) put('pos', g, 'data', 'Datenblatt', `Datenblatt: ${l.pos}` + (named.length > 1 ? ` (mehrere Stellen; gewählt: ${g}${g === fromBox ? ', dort liegt die Box' : ''})` : ''));
+    put('traeger', traegerOf(l.pos), 'data', 'Datenblatt', `Datenblatt: ${l.pos}`);
+    notes.G.push(`Datenblatt: ${l.pos}.` + (named.length > 1 ? ' Mehrere Stellen genannt; gewählt ist die, wo die Box liegt, sonst die erste.' : ''));
+  } else if (l.src === 'register') {
+    const g = lageGrid(l.lage) || positionsIn(l.pos)[0];
+    if (g) put('pos', g, 'data', 'Register', `Register, Spalte G: ${l.pos}` + (l.lage ? ` (Lage: ${l.lage})` : ''));
+    put('traeger', traegerOf(l.tr), 'data', 'Register', `Register, Spalte G: ${l.pos}` + (l.tr ? ` (Träger: ${l.tr})` : ''));
+    notes.G.push(`Register, Spalte G: ${l.pos}` + (l.lage ? ` · Lage: ${l.lage}` : '') + (l.tr ? ` · Träger: ${l.tr}` : '') + '.');
+  }
+  if (!v.pos && fromBox) {
+    put('pos', fromBox, 'sug', 'Lage der Box', 'Aus der Lage der Box auf dem Rückseitenfoto berechnet (Drittel des Bildes)');
+    notes.G.push('Lage aus der Box auf dem Rückseitenfoto berechnet (Drittel des Bildes)' + (v.traeger ? '.' : '; den Träger bitte ergänzen.'));
+  }
+  if (v.pos) notes.G.push(look.trim());
+  put('seite', 'verso', 'data', 'Rückseite', 'Die Box liegt auf einem Foto der Rückseite');
+
+  // H bis J: Person / Körperschaft, Ereignis, Evidenz
+  if (l.src === 'register') {
+    put('person', issuerOf(l.iss), 'data', 'Register', `Register, Spalte H: ${l.iss}`);
+    const e = parseEvent(l.sub, l.at), d = `Register, Spalte I: ${l.sub}` + (l.at ? ` (Art des Ausstellers: ${l.at})` : '');
+    ['evtyp', 'evbez', 'datum', 'od', 'lot'].forEach(n => put(n, e[n], 'data', 'Register', d));
+    put('evid', l.evid, 'data', 'Register', `Register, Spalte J: ${l.evid}`);
+    notes.HJ.push(`Register, Spalten H bis J: ${[l.iss, l.sub, l.evid].filter(Boolean).join(' · ')}`);
+  }
+  if (q && q.src === 'register' && q.iss) {
+    put('person', issuerOf(q.iss), 'sug', 'Vorschlag', `Aussteller der gleichen Etikette auf Inv. ${qinv} laut Register: ${q.iss}`);
+    notes.HJ.push(`Gleiche Etikette auf Inv. ${qinv}, laut Register: ${[q.iss, q.sub].filter(Boolean).join(' · ')}`);
+  }
+  // wiedergefundene Etiketten: die gemeinsame Ausstellung oder der gleiche Verkäufer an SKKG als Vorschlag. Vorrang hat,
+  // was auf der Etikette steht (Ort der Ausstellung, Name des Verkäufers); steht keines darauf, die Ausstellung
+  const pairs = [...fwd, ...rev];  // Paare von Werken mit der gleichen Etikette und ihre Belege in den Akten
+  const said = [l.t, l.q, l.d, q && q.t, q && q.q, q && q.d].filter(Boolean).join(' ').toLowerCase();  // was auf der Etikette steht
+  const [seller, ns, sellerSaid] = top(pairs.map(h => h.ev.seller).filter(Boolean), said);
+  const [ex, ne, exSaid] = top(pairs.flatMap(h => (h.ev.exhibition || '').split(' | ')).filter(Boolean), said, x => exhibitionParts(x).venue);
+  const useSeller = !!seller && ((sellerSaid > 0 && exSaid <= 0) || !ex);
+  const skipped = [];
+  if (ex && !useSeller && !v.evtyp && !v.evbez) {
+    const e = exhibitionParts(ex), d = `Gemeinsame Ausstellung mit ${ne} Werk(en) mit der gleichen Etikette: ${ex}`;
+    put('evtyp', 'Ausstellung', 'sug', 'Vorschlag', d);
+    put('evbez', [e.title, e.venue].filter(Boolean).join(', '), 'sug', 'Vorschlag', d);
+    put('datum', e.year, 'sug', 'Vorschlag', d);
+    if (exSaid > 0 && e.venue) put('person', e.venue, 'sug', 'Vorschlag', `Ort der Ausstellung; er steht auch auf der Etikette: ${e.venue}`);
+    notes.HJ.push(`Vorschlag aus der Bildsuche: ${ne === 1 ? 'ein Werk mit der gleichen Etikette war' : ne + ' Werke mit der gleichen Etikette waren'} mit diesem Werk an der Ausstellung «${ex}»` + (exSaid > 0 ? '; ihr Ort steht auch auf der Etikette.' : '.'));
+  } else if (ex) skipped.push(`gemeinsame Ausstellung «${ex}»`);
+  if (useSeller && !v.person) {
+    put('person', seller.replace(/\s*\([^()]*\d{4}[^()]*\)$/, ''), 'sug', 'Vorschlag', `Gleicher Verkäufer an SKKG wie bei ${ns} Werk(en) mit der gleichen Etikette: ${seller}`);
+    notes.HJ.push(`Vorschlag aus der Bildsuche: SKKG kaufte ${ns === 1 ? 'das Werk' : ns + ' Werke'} mit der gleichen Etikette beim gleichen Verkäufer (${seller}).`);
+  } else if (seller) skipped.push(`gleicher Verkäufer an SKKG (${seller})`);
+  if (skipped.length) notes.HJ.push(`Ebenfalls in den Akten, aber nicht vorgeschlagen: ${skipped.join('; ')}.`);
+
+  // K: weitere Werke mit dieser Etikette; L: wie die Box gefunden wurde
+  const others = new Map();
+  (l.kw || []).forEach(x => others.set(x, 'Register'));
+  fwd.forEach(h => others.set(invOf(h.w), 'Bildsuche'));
+  rev.forEach(h => { const ql = LAB_ID[h.q]; others.set(invOf(ql.w), 'Bildsuche'); (ql.hits || []).forEach(i => others.set(invOf(D.hits[i].w), 'Bildsuche')); });
+  others.delete(w.inv);
+  if (others.size) {
+    const list = [...others.keys()].sort((a, b) => a.localeCompare(b, 'de', { numeric: true }));
+    const reg = [...others.values()].every(x => x === 'Register');
+    put('tags', list, reg ? 'data' : 'sug', reg ? 'Register' : 'Bildsuche', reg ? `Register, Spalte K: ${l.kw.join(', ')}`
+      : 'Die Bildsuche fand dieselbe Etikette auf diesen Werken (Hinweise, keine Beweise)' + (l.kw ? `; Register, Spalte K: ${l.kw.join(', ')}` : ''));
+    notes.KL.push((reg ? 'Register, Spalte K' : 'Bildsuche (wiedergefunden)') + `: Inv. ${list.join(', ')}`);
+  }
+  const parts = [howSentence(l)];
+  if (l.src === 'hit') parts.push(Object.keys(l.hit.ev).length ? `Beleg in den Akten: ${evText(l.hit.ev)}.` : 'Noch kein Beleg in den Akten.');
+  else if (rev.length) parts.push(`Dieselbe Etikette wie auf Inv. ${[...new Set(rev.map(h => invOf(LAB_ID[h.q].w)))].join(', ')} (Bildsuche).`);
+  put('komm', parts.join(' '), 'data', 'Box', 'Wie die Box gefunden wurde (Provenance Pursuit, GLAMhack 2026)');
+  if (l.lc) notes.KL.push('Im Register steht in Spalte L schon ein Kommentar; er wird hier nicht gezeigt, weil er Personennamen enthalten kann. Beim Einfügen den bestehenden Kommentar behalten und ergänzen.');
+  return { v, s, notes };
+}
+
+// ---------------------------------------------------------------- Anzeige
+function find(k) {
+  if (!k) return null;
+  if (LAB_KEY[k]) return LAB_KEY[k];
+  const h = k.startsWith('box:') && D.hits.find(x => x.key === k);
+  return h ? { key: k, src: 'hit', w: h.w, iiif: h.iiif, box: h.box, n: h.n, ok: false, how: 'found again', hit: h } : null;
+}
+function header() {
+  if (!key) {
+    $('#wt').textContent = 'Kein Etikett gewählt';
+    $('#ws').textContent = 'Auf der Ergebnis-Website ein Etikett öffnen oder eine Box anklicken: dann ist das Formular vorausgefüllt und die Angaben werden gespeichert.';
+    return;
+  }
+  if (!L) {
+    const m = (entries[key] || {}).m;
+    $('#wt').textContent = m ? `Inv. ${m.inv} · ${m.t || ''}` : 'Etikett nicht gefunden';
+    $('#ws').textContent = `Das Etikett «${key}» ist in den aktuellen Daten nicht enthalten.` + (m ? ' Die gespeicherten Angaben werden gezeigt.' : '');
+    return;
+  }
+  const w = WORK[L.w], view = viewerUrl(L, BX.drawn), b = curBox();
+  document.title = `Etikett erfassen · Inv. ${w.inv} – Provenance Pursuit`;
+  $('#wt').textContent = `Inv. ${w.inv} · ${w.title}`;
+  $('#ws').textContent = `${w.type} · Werk (Spalten A–E), nur lesbar · ${SRC_DE[L.src]}: ${labelTitle(L)}`;
+  const ph = $('#ph');
+  Object.assign(ph, { href: view, target: '_blank', rel: 'noopener', title: 'Ganze Rückseite mit der Box, zoombar' });
+  ph.className = 'ph img';
+  ph.innerHTML = `<img alt="Ausschnitt aus dem Rückseitenfoto: ${esc(labelTitle(L))}" src="${esc(region(L.iiif, b, 900))}">`;
+  $('#wl').innerHTML = [`<a href="${esc(view)}" target="_blank" rel="noopener">Ganze Rückseite (zoombar)</a>`,
+    `<a href="${esc(`${L.iiif}/${b.join(',')}/max/0/default.jpg`)}" target="_blank" rel="noopener">Etikett in voller Auflösung (IIIF)</a>`,
+    w.url && `<a href="${esc(w.url)}" target="_blank" rel="noopener">SKKG Sammlung</a>`,
+    `<a href="${esc(siteUrl(L))}">Auf der Website</a>`].filter(Boolean).join(' · ');
+}
+function known() {
+  if (!L) return;
+  $('#known').hidden = false;
+  const [W, H] = DIM[L.iiif] || [L.box[0] + L.box[2], L.box[1] + L.box[3]];
+  const svg = $('#ksvg');
+  svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+  svg.innerHTML = `<image href="${esc(full(L.iiif, 700))}" width="${W}" height="${H}"/><rect class="kbox" style="stroke:#${COLOUR[L.src]}" x="${L.box[0]}" y="${L.box[1]}" width="${Math.max(L.box[2], W / 150)}" height="${Math.max(L.box[3], H / 150)}"${L.src === 'hit' || L.how === 'vision-language model' ? ' stroke-dasharray="8 5"' : ''}/>`;
+  $('#kback').href = viewerUrl(L, BX.drawn);
+  if (L.photo) {
+    $('#kpic').hidden = false;
+    $('#kpic').innerHTML = `<a href="${esc(full(L.photo, 2400))}" target="_blank" rel="noopener" title="Detailfoto der SKKG, gross"><img loading="lazy" alt="Detailfoto der Etikette (SKKG)" src="${esc(full(L.photo, 800))}"></a><div class="hint">Detailfoto der SKKG; anklicken für die grosse Ansicht.</div>`;
+  }
+  const rows = [], { fwd, rev } = hitsOf(L);
+  if (L.src === 'register') rows.push(['Quelle', `Etikettenverzeichnis, Zeile ${esc(L.row)}` + (L.type ? ` · ${esc(L.type)}` : '')]);
+  else if (L.src === 'photo') rows.push(['Quelle', 'Detailfoto der Etikette (SKKG), auf dem Rückseitenfoto wiedergefunden']);
+  else if (L.src === 'data sheet') rows.push(['Quelle', `Provenienzdatenblatt · ${esc(typeDe(L.type))} · ${esc(L.pos)}`]);
+  else { const q = LAB_ID[L.hit.q]; rows.push(['Quelle', `Bildsuche: dieselbe Etikette wie auf <a href="${esc(formUrl(q.key))}">Inv. ${esc(invOf(q.w))} · ${esc(labelTitle(q))}</a>`], ['Beleg', esc(evText(L.hit.ev))]); }
+  rows.push(['Box', esc(howShort(L)) + (L.ok ? '' : ' <span class="check">prüfen</span>')]);
+  const item = (href, text, extra) => `<li><a href="${esc(href)}">${esc(text)}</a> <span>(${esc(extra)})</span></li>`;
+  const list = (items, max = 12) => `<ul>${items.slice(0, max).join('')}${items.length > max ? `<li><span>… und ${items.length - max} weitere</span></li>` : ''}</ul>`;
+  if (fwd.length) rows.push(['Wiedergefunden auf', list(fwd.map(h => item(formUrl(h.key), `Inv. ${invOf(h.w)} · ${WORK[h.w].title}`, `${points(h.n)}; ${evText(h.ev)}`)))]);
+  if (rev.length) rows.push(['Gleiche Etikette wie', list(rev.map(h => { const q = LAB_ID[h.q]; return item(formUrl(q.key), `Inv. ${invOf(q.w)} · ${labelTitle(q)}`, `${points(h.n)}; ${evText(h.ev)}`); }))]);
+  $('#kdl').innerHTML = rows.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join('');
+}
+// ---------------------------------------------------------------- Box bestätigen / neu ziehen
+function renderBox() {
+  $('#bx').hidden = !L;
+  if (!L) return;
+  const b = curBox();
+  $('#bxok').setAttribute('aria-pressed', String(!!BX.ok));
+  $('#bxok').textContent = BX.ok ? '✓ Box bestätigt' : '✓ Box bestätigen';
+  $('#bxok').title = BX.ok ? 'Bestätigung zurücknehmen' : 'Die Box liegt richtig auf dem Etikett';
+  $('#bxorig').hidden = !BX.drawn;
+  $('#bxstate').textContent = BX.drawn ? `Neu gezogene Box${BX.ok ? ', bestätigt' : ''}: x ${b[0]}, y ${b[1]}, w ${b[2]}, h ${b[3]} (Pixel des Originalbilds).`
+    : BX.ok ? 'Die Box aus den Daten ist bestätigt.' : 'Box aus den Daten, noch nicht bestätigt: liegt sie richtig auf dem Etikett?';
+  const svg = $('#ksvg');
+  let r = svg.querySelector('.kdrawn');
+  if (BX.drawn) {
+    if (!r) { r = document.createElementNS('http://www.w3.org/2000/svg', 'rect'); r.setAttribute('class', 'kbox kdrawn'); svg.append(r); }
+    [['x', b[0]], ['y', b[1]], ['width', b[2]], ['height', b[3]]].forEach(([k, v]) => r.setAttribute(k, v));
+  } else if (r) r.remove();
+  $('#kback').href = viewerUrl(L, BX.drawn);
+  header();  // Ausschnitt und Links folgen der aktuellen Box
+}
+function boxChanged(text) {
+  undo = null;
+  renderBox();
+  if (key && D) save();
+  if (text) $('#msg').textContent = text;
+}
+$('#bxok').addEventListener('click', () => { BX = { ...BX, ok: !BX.ok }; boxChanged(BX.ok ? 'Box bestätigt.' : 'Bestätigung zurückgenommen.'); });
+$('#bxorig').addEventListener('click', () => { BX = { ok: false, drawn: null }; boxChanged('Box aus den Daten wiederhergestellt.'); });
+// Zeichnen: die ganze Rückseite als eine IIIF-Ansicht (1000 px), neue Box ziehen, gespeichert in Pixeln des Originalbilds
+const ed = $('#ed'), edimg = $('#edimg'), edwrap = $('#edwrap');
+let drag = null, drawnNew = null, edW = 1, edH = 1;
+const place = (el, b) => { el.style.left = b[0] / edW * 100 + '%'; el.style.top = b[1] / edH * 100 + '%';
+                           el.style.width = b[2] / edW * 100 + '%'; el.style.height = b[3] / edH * 100 + '%'; };
+function openEditor() {
+  if (!L) return;
+  [edW, edH] = DIM[L.iiif] || [L.box[0] + L.box[2], L.box[1] + L.box[3]];
+  drawnNew = BX.drawn;
+  edimg.src = `${L.iiif}/full/!1000,1000/0/default.jpg`;
+  place($('#edold'), L.box);
+  $('#ednew').hidden = !drawnNew;
+  if (drawnNew) place($('#ednew'), drawnNew);
+  $('#edsave').disabled = !drawnNew;
+  $('#edinfo').textContent = '';
+  ed.showModal();
+}
+function pointAt(e) {
+  const r = edimg.getBoundingClientRect();
+  return [Math.min(1, Math.max(0, (e.clientX - r.left) / r.width)) * edW, Math.min(1, Math.max(0, (e.clientY - r.top) / r.height)) * edH];
+}
+edwrap.addEventListener('pointerdown', e => { if (!edimg.naturalWidth) return; e.preventDefault(); drag = pointAt(e); edwrap.setPointerCapture(e.pointerId); });
+edwrap.addEventListener('pointermove', e => {
+  if (!drag) return;
+  const [x1, y1] = pointAt(e), [x0, y0] = drag;
+  drawnNew = [Math.min(x0, x1), Math.min(y0, y1), Math.abs(x1 - x0), Math.abs(y1 - y0)].map(Math.round);
+  $('#ednew').hidden = false;
+  place($('#ednew'), drawnNew);
+});
+edwrap.addEventListener('pointerup', () => {
+  if (!drag) return;
+  drag = null;
+  const ok = drawnNew && drawnNew[2] > edW / 200 && drawnNew[3] > edH / 200;
+  $('#edsave').disabled = !ok;
+  $('#edinfo').textContent = ok ? `x ${drawnNew[0]}, y ${drawnNew[1]}, w ${drawnNew[2]}, h ${drawnNew[3]} (Pixel des Originalbilds)` : 'Eine grössere Box ziehen.';
+});
+$('#edsave').addEventListener('click', () => { ed.close(); BX = { ok: true, drawn: drawnNew }; boxChanged('Neue Box gespeichert und bestätigt.'); });
+$('#edcancel').addEventListener('click', () => ed.close());
+$('#bxdraw').addEventListener('click', openEditor);
+
+function notes() {
+  [['F', '#srcF'], ['G', '#srcG'], ['HJ', '#srcHJ'], ['KL', '#srcKL']].forEach(([k, id]) => {
+    const n = P.notes[k] || [];
+    $(id).hidden = !n.length;
+    $(id).innerHTML = n.length ? 'Aus den Daten: ' + n.map(esc).join('<br>') : '';
+  });
+  $('#legend').hidden = !Object.keys(P.s).length;
+}
+
+// ---------------------------------------------------------------- Speichern
+const when = iso => { const d = new Date(iso); return isNaN(d) ? '' : d.toLocaleString('de-CH', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }); };
+function meta() {
+  if (!L) return (entries[key] || {}).m || {};
+  return { inv: WORK[L.w].inv, w: L.w, t: labelTitle(L), src: SRC_DE[L.src], iiif: L.iiif, box: L.box,
+    region: `${L.iiif}/${L.box.join(',')}/max/0/default.jpg` };
+}
+let timer = 0, touched = false;
+function changed() {
+  render(); undo = null;
+  if (!D) { touched = true; return; }  // vor dem Laden der Daten Getipptes bleibt stehen
+  if (key) { clearTimeout(timer); timer = setTimeout(save, 400); }
+}
+function save() {
+  clearTimeout(timer);
+  if (!key) { savedLine(null); return; }
+  const v = state();
+  entries = loadEntries();
+  entries[key] = { v, t: new Date().toISOString(), r: $('#who').value.trim(), m: meta(), b: { ok: !!BX.ok, drawn: BX.drawn || null },
+    d: NAMES.filter(n => P.s[n] && same(v[n], P.v[n])), e: NAMES.filter(n => P.s[n] ? !same(v[n], P.v[n]) : filled(v[n])) };
+  savedLine(store.set(STORE, entries));
+  renderList();
+}
+function savedLine(st) {
+  const el = $('#saved'), en = entries[key];
+  el.classList.remove('warn');
+  if (st === false) { el.innerHTML = '<span style="color:var(--red)">Dieser Browser speichert nicht (privates Fenster?): vor dem Verlassen der Seite als CSV herunterladen.</span>'; return; }
+  if (!key) { el.textContent = 'Ohne gewähltes Etikett wird nichts gespeichert.'; return; }
+  if (st === true) { el.textContent = `Gespeichert in diesem Browser, ${when(en.t)}.`; return; }
+  if (st === 'loaded' && en) { el.textContent = `Gespeicherte Angaben vom ${when(en.t)} geladen${en.r ? ' (' + en.r + ')' : ''}.`; return; }
+  el.textContent = 'Noch nicht gespeichert; jede Änderung wird gespeichert.';
+}
+function renderList() {
+  entries = loadEntries();
+  const keys = Object.keys(entries).sort((a, b) => (entries[b].t || '').localeCompare(entries[a].t || ''));
+  $('#scount').textContent = keys.length ? `${keys.length} ${keys.length === 1 ? 'Etikett' : 'Etiketten'} in diesem Browser gespeichert (neueste zuerst).` : 'Noch keine Einträge in diesem Browser.';
+  $('#slist').innerHTML = keys.slice(0, 60).map(k => {
+    const en = entries[k], m = en.m || {};
+    return `<li${k === key ? ' class="here"' : ''}><a href="${esc(formUrl(k))}">Inv. ${esc(m.inv || '?')} · ${esc(m.t || k)}</a> <span>${esc(when(en.t))}${en.r ? ' · ' + esc(en.r) : ''}</span></li>`;
+  }).join('') + (keys.length > 60 ? `<li><span>… und ${keys.length - 60} weitere (alle in der CSV)</span></li>` : '');
+  $('#export').disabled = !keys.length;
+}
+
+// ---------------------------------------------------------------- CSV
+const MAP = { form: 'form', farbe: 'farbe', tech: 'aufschrift', trans: 'transkription', pos: 'lage', traeger: 'traeger', seite: 'seite',
+  person: 'person', evtyp: 'ereignis_typ', evbez: 'ereignis_bezeichnung', datum: 'datum', od: 'ohne_datum', lot: 'lot', evid: 'evidenz',
+  tags: 'weitere_werke', komm: 'kommentar' };
+const BACK = Object.fromEntries(Object.entries(MAP).map(([a, b]) => [b, a]));
+const COLS = ['key', 'quelle', 'inv_nr', 'objekt_id', 'etikett', 'iiif_region', 'box_confirmed', 'box_source', 'x', 'y', 'w', 'h',
+  'F_beschreibung', 'G_position', 'H_person_koerperschaft', 'I_ereignis', 'J_evidenz', 'K_weitere_werke', 'L_kommentar',
+  ...NAMES.map(n => MAP[n]), 'aus_daten', 'geaendert', 'erfasst_von', 'zeit'];
+const boxOf = s => { const b = String(s || '').split(',').map(Number); return b.length === 4 && b.every(Number.isFinite) && b[2] > 0 && b[3] > 0 ? b : null; };
+const iiifOf = m => m.iiif || (m.region || '').replace(/\/[^/]+\/[^/]+\/[^/]+\/[^/]+$/, '');  // aus «…/x,y,w,h/max/0/default.jpg»
+const origBox = m => m.box || boxOf(((m.region || '').match(/\/(\d+,\d+,\d+,\d+)\/[^/]+\/[^/]+\/[^/]+$/) || [])[1]);
+const toCell = (n, v) => FIELDS[n] === 'checks' ? (v || []).join(' / ') : FIELDS[n] === 'tags' ? (v || []).join(', ') : FIELDS[n] === 'check' ? (v ? 'ja' : '') : (v || '');
+const fromCell = (n, c) => FIELDS[n] === 'checks' ? c.split('/').map(x => x.trim()).filter(Boolean)
+  : FIELDS[n] === 'tags' ? c.split(',').map(x => x.trim()).filter(Boolean) : FIELDS[n] === 'check' ? /^(ja|1|true|x|yes)$/i.test(c.trim()) : c.trim();
+const csvCell = v => { v = String(v ?? ''); return /[;"\n\r]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; };
+const smsg = (text, warn) => { $('#smsg').textContent = text; $('#smsg').classList.toggle('warn', !!warn); };
+function exportCsv() {
+  entries = loadEntries();
+  const keys = Object.keys(entries).sort((a, b) => ((entries[a].m || {}).inv || '').localeCompare((entries[b].m || {}).inv || '', 'de', { numeric: true }) || a.localeCompare(b));
+  if (!keys.length) { smsg('Noch keine Einträge zum Herunterladen.'); return; }
+  const rows = [COLS];
+  for (const k of keys) {
+    const en = entries[k], v = { ...empty(), ...en.v }, m = en.m || {}, c = compute(v), bs = en.b || {};
+    const b = bs.drawn || origBox(m) || ['', '', '', ''];
+    const row = { key: k, quelle: m.src, inv_nr: m.inv, objekt_id: m.w, etikett: m.t,
+      iiif_region: bs.drawn && iiifOf(m) ? `${iiifOf(m)}/${bs.drawn.join(',')}/max/0/default.jpg` : m.region,
+      box_confirmed: bs.ok ? 'yes' : 'no', box_source: bs.drawn ? 'drawn' : 'original', x: b[0], y: b[1], w: b[2], h: b[3],
+      F_beschreibung: c[0], G_position: c[1], H_person_koerperschaft: c[2], I_ereignis: c[3], J_evidenz: c[4], K_weitere_werke: c[5], L_kommentar: c[6],
+      aus_daten: (en.d || []).map(n => MAP[n]).join(', '), geaendert: (en.e || []).map(n => MAP[n]).join(', '),
+      erfasst_von: en.r || $('#who').value.trim(), zeit: en.t };
+    NAMES.forEach(n => { row[MAP[n]] = toCell(n, v[n]); });
+    rows.push(COLS.map(name => row[name] ?? ''));
+  }
+  const who = ($('#who').value.trim() || 'anonym').replace(/[^\wÄÖÜäöü-]+/g, '');
+  const blob = new Blob(['﻿' + rows.map(r => r.map(csvCell).join(';')).join('\r\n') + '\r\n'], { type: 'text/csv;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `etiketten_erfassung_${who}_${new Date().toISOString().slice(0, 10)}.csv`;
+  document.body.append(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+  smsg(`${keys.length} ${keys.length === 1 ? 'Eintrag' : 'Einträge'} als CSV heruntergeladen.`);
+}
+function parseCsv(text, sep) {
+  const rows = [];
+  let row = [], cell = '', q = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (q) { if (c === '"' && text[i + 1] === '"') { cell += '"'; i++; } else if (c === '"') q = false; else cell += c; }
+    else if (c === '"') q = true; else if (c === sep) { row.push(cell); cell = ''; }
+    else if (c === '\n' || c === '\r') { if (c === '\r' && text[i + 1] === '\n') i++; row.push(cell); rows.push(row); row = []; cell = ''; }
+    else cell += c;
+  }
+  if (cell || row.length) { row.push(cell); rows.push(row); }
+  return rows.filter(r => r.some(x => x.trim()));
+}
+async function importCsv(f) {
+  const buf = await f.arrayBuffer();
+  let text = new TextDecoder('utf-8').decode(buf);
+  if (text.includes('�')) text = new TextDecoder('windows-1252').decode(buf);  // von Excel ohne UTF-8 gespeichert
+  text = text.replace(/^﻿/, '');
+  const first = text.split(/\r?\n/, 1)[0];
+  const sep = [';', '\t', ','].sort((a, b) => first.split(b).length - first.split(a).length)[0];
+  const rows = parseCsv(text, sep), head = (rows.shift() || []).map(h => h.trim()), ix = n => head.indexOf(n);
+  if (ix('key') < 0 || !NAMES.some(n => ix(MAP[n]) >= 0)) { smsg(`${f.name}: keine Erfassungsdatei dieses Formulars (Spalten «key» und Feldspalten fehlen).`, true); return; }
+  const cell = (r, n) => (ix(n) >= 0 ? r[ix(n)] || '' : '').trim();
+  const fields = s => s.split(',').map(x => BACK[x.trim()]).filter(Boolean);
+  entries = loadEntries();
+  let added = 0, newer = 0, older = 0, current = false;
+  for (const r of rows) {
+    const k = cell(r, 'key');
+    if (!k) continue;
+    const v = empty();
+    NAMES.forEach(n => { if (ix(MAP[n]) >= 0) v[n] = fromCell(n, r[ix(MAP[n])] || ''); });
+    const t = cell(r, 'zeit') || new Date().toISOString(), old = entries[k];
+    if (old && (old.t || '') >= t) { older++; continue; }
+    const xywh = boxOf(['x', 'y', 'w', 'h'].map(n => cell(r, n)).join(',')), drawn = cell(r, 'box_source') === 'drawn' ? xywh : null;
+    const region = cell(r, 'iiif_region'), m = { inv: cell(r, 'inv_nr'), w: cell(r, 'objekt_id'), t: cell(r, 'etikett'), src: cell(r, 'quelle'), region };
+    m.iiif = iiifOf(m);
+    if (drawn) {  // die Box aus den Daten kennt nur data.json; die Region der Zeile ist die neu gezogene
+      const known = LAB_KEY[k] || (old && old.m) || null;
+      if (known && known.box) { m.box = known.box; m.region = `${m.iiif}/${known.box.join(',')}/max/0/default.jpg`; }
+    } else if (xywh) m.box = xywh;
+    entries[k] = { v, t, r: cell(r, 'erfasst_von'), d: fields(cell(r, 'aus_daten')), e: fields(cell(r, 'geaendert')), m,
+      b: { ok: /^(yes|ja|1|true|x)$/i.test(cell(r, 'box_confirmed')), drawn } };
+    if (old) newer++; else added++;
+    if (k === key) current = true;
+  }
+  const ok = store.set(STORE, entries);
+  if (current) { apply(entries[key].v); BX = { ok: false, drawn: null, ...entries[key].b }; render(); renderBox(); savedLine('loaded'); }
+  renderList();
+  smsg(`${f.name}: ${added} neue und ${newer} neuere Einträge übernommen` + (older ? `, ${older} ältere oder gleiche übersprungen` : '') + '.'
+    + (ok ? '' : ' Achtung: dieser Browser speichert nicht.'), !ok);
+}
+
+// ---------------------------------------------------------------- Bedienung
+$('#fields').addEventListener('input', changed);
+$('#fields').addEventListener('change', changed);
+$('#fields').addEventListener('click', e => {
+  const b = e.target.closest('[data-restore]');
+  if (!b) return;
+  e.preventDefault();
+  b.dataset.restore.split(' ').forEach(n => write(n, n in P.v ? P.v[n] : empty()[n]));
+  changed();
+});
+$('#copy').onclick = async () => {
+  const text = compute(state()).map(x => x.replace(/[\t\n]/g, ' ')).join('\t');
+  try { await navigator.clipboard.writeText(text); $('#msg').textContent = 'Zeile kopiert.'; }
+  catch (e) {
+    const ta = document.createElement('textarea'); ta.value = text; document.body.appendChild(ta); ta.select();
+    try { document.execCommand('copy'); $('#msg').textContent = 'Zeile kopiert.'; } catch (_) { $('#msg').textContent = 'Kopieren nicht möglich. Bitte manuell markieren.'; }
+    ta.remove();
+  }
+};
+$('#save').onclick = () => { save(); if (key) $('#msg').textContent = 'Gespeichert.'; };
+$('#reset').onclick = () => {
+  clearTimeout(timer);
+  entries = loadEntries();
+  undo = key && entries[key] ? entries[key] : null;
+  if (undo) { delete entries[key]; store.set(STORE, entries); }
+  $('#tagin').value = '';
+  apply(P.v); BX = { ok: false, drawn: null }; $('#msg').textContent = ''; render(); renderBox(); renderList();
+  $('#saved').innerHTML = !key ? 'Zurückgesetzt.' : undo
+    ? 'Auf die Werte aus den Daten zurückgesetzt; die gespeicherten Angaben sind gelöscht. <button type="button" class="link" id="undo">Rückgängig</button>'
+    : 'Auf die Werte aus den Daten zurückgesetzt.';
+};
+document.addEventListener('click', e => {
+  if (e.target.id !== 'undo' || !undo) return;
+  entries = loadEntries(); entries[key] = undo; store.set(STORE, entries);
+  apply(undo.v); BX = { ok: false, drawn: null, ...undo.b }; undo = null; render(); renderBox(); renderList(); savedLine('loaded');
+});
+$('#export').addEventListener('click', exportCsv);
+$('#import').addEventListener('change', async e => {
+  const f = e.target.files[0];
+  if (f) { try { await importCsv(f); } catch (err) { smsg(`${f.name} konnte nicht gelesen werden.`, true); } }
+  e.target.value = '';
+});
+$('#who').value = store.get(WHO, '') || '';
+$('#who').addEventListener('input', e => store.set(WHO, e.target.value.trim()));
+window.addEventListener('storage', e => { if (e.key === STORE) renderList(); });
+(() => {  // «← Ergebnisse»: zurück zur Website, wenn sie die vorige Seite war; sonst zum Etikett auf der Website
+  try {
+    const ref = new URL(document.referrer), dir = location.pathname.replace(/[^/]*$/, '');
+    if (ref.origin === location.origin && (ref.pathname === dir || ref.pathname === dir + 'index.html') && history.length > 1)
+      $('#back').addEventListener('click', e => { e.preventDefault(); history.back(); });
+  } catch (_) { /* keine vorige Seite */ }
+})();
+
+render(); renderList(); savedLine(null);
+fetch('data.json', { cache: 'no-cache' }).then(r => { if (!r.ok) throw new Error(r.status); return r.json(); }).then(data => {
+  D = data;
+  for (const [oid, w] of Object.entries(D.works)) { WORK[oid] = w; w.backs.forEach(([iiif, W, H]) => { DIM[iiif] = [W, H]; }); }
+  D.labels.forEach(l => { LAB_ID[l.id] = l; LAB_KEY[l.key] = l; });
+  L = find(key);
+  if (L) { P = prefill(L); $('#back').href = siteUrl(L); }
+  header(); known(); notes();
+  const saved = key && entries[key];
+  if (!touched) apply(saved ? saved.v : P.v);
+  if (saved && saved.b) BX = { ok: false, drawn: null, ...saved.b };
+  render(); renderBox(); renderList(); savedLine(saved ? 'loaded' : null);
+}).catch(() => {
+  $('#ws').textContent = 'Die Daten (data.json) konnten nicht geladen werden; das Formular funktioniert ohne Vorausfüllung.';
+  if (key && entries[key]) { apply(entries[key].v); render(); }
+});
+})();
 </script>
 </body>
 </html>

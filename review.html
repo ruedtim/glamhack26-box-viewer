@@ -181,7 +181,7 @@
     $('#pos').textContent = list.length ? `${at + 1} of ${list.length} in this list` : '';
     if (!list.length) return;
     const it = list[at], w = R.works[it.w] || ['?', '', ''];
-    const own = (mine[it.k] || {}).box;
+    const own = (mine[it.k] || {}).box || (!mine[it.k] && it.rb) || null;  // yours, else the team's merged one
     const ctx = context(it), [W, H] = R.dims[it.iiif] || [ctx[0] + ctx[2], ctx[1] + ctx[3]];
     svg($('#crop'), it.iiif, ctx, ctx, 1000, [['box', it.box], ...(own ? [['drawn', own]] : [])]);
     svg($('#whole'), it.iiif, [0, 0, W, H], null, 700, [['area', it.area], ['box', it.box], ...(own ? [['drawn', own]] : [])]);

@@ -1,0 +1,24 @@
+{
+ "windows": 143963,
+ "backs": 872,
+ "dims": 256,
+ "input_dims": 1536,
+ "model": "Xenova/dinov2-base (onnx/model_fp16.onnx)",
+ "size": 224,
+ "preprocessing": "pad to square with mean colour (int), bicubic to 224 (PIL), ImageNet mean/std; vector = L2(concat(CLS, mean of patch tokens)); q256 = (q - mean) @ matrix",
+ "files": {
+  "backs.json": 235176,
+  "codes.u8": 4606816,
+  "pca_matrix.f32": 1572864,
+  "pca_mean.f32": 6144,
+  "windows.u16": 1439630
+ },
+ "recall_eval_photos": {
+  "eval_photos": 197,
+  "R@1": 0.36,
+  "R@5": 0.482,
+  "R@10": 0.533,
+  "R@20": 0.579,
+  "MRR": 0.426
+ }
+}

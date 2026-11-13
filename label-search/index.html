@@ -1,0 +1,370 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Seen This Label?</title>
+<meta name="description" content="Photograph a provenance label and find the most similar backs among 872 SKKG artworks. Runs entirely in your browser.">
+<style>
+  :root { --bg: #fbfaf7; --fg: #1c1b19; --muted: #6b6760; --line: #dcd8d0; --card: #fff; --accent: #8a3b12; --accent-fg: #fff; --sel: #e0662a;
+          --ok: #1a7f4b; --bad: #c0392b; --unsure: #a86b00; }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) { --bg: #171614; --fg: #ece9e3; --muted: #a29d94; --line: #3a3733; --card: #22201d; --accent: #e08a5a; --accent-fg: #171614; }
+  }
+  :root[data-theme="dark"] { --bg: #171614; --fg: #ece9e3; --muted: #a29d94; --line: #3a3733; --card: #22201d; --accent: #e08a5a; --accent-fg: #171614; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--fg); font: 16px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width: 1100px; margin: 0 auto; padding: 20px 16px 48px; }
+  h1 { font-size: 1.6rem; margin: 0 0 4px; }
+  .lead { color: var(--muted); margin: 0 0 16px; max-width: 70ch; }
+  .privacy { border-left: 3px solid var(--accent); padding: 8px 12px; background: var(--card); margin: 0 0 20px; max-width: 70ch; }
+  .buttons { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+  button, label.btn { font: inherit; border: 1px solid var(--line); background: var(--card); color: var(--fg); padding: 10px 16px; border-radius: 8px; cursor: pointer; }
+  button.primary { background: var(--accent); color: var(--accent-fg); border-color: var(--accent); }
+  button:disabled { opacity: .5; cursor: default; }
+  input[type=file] { display: none; }
+  #stage { display: none; }
+  .crop-wrap { position: relative; display: inline-block; overflow: hidden; max-width: 100%; touch-action: none; user-select: none; -webkit-user-select: none; }
+  .crop-wrap img { display: block; max-width: 100%; max-height: 60vh; }
+  #sel { position: absolute; border: 2px solid var(--sel); box-shadow: 0 0 0 9999px rgba(0,0,0,.45); display: none; pointer-events: none; }
+  .hint { color: var(--muted); font-size: .9rem; margin: 6px 0 12px; }
+  .progress { height: 8px; background: var(--line); border-radius: 4px; overflow: hidden; max-width: 480px; margin: 6px 0; display: none; }
+  .progress > div { height: 100%; width: 0; background: var(--accent); transition: width .2s; }
+  #status { color: var(--muted); min-height: 1.5em; }
+  #results { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 150px), 1fr)); gap: 12px; margin-top: 16px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 8px; overflow: hidden; display: flex; flex-direction: column; }
+  .card .thumb { aspect-ratio: 1; background: var(--line); display: flex; align-items: center; justify-content: center; }
+  .card img { max-width: 100%; max-height: 100%; display: block; }
+  .card .body { padding: 8px 10px; font-size: .9rem; }
+  .card .body b { font-size: 1rem; }
+  .card a { color: var(--accent); }
+  .card .links { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 4px; }
+  .card.same { border: 2px solid var(--ok); } .card.not { opacity: .55; } .card.unsure { border: 2px dashed var(--unsure); }
+  .decide { display: flex; gap: 4px; margin-top: 6px; flex-wrap: wrap; }
+  .decide button { padding: 5px 8px; font-size: .85rem; border-radius: 6px; }
+  .decide button.on[data-d="same"] { background: var(--ok); color: #fff; border-color: var(--ok); }
+  .decide button.on[data-d="not"] { background: var(--bad); color: #fff; border-color: var(--bad); }
+  .decide button.on[data-d="unsure"] { background: var(--unsure); color: #fff; border-color: var(--unsure); }
+  .tag { font-size: .78rem; color: var(--muted); }
+  #review { display: none; background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; margin-top: 12px; }
+  #review .row { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; }
+  #review input[type=text] { font: inherit; padding: 6px 8px; border: 1px solid var(--line); border-radius: 6px; background: var(--bg); color: var(--fg); }
+  dialog { border: 1px solid var(--line); border-radius: 10px; background: var(--card); color: var(--fg); padding: 12px; width: min(96vw, 1000px); }
+  dialog::backdrop { background: rgba(0,0,0,.6); }
+  .ed-wrap { position: relative; display: inline-block; max-width: 100%; touch-action: none; user-select: none; -webkit-user-select: none; overflow: hidden; }
+  .ed-wrap img { display: block; max-width: 100%; max-height: 70vh; }
+  .ed-box { position: absolute; border: 2px solid var(--sel); pointer-events: none; }
+  .ed-box.old { border: 2px dashed #fff; box-shadow: 0 0 0 1px #000; }
+  details { margin-top: 28px; color: var(--muted); max-width: 75ch; }
+  details summary { cursor: pointer; color: var(--fg); }
+</style>
+</head>
+<body>
+<main>
+  <p class="tag" id="home" hidden><a href="../index.html" style="color:var(--accent)">← Provenance Pursuit results</a></p>
+  <h1>Have I seen this label before?</h1>
+  <p class="lead">Photograph or upload a label, stamp or inscription from the back of an artwork. The page compares it
+    with 143,963 image windows on the backs of 872 artworks of the SKKG collection (Winterthur) and shows the 20 most
+    similar backs.</p>
+  <p class="privacy"><b>Your photo never leaves your browser.</b> The image model runs on your device; nothing is
+    uploaded. The page only downloads the model (about 174&nbsp;MB, once, then cached) and the search index (about 8&nbsp;MB).</p>
+
+  <div class="buttons">
+    <label class="btn" for="camera">📷 Take photo</label>
+    <input id="camera" type="file" accept="image/*" capture="environment">
+    <label class="btn" for="file">Choose image…</label>
+    <input id="file" type="file" accept="image/*">
+  </div>
+
+  <section id="stage">
+    <div class="crop-wrap" id="cropWrap"><img id="preview" alt="Your image"><div id="sel"></div></div>
+    <p class="hint">Optional: drag a box around the label to search only that part. Tap without dragging to reset.</p>
+    <div class="buttons">
+      <button id="go" class="primary">Search</button>
+      <button id="reset">Reset crop</button>
+    </div>
+  </section>
+
+  <div class="progress" id="bar"><div></div></div>
+  <p id="status" aria-live="polite"></p>
+  <section id="review">
+    <p class="hint" style="margin-top:0">Help check the hits: mark a back as <b>same label</b>, <b>not it</b> or
+      <b>unsure</b>, and use <b>Redraw box</b> to draw the exact box around the label on the back (also when the label
+      sits elsewhere on that back). Your decisions stay in this browser: download them and put the file into the
+      team's folder; they are merged with everyone else's.</p>
+    <div class="row">
+      <label class="tag">Your initials <input type="text" id="who" size="5" maxlength="12" autocomplete="off"></label>
+      <label class="tag">What did you photograph? <input type="text" id="qnote" size="28" maxlength="120"
+        placeholder="e.g. Kunsthaus Zürich exhibition label" autocomplete="off"></label>
+      <button id="export">Download my decisions (CSV)</button>
+      <label class="btn" for="import">Load decisions…</label><input type="file" id="import" accept=".csv,text/csv">
+      <span class="tag" id="saved"></span>
+    </div>
+  </section>
+  <div id="results"></div>
+
+  <dialog id="editor">
+    <p style="margin:0 0 8px"><b id="ed-title"></b> <span class="tag">Drag a box around the label. The dashed box is the
+      current one.</span></p>
+    <div class="ed-wrap" id="ed-wrap"><img id="ed-img" alt="Whole back"><div class="ed-box old" id="ed-old"></div>
+      <div class="ed-box" id="ed-new" hidden></div></div>
+    <div class="buttons" style="margin:10px 0 0">
+      <button class="primary" id="ed-save" disabled>Save box (same label)</button>
+      <button id="ed-cancel">Cancel</button>
+    </div>
+  </dialog>
+
+  <details>
+    <summary>How it works and its limits</summary>
+    <p>The image is padded to a square with its mean colour, scaled to 224&nbsp;px and embedded with DINOv2-base
+      (<code>Xenova/dinov2-base</code>, fp16 ONNX, via transformers.js on WebAssembly; WebGPU is not used because its half-precision arithmetic changes the vectors too much).
+      The 1,536-value vector is projected to 256 dimensions (PCA) and compared with 1-bit codes of every window. A back
+      scores as its best-matching window; the thumbnail shows that window.</p>
+    <p><b>Only the coarse search runs here.</b> On 197 test photos the correct back is first in 36% of searches, in
+      the top 5 in 48% and in the top 20 in 58%. The full pipeline re-checks candidates with LightGlue keypoint
+      matching, which lifts the first-place rate to 56%; that step does not run in the browser. Treat the results as
+      candidates to look at, not as identifications.</p>
+    <p>Images: SKKG IIIF server. Collection records: <a href="https://digital.skkg.ch/">digital.skkg.ch</a>.
+      GLAMhack 2026, challenge «Provenance Pursuit».</p>
+  </details>
+</main>
+
+<script type="module">
+import { loadIndex, loadModel, decodeImage, squareAndResize, embed, search } from "./search.js";
+
+const $ = (id) => document.getElementById(id);
+const status = (t) => ($("status").textContent = t);
+let file = null, crop = null, natural = null;
+let indexP = null, modelP = null;
+
+const getIndex = () => (indexP ??= loadIndex("data/"));
+const getModel = () => (modelP ??= loadModel((loaded, total) => {
+  $("bar").style.display = "block";
+  $("bar").firstElementChild.style.width = `${(100 * loaded / total).toFixed(1)}%`;
+  status(`Downloading the image model (once): ${(loaded / 1e6).toFixed(0)} of ${(total / 1e6).toFixed(0)} MB`);
+}).catch((e) => { modelP = null; throw e; }));
+
+function pick(e) {
+  const f = e.target.files[0];
+  if (!f) return;
+  file = f; crop = null;
+  const url = URL.createObjectURL(f);
+  const img = $("preview");
+  img.onload = async () => {
+    // natural size after EXIF orientation, as decodeImage sees it
+    const bmp = await createImageBitmap(f, { imageOrientation: "from-image" });
+    natural = { w: bmp.width, h: bmp.height }; bmp.close?.();
+  };
+  img.src = url;
+  $("stage").style.display = "block";
+  $("sel").style.display = "none";
+  show([]);
+  status("");
+  getIndex(); getModel().catch(() => {}); // start downloads early
+  e.target.value = "";
+}
+$("camera").addEventListener("change", pick);
+$("file").addEventListener("change", pick);
+
+// crop selection (pointer events: mouse and touch)
+let start = null;
+const wrap = $("cropWrap"), sel = $("sel");
+const local = (e) => { const r = $("preview").getBoundingClientRect();
+  return { x: Math.min(Math.max(e.clientX - r.left, 0), r.width), y: Math.min(Math.max(e.clientY - r.top, 0), r.height), r }; };
+wrap.addEventListener("pointerdown", (e) => { start = local(e); wrap.setPointerCapture(e.pointerId); e.preventDefault(); });
+wrap.addEventListener("pointermove", (e) => {
+  if (!start) return;
+  const p = local(e);
+  Object.assign(sel.style, { display: "block", left: `${Math.min(start.x, p.x)}px`, top: `${Math.min(start.y, p.y)}px`,
+    width: `${Math.abs(p.x - start.x)}px`, height: `${Math.abs(p.y - start.y)}px` });
+});
+wrap.addEventListener("pointerup", (e) => {
+  if (!start) return;
+  const p = local(e), r = p.r;
+  const w = Math.abs(p.x - start.x), h = Math.abs(p.y - start.y);
+  if (w < 10 || h < 10 || !natural) { crop = null; sel.style.display = "none"; }
+  else {
+    const fx = natural.w / r.width, fy = natural.h / r.height;
+    crop = { x: Math.round(Math.min(start.x, p.x) * fx), y: Math.round(Math.min(start.y, p.y) * fy),
+             w: Math.max(1, Math.round(w * fx)), h: Math.max(1, Math.round(h * fy)) };
+  }
+  start = null;
+});
+$("reset").onclick = () => { crop = null; sel.style.display = "none"; };
+
+$("go").onclick = async () => {
+  if (!file) return;
+  $("go").disabled = true;
+  try {
+    status("Loading search index…");
+    const idx = await getIndex();
+    if (!modelP) status("Loading the image model…");
+    const { model, device } = await getModel();
+    $("bar").style.display = "none";
+    status(`Embedding your image on ${device === "webgpu" ? "WebGPU" : "WebAssembly (a few seconds)"}…`);
+    const t0 = performance.now();
+    const x = squareAndResize(await decodeImage(file, crop));
+    const v = await embed(model, x);
+    const hits = search(idx, v, 20);
+    searchTime = new Date().toISOString();
+    status(`Top 20 of ${idx.backs.length} backs (${((performance.now() - t0) / 1000).toFixed(1)} s). ` +
+      `Coarse search only: the right back is in the top 20 in about 58% of test searches.`);
+    show(hits);
+  } catch (e) {
+    console.error(e);
+    status("Something went wrong: " + (e.message || e));
+  } finally { $("go").disabled = false; }
+};
+
+// ------------------------------------------------------------------ review: confirm, reject, redraw boxes
+// Decisions stay in this browser (localStorage) and are downloaded as CSV, like the site's review.html.
+const KEY = "pp-label-search-review-v1", WHO = "pp-model-review-who"; // initials shared with review.html
+const store = {
+  get(k, fb) { try { const v = localStorage.getItem(k); return v === null ? fb : JSON.parse(v); } catch { return fb; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch { return false; } },
+};
+let mine = store.get(KEY, {}); // entry key (search time | IIIF id) -> decision record
+let searchTime = "", hitsNow = [];
+const iiifId = (base) => base.split("/").pop();
+const viewerUrl = (base, r) => `https://ruedtim.github.io/glamhack26-box-viewer/viewer.html?iiif=${base}&xywh=${r.x},${r.y},${r.w},${r.h}`;
+$("who").value = store.get(WHO, "");
+$("who").addEventListener("change", () => store.set(WHO, $("who").value.trim()));
+
+function savedNote(ok = true) {
+  const n = Object.keys(mine).length;
+  $("saved").innerHTML = ok ? (n ? `${n} decision${n > 1 ? "s" : ""} saved in this browser. Download them before you switch computers.` : "")
+    : `<span style="color:var(--bad)">This browser does not keep the decisions: download them before you leave the page.</span>`;
+}
+
+function decide(h, d, box = null) {
+  const k = `${searchTime}|${iiifId(h.info.iiif_base)}`, old = mine[k];
+  const b = box || (old && old.src === "drawn" ? { x: old.x, y: old.y, w: old.w, h: old.h } : h.box);
+  mine[k] = { search_time: searchTime, query_note: $("qnote").value.trim(), inv_nr: h.info.inv_nr, objekt_id: h.info.objekt_id,
+    iiif_base: h.info.iiif_base, rank: h.rank, score: +h.score.toFixed(3), d, src: box || (old && old.src === "drawn") ? "drawn" : "search window",
+    x: b.x, y: b.y, w: b.w, h: b.h, r: $("who").value.trim(), t: new Date().toISOString() };
+  savedNote(store.set(KEY, mine));
+  show(hitsNow);
+}
+
+function show(hits) {
+  hitsNow = hits;
+  $("review").style.display = hits.length ? "block" : "none";
+  const box = $("results");
+  box.innerHTML = "";
+  for (const h of hits) {
+    const b = h.info, rec = mine[`${searchTime}|${iiifId(b.iiif_base)}`];
+    const r = rec ? { x: rec.x, y: rec.y, w: rec.w, h: rec.h } : h.box;
+    const region = `${r.x},${r.y},${r.w},${r.h}`, viewer = viewerUrl(b.iiif_base, r);
+    const card = document.createElement("div");
+    card.className = "card " + (rec ? rec.d : "");
+    card.innerHTML = `
+      <a class="thumb" href="${viewer}" target="_blank" rel="noopener">
+        <img loading="lazy" alt="${rec && rec.src === "drawn" ? "Your box" : "Best-matching window"} on the back of inv. no. ${b.inv_nr}"
+             src="${b.iiif_base}/${region}/!300,300/0/default.jpg"></a>
+      <div class="body"><b>${h.rank}. Inv. no. ${b.inv_nr}</b><br>
+        <span class="tag">score ${h.score.toFixed(2)}${rec && rec.src === "drawn" ? " · your box" : ""}</span>
+        <div class="links"><a href="${viewer}" target="_blank" rel="noopener">Show on the back</a>
+          <a href="${b.url}" target="_blank" rel="noopener">SKKG record</a></div>
+        <div class="decide">
+          <button data-d="same" title="The same label is on this back">✓ Same</button>
+          <button data-d="not" title="Not the same label">✗ Not it</button>
+          <button data-d="unsure">?</button>
+          <button data-edit title="Draw the exact box around the label on this back">Redraw box</button></div></div>`;
+    card.querySelectorAll("[data-d]").forEach((btn) => {
+      if (rec && rec.d === btn.dataset.d) btn.classList.add("on");
+      btn.onclick = () => decide(h, btn.dataset.d);
+    });
+    card.querySelector("[data-edit]").onclick = () => openEditor(h, r);
+    box.append(card);
+  }
+}
+
+// box editor: the whole back as one small IIIF rendering, drag a new box, saved in original pixels
+let edHit = null, edBox = null, edStart = null;
+const edWrap = $("ed-wrap"), edImg = $("ed-img");
+function place(el, r) {
+  const f = edImg.clientWidth / edHit.info.width;
+  Object.assign(el.style, { left: `${r.x * f}px`, top: `${r.y * f}px`, width: `${r.w * f}px`, height: `${r.h * f}px` });
+}
+function openEditor(h, current) {
+  edHit = h; edBox = null;
+  $("ed-title").textContent = `Inv. no. ${h.info.inv_nr}`;
+  $("ed-new").hidden = true; $("ed-save").disabled = true;
+  edImg.onload = () => place($("ed-old"), current);
+  edImg.src = `${h.info.iiif_base}/full/!1000,1000/0/default.jpg`;
+  if (edImg.complete && edImg.naturalWidth) place($("ed-old"), current);
+  $("editor").showModal();
+}
+const edLocal = (e) => { const r = edImg.getBoundingClientRect();
+  return { x: Math.min(Math.max(e.clientX - r.left, 0), r.width), y: Math.min(Math.max(e.clientY - r.top, 0), r.height) }; };
+edWrap.addEventListener("pointerdown", (e) => { edStart = edLocal(e); edWrap.setPointerCapture(e.pointerId); e.preventDefault(); });
+edWrap.addEventListener("pointermove", (e) => {
+  if (!edStart) return;
+  const p = edLocal(e), f = edHit.info.width / edImg.clientWidth;
+  const x0 = Math.min(edStart.x, p.x), y0 = Math.min(edStart.y, p.y), w = Math.abs(p.x - edStart.x), h = Math.abs(p.y - edStart.y);
+  if (w < 4 || h < 4) return;
+  edBox = { x: Math.round(x0 * f), y: Math.round(y0 * f), w: Math.round(w * f), h: Math.round(h * f) };
+  edBox.w = Math.min(edBox.w, edHit.info.width - edBox.x); edBox.h = Math.min(edBox.h, edHit.info.height - edBox.y);
+  $("ed-new").hidden = false; place($("ed-new"), edBox); $("ed-save").disabled = false;
+});
+edWrap.addEventListener("pointerup", () => { edStart = null; });
+$("ed-cancel").onclick = () => $("editor").close();
+$("ed-save").onclick = () => { if (edBox) decide(edHit, "same", edBox); $("editor").close(); };
+
+// CSV export / import (semicolon, UTF-8 with BOM, like the project's other CSVs)
+const csvCell = (v) => { v = String(v ?? ""); return /[;"\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; };
+const COLS = ["key", "search_time", "query_note", "inv_nr", "objekt_id", "rank", "score", "decision", "box_source",
+  "x", "y", "w", "h", "iiif_region", "box_viewer", "reviewer", "time"];
+$("export").onclick = () => {
+  const rows = [COLS];
+  for (const v of Object.values(mine)) {
+    rows.push([`box:${iiifId(v.iiif_base)}:${v.x},${v.y},${v.w},${v.h}`, v.search_time, v.query_note, v.inv_nr, v.objekt_id,
+      v.rank, v.score, v.d, v.src, v.x, v.y, v.w, v.h, `${v.iiif_base}/${v.x},${v.y},${v.w},${v.h}/max/0/default.jpg`,
+      viewerUrl(v.iiif_base, v), v.r || $("who").value.trim(), v.t]);
+  }
+  const blob = new Blob(["﻿" + rows.map((r) => r.map(csvCell).join(";")).join("\n")], { type: "text/csv;charset=utf-8" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = `label_search_review_${($("who").value.trim() || "anonymous").replace(/\W+/g, "")}_${new Date().toISOString().slice(0, 10)}.csv`;
+  document.body.append(a); a.click(); a.remove();
+};
+function parseCsv(text) {
+  const rows = []; let row = [], cell = "", q = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (q) { if (c === '"' && text[i + 1] === '"') { cell += '"'; i++; } else if (c === '"') q = false; else cell += c; }
+    else if (c === '"') q = true; else if (c === ";") { row.push(cell); cell = ""; }
+    else if (c === "\n" || c === "\r") { if (c === "\r" && text[i + 1] === "\n") i++; row.push(cell); rows.push(row); row = []; cell = ""; }
+    else cell += c;
+  }
+  if (cell || row.length) { row.push(cell); rows.push(row); }
+  return rows;
+}
+$("import").addEventListener("change", async (e) => {
+  const f = e.target.files[0];
+  if (!f) return;
+  const rows = parseCsv((await f.text()).replace(/^﻿/, "")), head = rows.shift() || [];
+  const get = (r, n) => r[head.indexOf(n)] ?? "";
+  let n = 0;
+  for (const r of rows) {
+    const d = get(r, "decision"), region = get(r, "iiif_region");
+    if (!["same", "not", "unsure"].includes(d) || !region) continue;
+    const base = region.split("/").slice(0, -4).join("/");
+    const k = `${get(r, "search_time")}|${iiifId(base)}`, t = get(r, "time");
+    if (mine[k] && (mine[k].t || "") >= t) continue;
+    mine[k] = { search_time: get(r, "search_time"), query_note: get(r, "query_note"), inv_nr: get(r, "inv_nr"),
+      objekt_id: get(r, "objekt_id"), iiif_base: base, rank: +get(r, "rank"), score: +get(r, "score"), d, src: get(r, "box_source"),
+      x: +get(r, "x"), y: +get(r, "y"), w: +get(r, "w"), h: +get(r, "h"), r: get(r, "reviewer"), t };
+    n++;
+  }
+  store.set(KEY, mine);
+  $("saved").textContent = `${n} decisions loaded from ${f.name}.`;
+  e.target.value = "";
+  show(hitsNow);
+});
+savedNote();
+// link back to the results site when this page is part of it (site/label-search/)
+fetch("../data.json", { method: "HEAD" }).then((r) => { if (r.ok) $("home").hidden = false; }).catch(() => {});
+</script>
+</body>
+</html>

@@ -14,6 +14,8 @@
             &title=…  &note=…  &page=<collection page URL>
             &colour=ff3b30 (box colour, hex)  &style=dashed (approximate position)  &zoom=1 (start on the box)
             &static=1 (plain image without deep zoom)
+            &label=<key> (one per xywh box, in the same order: the box links to the entry form form.html?label=<key>
+            next to this page; the results site passes the stable label keys of its data.json)
   x, y, w, h are pixels of the original image, as in the IIIF region parameter.
 -->
 <style>
@@ -42,6 +44,8 @@
   #flat svg { display: block; width: 100%; height: 100%; }
   .box { outline: 3px solid var(--box); box-shadow: 0 0 0 5px rgba(0, 0, 0, .45), inset 0 0 0 1px rgba(0, 0, 0, .5); }
   .box.dashed { outline-style: dashed; }
+  .box.link { cursor: pointer; }
+  #formhint { color: var(--muted); }
   footer { padding: 6px 16px; font-size: 12px; color: var(--muted); background: var(--bar);
            border-top: 1px solid var(--line); }
 </style>
@@ -96,7 +100,11 @@
     $('links').append(a);
   };
   const focus = boxes.length ? boxes : areas;  // «Zoom to box» goes to the boxes, else to the areas
-  const shapes = [...boxes.map(b => [b, dashed]), ...areas.map(b => [b, true])];
+  // label keys from the results site, one per box: clicking the box opens the entry form for that label
+  const keys = params.getAll('label').map(k => k.trim());
+  const keyOf = i => (keys.length === boxes.length && keys[i]) || '';
+  const formHref = key => 'form.html?label=' + encodeURIComponent(key);
+  const shapes = [...boxes.map((b, i) => [b, dashed, keyOf(i)]), ...areas.map(b => [b, true, ''])];
   if (!focus.length) $('zoom').disabled = true;
   if (!isHttp(base)) {
     $('zoom').disabled = $('whole').disabled = true;
@@ -108,6 +116,15 @@
   boxes.forEach((b, i) => addLink(boxes.length > 1 ? `Box ${i + 1} (IIIF region)` : 'Box (IIIF region)',
                                   `${base}/${b.map(Math.round).join(',')}/max/0/default.jpg`));
   addLink('Collection page', params.get('page'));
+  if (boxes.length === 1 && keyOf(0)) {
+    const a = document.createElement('a');
+    a.href = formHref(keyOf(0)); a.textContent = 'Record this label in the entry form';
+    $('links').append(a);
+  } else if (boxes.some((b, i) => keyOf(i))) {
+    const s = document.createElement('span');
+    s.id = 'formhint'; s.textContent = 'Click a box to open the entry form for that label.';
+    $('links').append(s);
+  }
 
   // the boxes with a margin around them, kept inside the image
   const union = focus.reduce((u, [x, y, w, h]) => [Math.min(u[0], x), Math.min(u[1], y),
@@ -128,9 +145,13 @@
     viewer.addOnceHandler('tile-drawn', () => { msg.hidden = true; });  // «Loading …» stays until the first tile
     viewer.addHandler('open', () => {
       const vp = viewer.viewport, size = viewer.world.getItemAt(0).getContentSize();
-      for (const [[x, y, w, h], dash] of shapes) {
+      for (const [[x, y, w, h], dash, key] of shapes) {
         const el = document.createElement('div');
-        el.className = dash ? 'box dashed' : 'box';
+        el.className = (dash ? 'box dashed' : 'box') + (key ? ' link' : '');
+        if (key) {  // a quick click (not a drag) opens the entry form
+          el.title = 'Open the entry form for this label';
+          new OpenSeadragon.MouseTracker({ element: el, clickHandler: e => { if (e.quick) location.href = formHref(key); } });
+        }
         viewer.addOverlay({ element: el, location: vp.imageToViewportRectangle(x, y, w, h) });
       }
       $('whole').onclick = () => vp.goHome();
@@ -153,10 +174,16 @@
                              'aria-label': 'Whole image with the box drawn on it' });
       svg.append(el('image', { href: `${base}/full/!2400,2400/0/default.jpg`, width: W, height: H }));
       const stroke = getComputedStyle(document.documentElement).getPropertyValue('--box').trim();
-      for (const [[x, y, w, h], dash] of shapes) {
+      for (const [[x, y, w, h], dash, key] of shapes) {
         const common = { x, y, width: w, height: h, fill: 'none', 'vector-effect': 'non-scaling-stroke' };
         svg.append(el('rect', { ...common, stroke: 'rgba(0,0,0,.5)', 'stroke-width': 9 }));
-        svg.append(el('rect', { ...common, stroke, 'stroke-width': 3, ...(dash ? { 'stroke-dasharray': '10 6' } : {}) }));
+        const r = el('rect', { ...common, stroke, 'stroke-width': 3, ...(dash ? { 'stroke-dasharray': '10 6' } : {}) });
+        if (key) {  // the whole box is clickable and opens the entry form
+          r.setAttribute('fill', 'transparent'); r.style.cursor = 'pointer';
+          r.append(el('title', {})); r.lastChild.textContent = 'Open the entry form for this label';
+          r.addEventListener('click', () => { location.href = formHref(key); });
+        }
+        svg.append(r);
       }
       $('flat').replaceChildren(svg);
       $('flat').hidden = false;

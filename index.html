@@ -76,6 +76,11 @@
   dt { color: var(--muted); } dd { margin: 0; overflow-wrap: anywhere; }
   h4 { margin: 20px 0 8px; font-size: 15px; }
   .links { display: flex; flex-wrap: wrap; gap: 6px 14px; margin-top: 10px; font-size: 14px; }
+  .formrow { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; margin: 14px 0 4px; }
+  .formbtn { display: inline-block; padding: 7px 14px; border-radius: 6px; background: var(--accent); color: var(--bg); text-decoration: none; font-weight: 600; font-size: 14px; }
+  .formbtn:hover, .formbtn:focus-visible { filter: brightness(1.12); }
+  .formrow span, .hintline { font-size: 13px; color: var(--muted); }
+  .hintline { margin: 0 0 8px; }
   .stats { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; margin: 10px 0 20px; }
   .stat { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; box-shadow: var(--shadow); }
   .stat b { display: block; font-size: 26px; line-height: 1.1; }
@@ -104,7 +109,9 @@
   <section id="labels" hidden>
     <p class="intro">Every picture is cut out of the original photograph of a work's back by the SKKG image server.
       Click a label to see where it sits on the back, which work it belongs to, and on which other works the same label
-      was found. <a href="review.html">Help check the vision-language model's proposals →</a></p>
+      was found. Clicking a box on a back opens the entry form for SKKG's label register (German), prefilled with what
+      we already know. <a href="review.html">Help check the vision-language model's proposals →</a>
+      <a href="label-search/">Search by photo: have I seen this label before? →</a></p>
     <div class="controls">
       <input type="search" id="lq" placeholder="Search: issuer, text, Inv. no., title …" aria-label="Search labels">
       <div class="seg" id="lsrc" role="group" aria-label="Source">
@@ -178,6 +185,14 @@
       <li><a href="provenance_pursuit_results.xlsx">All results as a workbook (Excel)</a>, with a guide on its first sheet.</li>
       <li><a href="review.html">Review page</a>: check the vision-language model's proposals (correct, wrong,
         unsure) and download your decisions for the team.</li>
+      <li><a href="form.html">Entry form</a> for the columns F to L of SKKG's label register (German): opens from
+        every box and label, prefilled with what the data already say (marked), keeps your entries in this browser
+        and downloads them as CSV for the team.</li>
+      <li><a href="sik_isea.html">What SIK-ISEA adds</a>: exhibitions and sales that SIK-ISEA's research portal records
+        for SKKG works and SKKG's knowledge graph lacks, with the matching labels on the backs.</li>
+      <li><a href="label-search/">Search by photo</a>: photograph a label and find the most similar backs. Runs in
+        your browser (the photo is not uploaded; the image model, 174&nbsp;MB, is downloaded once). Confirm hits or
+        redraw their boxes and download your decisions for the team.</li>
       <li><a href="viewer.html">Box viewer</a> for any IIIF image: <code>viewer.html?iiif=…&amp;xywh=x,y,w,h</code></li>
       <li><a href="https://github.com/ruedtim/glamhack26-box-viewer">Source of this site on GitHub</a></li>
     </ul>
@@ -186,7 +201,10 @@
       knowledge graph and IIIF image server). Object metadata and photographs of backs CC0; provenance data sheets
       CC BY 4.0, SKKG provenance research team; label register and object list from the challenge. Exhibitions and
       acquisitions were read from the knowledge graph following <a href="https://github.com/kintopp/skkg-mcp">skkg-mcp</a>
-      (RISE, University of Basel). Private persons are not named.</p>
+      (RISE, University of Basel). Names and addresses of private owners that labels, data sheets or the text
+      recognition transcribe are masked («[private owner]», «[address]»); sellers that are persons are not named;
+      provenance actors are shown as SKKG publishes them. SIK-ISEA's research portal is only linked and counted
+      (<a href="sik_isea.html">What SIK-ISEA adds</a>): its content may not be republished without SIK-ISEA's consent.</p>
   </section>
 </main>
 <footer><div class="wrap" id="foot">Provenance Pursuit · GLAMhack 2026, challenge 304 · data and images: SKKG, Winterthur</div></footer>
@@ -204,20 +222,22 @@
   const PAGE = 96;
   const SRC = { register: 'Label register', photo: 'Label photo', 'data sheet': 'Data sheet' };
   const COLOUR = { register: '3d9bff', photo: 'ff3b30', 'data sheet': 'bf5af2' };
-  let D, LAB = {}, WORK = {}, DIM = {}, HAY = {}, current = 'labels';
+  let D, LAB = {}, BYKEY = {}, WORK = {}, DIM = {}, HAY = {}, current = 'labels';
   const state = { lq: '', lsrc: 'all', lagain: false, lok: false, lmodel: false, lpage: 1,
                   wq: '', wlab: true, wagain: false, wpage: 1, aev: 'all' };
 
   const region = (iiif, b, s = 320) => `${iiif}/${b.join(',')}/${b[2] > s || b[3] > s ? `!${s},${s}` : 'max'}/0/default.jpg`;
   const full = (iiif, s = 700) => `${iiif}/full/!${s},${s}/0/default.jpg`;
   const kind = l => l.how === 'vision-language model' ? 'model' : l.src === 'data sheet' ? 'sheet' : l.src;
-  function viewer(iiif, boxes, title, note, colour, dashed) {
+  const formUrl = key => 'form.html?label=' + encodeURIComponent(key);  // entry form, by the label's stable key
+  function viewer(iiif, boxes, title, note, colour, dashed, keys) {
     const p = new URLSearchParams({ iiif });
     boxes.forEach(b => p.append('xywh', b.join(',')));
     if (title) p.set('title', title);
     if (note) p.set('note', note);
     if (colour) p.set('colour', colour);
     if (dashed) p.set('style', 'dashed');
+    if (keys && keys.length === boxes.length) keys.forEach(k => p.append('label', k));  // the viewer links the boxes to the form
     return 'viewer.html?' + p;
   }
   const workTitle = w => `Inv. ${w.inv} · ${w.title}`;
@@ -235,9 +255,9 @@
     return `<button class="card" data-work="${h.w}"><span class="thumb"><img loading="lazy" alt="" src="${esc(region(h.iiif, h.box))}"></span>
       <span class="cap"><b>${esc(title || workTitle(w))}</b><span class="meta">${h.n} inliers</span><span class="ev">${ev || '<i class="meta">no evidence in the records yet</i>'}</span></span></button>`;
   }
-  function backWithBoxes(iiif, boxes, size = 700) {  // boxes: [{box, cls, label, title}] in original pixels
+  function backWithBoxes(iiif, boxes, size = 700) {  // boxes: [{box, cls, label, key, title}] in original pixels; a box with a key opens the form
     const [W, H] = DIM[iiif] || [1000, 1000];
-    const rects = boxes.map(o => `<rect class="ov ${o.cls}"${o.label ? ` data-label="${o.label}"` : ''} x="${o.box[0]}" y="${o.box[1]}" width="${Math.max(o.box[2], W / 150)}" height="${Math.max(o.box[3], H / 150)}"><title>${esc(o.title || '')}</title></rect>`).join('');
+    const rects = boxes.map(o => `<rect class="ov ${o.cls}"${o.label ? ` data-label="${o.label}"` : ''}${o.key ? ` data-key="${esc(o.key)}"` : ''} x="${o.box[0]}" y="${o.box[1]}" width="${Math.max(o.box[2], W / 150)}" height="${Math.max(o.box[3], H / 150)}"><title>${esc(o.title || '')}</title></rect>`).join('');
     return `<svg class="back" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Back of the work with the located labels"><image href="${esc(full(iiif, size))}" width="${W}" height="${H}"/>${rects}</svg>`;
   }
 
@@ -310,11 +330,12 @@
       l.d && ['Description', esc(l.d)]].filter(Boolean);
     const others = w.labels.filter(o => o.id !== l.id && (state.lmodel || o.how !== 'vision-language model'));
     const hits = (l.hits || []).map(i => D.hits[i]);
-    const view = viewer(l.iiif, [l.box], workTitle(w), `${SRC[l.src]}: ${l.t}`, COLOUR[l.src], l.how === 'vision-language model');
+    const view = viewer(l.iiif, [l.box], workTitle(w), `${SRC[l.src]}: ${l.t}`, COLOUR[l.src], l.how === 'vision-language model', [l.key]);
     openDialog(l.t, `<div class="two"><div><div class="big"><a href="${esc(view)}" target="_blank" rel="noopener" title="Whole back, zoomable"><img alt="${esc(l.t)}" src="${esc(region(l.iiif, l.box, 900))}"></a></div>
       ${l.photo ? `<h4>SKKG's photograph of this label</h4><div class="big"><img alt="Detail photograph" loading="lazy" src="${esc(full(l.photo, 800))}"></div>` : ''}</div>
       <div><dl>${facts.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join('')}</dl>
-      <h4>Where it sits on the back</h4>${backWithBoxes(l.iiif, [{ box: l.box, cls: kind(l) + ' sel' }], 700)}
+      <p class="formrow"><a class="formbtn" href="${esc(formUrl(l.key))}">✎ Record this label in the entry form</a><span>German form for SKKG's label register, prefilled with what is known</span></p>
+      <h4>Where it sits on the back</h4>${backWithBoxes(l.iiif, [{ box: l.box, cls: kind(l) + ' sel', key: l.key, title: 'Click to open the entry form for this label' }], 700)}
       <div class="links"><a href="${esc(view)}" target="_blank" rel="noopener">Whole back, zoomable</a><a href="${esc(`${l.iiif}/${l.box.join(',')}/max/0/default.jpg`)}" target="_blank" rel="noopener">Label in full resolution (IIIF)</a></div></div></div>
       ${hits.length ? `<h4>The same label on ${hits.length} other work${hits.length > 1 ? 's' : ''}</h4><div class="row">${hits.map(h => hitCard(h)).join('')}</div>` : ''}
       ${others.length ? `<h4>Other marks on this work</h4><div class="row">${others.slice(0, 20).map(labelCard).join('')}</div>` : ''}`);
@@ -325,16 +346,16 @@
     const hitsHere = D.hits.filter(h => h.w === oid);
     const backs = w.backs.map(([iiif]) => {
       const mine = w.labels.filter(l => l.iiif === iiif && (state.lmodel || l.how !== 'vision-language model'));
-      const boxes = mine.map(l => ({ box: l.box, cls: kind(l), label: l.id, title: l.t }))
-        .concat(hitsHere.filter(h => h.iiif === iiif).map(h => ({ box: h.box, cls: 'hit', label: h.q, title: 'same label as on Inv. ' + WORK[LAB[h.q].w].inv })));
-      const all = viewer(iiif, mine.map(l => l.box), workTitle(w), 'all located labels and marks', '762a83');
+      const boxes = mine.map(l => ({ box: l.box, cls: kind(l), key: l.key, title: `${l.t} — click to open the entry form` }))
+        .concat(hitsHere.filter(h => h.iiif === iiif).map(h => ({ box: h.box, cls: 'hit', key: h.key, title: `same label as on Inv. ${WORK[LAB[h.q].w].inv} — click to open the entry form` })));
+      const all = viewer(iiif, mine.map(l => l.box), workTitle(w), 'all located labels and marks', '762a83', false, mine.map(l => l.key));
       return `${backWithBoxes(iiif, boxes, 900)}<div class="links"><a href="${esc(all)}" target="_blank" rel="noopener">Open zoomable with all boxes</a></div>`;
     }).join('<br>');
     const facts = [['Object type', esc(w.type)], ['Collection', `<a href="${esc(w.url)}" target="_blank" rel="noopener">${esc(w.url)}</a>`],
       w.acq && ['Acquired by SKKG', esc(w.acq)], w.actors.length && ['Provenance actors', esc(w.actors.join(', '))],
       w.ex.length && ['Exhibitions', w.ex.map(esc).join('<br>')]].filter(Boolean);
     const shown = w.labels.filter(l => state.lmodel || l.how !== 'vision-language model');
-    openDialog(workTitle(w), `<div class="two"><div>${backs}</div><div><dl>${facts.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join('')}</dl>
+    openDialog(workTitle(w), `<div class="two"><div><p class="hintline">Click a box to open the entry form for that label (German, for SKKG's label register).</p>${backs}</div><div><dl>${facts.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join('')}</dl>
       ${hitsHere.length ? `<h4>Labels it shares with other works</h4><div class="row">${hitsHere.map(h => `<button class="card" data-label="${h.q}"><span class="thumb"><img loading="lazy" alt="" src="${esc(region(h.iiif, h.box))}"></span><span class="cap"><b>${esc(LAB[h.q].t)}</b><span class="meta">also on Inv. ${esc(WORK[LAB[h.q].w].inv)}</span></span></button>`).join('')}</div>` : ''}</div></div>
       <h4>${shown.length} label${shown.length === 1 ? '' : 's'} and marks located${state.lmodel ? '' : ' (without unverified model boxes)'}</h4><div class="grid">${shown.map(labelCard).join('') || '<p class="empty">None located yet.</p>'}</div>`);
   }
@@ -353,12 +374,19 @@
   }
   function route() {
     const h = decodeURIComponent(location.hash.slice(1));
-    if (h.startsWith('label=')) { if (document.querySelector('main > section:not([hidden])') === null) tab(current); showLabel(h.slice(6)); return; }
+    if (h.startsWith('label=')) {  // a label by its id or by its stable key (links from the entry form)
+      if (document.querySelector('main > section:not([hidden])') === null) tab(current);
+      const id = h.slice(6);
+      showLabel(LAB[id] ? id : (BYKEY[id] || {}).id);
+      return;
+    }
     if (h.startsWith('work=')) { if (document.querySelector('main > section:not([hidden])') === null) tab(current); showWork(h.slice(5)); return; }
     if (dlg.open) dlg.close();
     tab(h || 'labels');
   }
   document.addEventListener('click', e => {
+    const box = e.target.closest('.ov[data-key]');
+    if (box) { e.preventDefault(); location.href = formUrl(box.dataset.key); return; }  // a box opens the entry form
     const ov = e.target.closest('.ov[data-label]'), card = e.target.closest('[data-label],[data-work]');
     const el = ov || card;
     if (!el || e.target.closest('a')) return;
@@ -395,7 +423,7 @@
       w.backs.forEach(([iiif, W, H]) => { DIM[iiif] = [W, H]; });
       WORK[oid] = w;
     }
-    D.labels.forEach(l => { LAB[l.id] = l; WORK[l.w].labels.push(l); });
+    D.labels.forEach(l => { LAB[l.id] = l; BYKEY[l.key] = l; WORK[l.w].labels.push(l); });
     D.hits.forEach(h => { WORK[h.w].shared = true; WORK[LAB[h.q].w].shared = true; });
     D.labels.forEach(l => { const w = WORK[l.w]; HAY[l.id] = [l.t, l.sub, l.d, l.pos, l.type, w.inv, w.title, w.type, w.actors.join(' ')].join(' ').toLowerCase(); });
     for (const w of Object.values(WORK)) w.hay = [w.inv, w.title, w.type, w.actors.join(' '), w.ex.join(' '), w.acq, w.labels.map(l => l.t).join(' ')].join(' ').toLowerCase();
