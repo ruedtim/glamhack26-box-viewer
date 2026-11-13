@@ -46,6 +46,15 @@
   .status { font-size: 13px; font-weight: 600; }
   .note { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 10px 14px; font-size: 14px; margin: 14px 0 0; }
   .warn { color: var(--bad); }
+  .btn.redraw { border-color: var(--accent); color: var(--accent); } .btn.on.redraw { background: var(--accent); color: #fff; }
+  .drawn { fill: transparent; stroke: #30d158; stroke-width: 3; vector-effect: non-scaling-stroke; filter: drop-shadow(0 0 1.5px #000); }
+  dialog#ed { border: 1px solid var(--line); border-radius: 10px; padding: 14px; background: var(--panel); color: var(--ink); max-width: 96vw; }
+  dialog#ed::backdrop { background: rgba(0,0,0,.5); }
+  #edwrap { position: relative; display: inline-block; touch-action: none; user-select: none; -webkit-user-select: none; cursor: crosshair; margin: 10px 0; }
+  #edimg { display: block; max-width: min(1000px, 90vw); max-height: 70vh; }
+  .edbox { position: absolute; pointer-events: none; box-sizing: border-box; }
+  .edbox.old { border: 2px solid var(--model); } .edbox.area { border: 2px dashed #fff; box-shadow: 0 0 0 1px rgba(0,0,0,.6); }
+  .edbox.new { border: 3px solid #30d158; box-shadow: 0 0 0 1px rgba(0,0,0,.6); }
 </style>
 </head>
 <body>
@@ -55,21 +64,22 @@
       <div class="muted">Provenance Pursuit · <a href="./">back to the results</a></div></div>
     <div style="min-width:280px;flex:1;max-width:520px">
       <div class="muted" id="progress">Loading …</div>
-      <div class="bar" aria-hidden="true"><i id="pOk" style="background:var(--ok)"></i><i id="pBad" style="background:var(--bad)"></i><i id="pUnsure" style="background:var(--unsure)"></i></div>
+      <div class="bar" aria-hidden="true"><i id="pOk" style="background:var(--ok)"></i><i id="pRedrawn" style="background:var(--accent)"></i><i id="pBad" style="background:var(--bad)"></i><i id="pUnsure" style="background:var(--unsure)"></i></div>
     </div>
   </div>
 </header>
 <main class="wrap">
   <div class="note">A vision-language model proposed a box for the marks described in SKKG's provenance data sheets
     that the text recognition could not find. Is the <b style="color:var(--model)">box</b> on the mark the data sheet
-    describes? The white dashed frame is the area the data sheet names. Your decisions stay in this browser:
+    describes? The white dashed frame is the area the data sheet names. If the mark is visible but the box is wrong
+    or too loose, use <b>Redraw box</b> and drag the right one. Your decisions stay in this browser:
     <b>download them</b> when you are done (or before you leave) and put the file into the team's folder; they are
     merged with everyone else's.</div>
   <div class="controls">
     <label class="muted">Your initials <input type="text" id="who" size="5" maxlength="12" autocomplete="off"></label>
     <label class="muted">Show <select id="show">
       <option value="open">not yet reviewed</option><option value="all">all</option>
-      <option value="correct">correct</option><option value="wrong">wrong</option><option value="unsure">unsure</option></select></label>
+      <option value="correct">correct</option><option value="redrawn">redrawn</option><option value="wrong">wrong</option><option value="unsure">unsure</option></select></label>
     <label class="muted">Type <select id="type"><option value="">all</option><option value="label">labels</option>
       <option value="stamp">stamps</option><option value="inscription">inscriptions</option><option value="other">other</option></select></label>
     <input type="search" id="q" placeholder="Inv. no., text …" aria-label="Search">
@@ -87,11 +97,12 @@
         <button class="btn ok" data-d="correct">✓ Correct <kbd>Y</kbd></button>
         <button class="btn bad" data-d="wrong">✗ Wrong <kbd>N</kbd></button>
         <button class="btn unsure" data-d="unsure">? Unsure <kbd>U</kbd></button>
+        <button class="btn redraw" id="redraw" data-mark="redrawn">✎ Redraw box <kbd>R</kbd></button>
         <span style="flex:1"></span>
         <button class="btn" id="prev">← Previous</button>
         <button class="btn" id="next">Next →</button>
       </div>
-      <div class="muted">Keys: <kbd>Y</kbd> correct · <kbd>N</kbd> wrong · <kbd>U</kbd> unsure · <kbd>←</kbd> <kbd>→</kbd> move. After a decision the next open proposal follows.</div>
+      <div class="muted">Keys: <kbd>Y</kbd> correct · <kbd>N</kbd> wrong · <kbd>U</kbd> unsure · <kbd>R</kbd> redraw · <kbd>←</kbd> <kbd>→</kbd> move. After a decision the next open proposal follows. A redrawn box is shown in green.</div>
     </div>
     <div class="panel">
       <h2 id="title"></h2>
@@ -104,6 +115,16 @@
   </div>
   <p class="muted" id="saved"></p>
 </main>
+<dialog id="ed" aria-labelledby="edtitle">
+  <b id="edtitle">Draw the box around the mark</b>
+  <div class="muted">Drag on the image. Purple: the model's proposal · dashed: the area named in the data sheet · green: your box.</div>
+  <div><div id="edwrap"><img id="edimg" alt="The whole back" draggable="false"><div class="edbox area" id="edarea"></div><div class="edbox old" id="edold"></div><div class="edbox new" id="ednew" hidden></div></div></div>
+  <div class="decide" style="margin:0">
+    <button class="btn ok" id="edsave" disabled>Save box</button>
+    <button class="btn" id="edcancel">Cancel</button>
+    <span class="muted" id="edinfo" style="align-self:center"></span>
+  </div>
+</dialog>
 <script>
 (() => {
   'use strict';
@@ -146,11 +167,12 @@
     at = Math.min(at, Math.max(0, list.length - 1));
   }
   function progress() {
-    const n = { correct: 0, wrong: 0, unsure: 0 };
-    items.forEach(it => { const d = decision(it); if (d) n[d]++; });
-    const done = n.correct + n.wrong + n.unsure, pct = v => (v / items.length * 100) + '%';
-    $('#progress').textContent = `${done.toLocaleString('en')} of ${items.length.toLocaleString('en')} reviewed · ${n.correct} correct · ${n.wrong} wrong · ${n.unsure} unsure`;
-    $('#pOk').style.width = pct(n.correct); $('#pBad').style.width = pct(n.wrong); $('#pUnsure').style.width = pct(n.unsure);
+    const n = { correct: 0, redrawn: 0, wrong: 0, unsure: 0 };
+    items.forEach(it => { const d = decision(it); if (d in n) n[d]++; });
+    const done = n.correct + n.redrawn + n.wrong + n.unsure, pct = v => (v / items.length * 100) + '%';
+    $('#progress').textContent = `${done.toLocaleString('en')} of ${items.length.toLocaleString('en')} reviewed · ${n.correct} correct · ${n.redrawn} redrawn · ${n.wrong} wrong · ${n.unsure} unsure`;
+    $('#pOk').style.width = pct(n.correct); $('#pRedrawn').style.width = pct(n.redrawn);
+    $('#pBad').style.width = pct(n.wrong); $('#pUnsure').style.width = pct(n.unsure);
   }
   function show() {
     progress();
@@ -159,13 +181,15 @@
     $('#pos').textContent = list.length ? `${at + 1} of ${list.length} in this list` : '';
     if (!list.length) return;
     const it = list[at], w = R.works[it.w] || ['?', '', ''];
+    const own = (mine[it.k] || {}).box;
     const ctx = context(it), [W, H] = R.dims[it.iiif] || [ctx[0] + ctx[2], ctx[1] + ctx[3]];
-    svg($('#crop'), it.iiif, ctx, ctx, 1000, [['box', it.box]]);
-    svg($('#whole'), it.iiif, [0, 0, W, H], null, 700, [['area', it.area], ['box', it.box]]);
+    svg($('#crop'), it.iiif, ctx, ctx, 1000, [['box', it.box], ...(own ? [['drawn', own]] : [])]);
+    svg($('#whole'), it.iiif, [0, 0, W, H], null, 700, [['area', it.area], ['box', it.box], ...(own ? [['drawn', own]] : [])]);
     $('#title').textContent = `Inv. ${w[0]} · ${w[1]}`;
     const d = decision(it), by = mine[it.k] ? `you${mine[it.k].r ? ' (' + mine[it.k].r + ')' : ''}` : 'the team (merged)';
     $('#status').textContent = d ? `Decided: ${d} — by ${by}` : 'Not reviewed yet';
-    $('#status').style.color = { correct: 'var(--ok)', wrong: 'var(--bad)', unsure: 'var(--unsure)' }[d] || 'var(--muted)';
+    $('#status').style.color = { correct: 'var(--ok)', redrawn: 'var(--accent)', wrong: 'var(--bad)', unsure: 'var(--unsure)' }[d] || 'var(--muted)';
+    $('#redraw').classList.toggle('on', d === 'redrawn');
     const facts = [['Position', it.pos], ['Type', it.type], it.t && ['Text on it', `«${it.t}»`], ['Data sheet says', it.d]].filter(Boolean);
     $('#facts').replaceChildren(...facts.flatMap(([k, v]) => {
       const dt = document.createElement('dt'), dd = document.createElement('dd');
@@ -182,10 +206,10 @@
     const nx = list[at + 1];  // load the next pictures early
     if (nx) { const c = context(nx); new Image().src = `${nx.iiif}/${c.join(',')}/${c[2] > 1000 || c[3] > 1000 ? '!1000,1000' : 'max'}/0/default.jpg`; }
   }
-  function decide(d) {
+  function decide(d, box) {
     if (!list.length) return;
     const it = list[at];
-    mine[it.k] = { d, t: new Date().toISOString(), r: $('#who').value.trim() };
+    mine[it.k] = { d, t: new Date().toISOString(), r: $('#who').value.trim(), ...(box ? { box } : {}) };
     const ok = store.set(KEY, mine);
     $('#saved').innerHTML = ok ? `Saved in this browser (${Object.keys(mine).length} of your decisions). Download them before you switch computers.`
                                : '<span class="warn">This browser does not keep the decisions: download them before you leave the page.</span>';
@@ -195,10 +219,11 @@
   function csvCell(v) { v = String(v ?? ''); return /[;"\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; }
   function exportCsv() {
     const by = {}; items.forEach(it => { by[it.k] = it; });
-    const rows = [['key', 'inv_nr', 'position', 'quoted_text', 'decision', 'reviewer', 'time']];
+    const rows = [['key', 'inv_nr', 'position', 'quoted_text', 'decision', 'box_source', 'x', 'y', 'w', 'h', 'iiif', 'reviewer', 'time']];
     for (const [k, v] of Object.entries(mine)) {
-      const it = by[k], w = it ? R.works[it.w] : null;
-      rows.push([k, w ? w[0] : '', it ? it.pos : '', it ? it.t : '', v.d, v.r || $('#who').value.trim(), v.t]);
+      const it = by[k], w = it ? R.works[it.w] : null, b = v.box || (it ? it.box : ['', '', '', '']);
+      rows.push([k, w ? w[0] : '', it ? it.pos : '', it ? it.t : '', v.d, v.box ? 'drawn' : 'model', ...b, it ? it.iiif : '',
+                 v.r || $('#who').value.trim(), v.t]);
     }
     const blob = new Blob(['﻿' + rows.map(r => r.map(csvCell).join(';')).join('\n')], { type: 'text/csv;charset=utf-8' });
     const a = document.createElement('a');
@@ -227,8 +252,12 @@
     let n = 0;
     for (const r of rows) {
       const k = r[ix('key')], d = r[ix('decision')], t = r[ix('time')] || '';
-      if (!k || !['correct', 'wrong', 'unsure'].includes(d)) continue;
-      if (!mine[k] || (mine[k].t || '') < t) { mine[k] = { d, t, r: r[ix('reviewer')] || '' }; n++; }
+      if (!k || !['correct', 'redrawn', 'wrong', 'unsure'].includes(d)) continue;
+      const box = r[ix('box_source')] === 'drawn' ? ['x', 'y', 'w', 'h'].map(c => Number(r[ix(c)])) : null;
+      if (!mine[k] || (mine[k].t || '') < t) {
+        mine[k] = { d, t, r: r[ix('reviewer')] || '', ...(box && box.every(Number.isFinite) ? { box } : {}) };
+        n++;
+      }
     }
     store.set(KEY, mine);
     $('#saved').textContent = `${n} decisions loaded from ${f.name}.`;
@@ -236,6 +265,47 @@
     filter(); show();
   });
   document.querySelectorAll('.decide [data-d]').forEach(b => b.addEventListener('click', () => decide(b.dataset.d)));
+
+  // ---- redraw: drag a new box on the whole back, saved in pixels of the original image
+  const ed = $('#ed'), edimg = $('#edimg'), edwrap = $('#edwrap');
+  let drag = null, drawn = null, edW = 1, edH = 1;
+  const place = (el, b) => { el.style.left = b[0] / edW * 100 + '%'; el.style.top = b[1] / edH * 100 + '%';
+                             el.style.width = b[2] / edW * 100 + '%'; el.style.height = b[3] / edH * 100 + '%'; };
+  function openEditor() {
+    if (!list.length) return;
+    const it = list[at];
+    [edW, edH] = R.dims[it.iiif] || [1, 1];
+    drawn = (mine[it.k] || {}).box || null;
+    edimg.src = `${it.iiif}/full/!1000,1000/0/default.jpg`;
+    place($('#edold'), it.box);
+    place($('#edarea'), it.area);
+    $('#ednew').hidden = !drawn;
+    if (drawn) place($('#ednew'), drawn);
+    $('#edsave').disabled = !drawn;
+    $('#edinfo').textContent = '';
+    ed.showModal();
+  }
+  function pointAt(e) {
+    const r = edimg.getBoundingClientRect();
+    return [Math.min(1, Math.max(0, (e.clientX - r.left) / r.width)) * edW, Math.min(1, Math.max(0, (e.clientY - r.top) / r.height)) * edH];
+  }
+  edwrap.addEventListener('pointerdown', e => { e.preventDefault(); drag = pointAt(e); edwrap.setPointerCapture(e.pointerId); });
+  edwrap.addEventListener('pointermove', e => {
+    if (!drag) return;
+    const [x1, y1] = pointAt(e), [x0, y0] = drag;
+    drawn = [Math.min(x0, x1), Math.min(y0, y1), Math.abs(x1 - x0), Math.abs(y1 - y0)].map(Math.round);
+    $('#ednew').hidden = false;
+    place($('#ednew'), drawn);
+  });
+  edwrap.addEventListener('pointerup', () => {
+    drag = null;
+    const ok = drawn && drawn[2] > edW / 200 && drawn[3] > edH / 200;
+    $('#edsave').disabled = !ok;
+    $('#edinfo').textContent = ok ? `x ${drawn[0]}, y ${drawn[1]}, w ${drawn[2]}, h ${drawn[3]} (original pixels)` : 'Drag a larger box.';
+  });
+  $('#edsave').addEventListener('click', () => { ed.close(); decide('redrawn', drawn); });
+  $('#edcancel').addEventListener('click', () => ed.close());
+  $('#redraw').addEventListener('click', openEditor);
   $('#prev').addEventListener('click', () => { if (at > 0) { at--; show(); } });
   $('#next').addEventListener('click', () => { if (at < list.length - 1) { at++; show(); } });
   ['#show', '#type'].forEach(id => $(id).addEventListener('change', () => { at = 0; filter(); show(); }));
@@ -244,9 +314,10 @@
   $('#who').addEventListener('input', e => store.set(WHO, e.target.value.trim()));
   $('#export').addEventListener('click', exportCsv);
   document.addEventListener('keydown', e => {
-    if (e.target.closest('input, select, textarea') || e.metaKey || e.ctrlKey || e.altKey) return;
+    if (e.target.closest('input, select, textarea') || e.metaKey || e.ctrlKey || e.altKey || ed.open) return;
     const k = e.key.toLowerCase();
-    if (k === 'y' || k === '1') decide('correct');
+    if (k === 'r') openEditor();
+    else if (k === 'y' || k === '1') decide('correct');
     else if (k === 'n' || k === '2') decide('wrong');
     else if (k === 'u' || k === '3') decide('unsure');
     else if (e.key === 'ArrowLeft') $('#prev').click();
