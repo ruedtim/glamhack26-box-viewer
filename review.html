@@ -1,0 +1,266 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Review the model's proposals – Provenance Pursuit</title>
+<meta name="description" content="Check the boxes a vision-language model proposed for provenance marks described in SKKG's data sheets.">
+<style>
+  :root { --bg: #f5f3ef; --panel: #fff; --ink: #1d1d1b; --muted: #6b6860; --line: #e2ded6; --accent: #1f4e8c;
+          --ok: #1a7f4b; --bad: #c0392b; --unsure: #a86b00; --model: #bf5af2; --chip: #efece6;
+          --shadow: 0 1px 2px rgba(0,0,0,.06), 0 3px 10px rgba(0,0,0,.05); }
+  :root[data-theme="dark"] { --bg: #171716; --panel: #222220; --ink: #ecebe7; --muted: #a8a59d; --line: #36342f;
+          --accent: #9cc2ff; --ok: #52c891; --bad: #ff8a7a; --unsure: #e8b54a; --chip: #2d2b28; --shadow: none; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg: #171716; --panel: #222220;
+          --ink: #ecebe7; --muted: #a8a59d; --line: #36342f; --accent: #9cc2ff; --ok: #52c891; --bad: #ff8a7a;
+          --unsure: #e8b54a; --chip: #2d2b28; --shadow: none; } }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  a { color: var(--accent); }
+  .wrap { max-width: 1280px; margin: 0 auto; padding: 0 16px; }
+  header { background: var(--panel); border-bottom: 1px solid var(--line); }
+  .top { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px 20px; padding: 12px 0; }
+  h1 { font-size: 20px; margin: 0; }
+  .muted { color: var(--muted); font-size: 13px; }
+  .bar { height: 8px; background: var(--chip); border-radius: 99px; overflow: hidden; display: flex; margin: 8px 0 2px; }
+  .bar i { display: block; height: 100%; }
+  .controls { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; margin: 14px 0; }
+  input[type=search], input[type=text], select { font: inherit; font-size: 14px; padding: 6px 9px; border: 1px solid var(--line); border-radius: 6px; background: var(--panel); color: var(--ink); }
+  .btn { font: inherit; font-size: 14px; padding: 7px 14px; border-radius: 6px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); cursor: pointer; }
+  .btn:disabled { opacity: .45; cursor: default; }
+  .decide { display: flex; flex-wrap: wrap; gap: 8px; margin: 14px 0 6px; }
+  .decide .btn { font-weight: 600; padding: 10px 18px; }
+  .btn.ok { border-color: var(--ok); color: var(--ok); } .btn.bad { border-color: var(--bad); color: var(--bad); } .btn.unsure { border-color: var(--unsure); color: var(--unsure); }
+  .btn.on.ok { background: var(--ok); color: #fff; } .btn.on.bad { background: var(--bad); color: #fff; } .btn.on.unsure { background: var(--unsure); color: #fff; }
+  kbd { font: 11px ui-monospace, monospace; border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 4px; padding: 0 4px; margin-left: 4px; color: var(--muted); }
+  .stage { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 18px; }
+  @media (max-width: 820px) { .stage { grid-template-columns: 1fr; } }
+  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 14px; box-shadow: var(--shadow); }
+  svg.view { display: block; width: 100%; height: auto; max-height: 62vh; background: var(--chip); border-radius: 6px; }
+  .box { fill: transparent; stroke: var(--model); stroke-width: 3; vector-effect: non-scaling-stroke; filter: drop-shadow(0 0 1.5px #000); }
+  .area { fill: transparent; stroke: #fff; stroke-width: 2; stroke-dasharray: 8 6; vector-effect: non-scaling-stroke; filter: drop-shadow(0 0 1.5px #000); }
+  h2 { font-size: 17px; margin: 0 0 4px; overflow-wrap: anywhere; }
+  dl { display: grid; grid-template-columns: max-content 1fr; gap: 6px 12px; margin: 10px 0 0; font-size: 14px; }
+  dt { color: var(--muted); } dd { margin: 0; overflow-wrap: anywhere; }
+  .q { color: #762a83; font-weight: 600; }
+  .status { font-size: 13px; font-weight: 600; }
+  .note { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 10px 14px; font-size: 14px; margin: 14px 0 0; }
+  .warn { color: var(--bad); }
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap top">
+    <div><h1>Review the model's proposals</h1>
+      <div class="muted">Provenance Pursuit · <a href="./">back to the results</a></div></div>
+    <div style="min-width:280px;flex:1;max-width:520px">
+      <div class="muted" id="progress">Loading …</div>
+      <div class="bar" aria-hidden="true"><i id="pOk" style="background:var(--ok)"></i><i id="pBad" style="background:var(--bad)"></i><i id="pUnsure" style="background:var(--unsure)"></i></div>
+    </div>
+  </div>
+</header>
+<main class="wrap">
+  <div class="note">A vision-language model proposed a box for the marks described in SKKG's provenance data sheets
+    that the text recognition could not find. Is the <b style="color:var(--model)">box</b> on the mark the data sheet
+    describes? The white dashed frame is the area the data sheet names. Your decisions stay in this browser:
+    <b>download them</b> when you are done (or before you leave) and put the file into the team's folder; they are
+    merged with everyone else's.</div>
+  <div class="controls">
+    <label class="muted">Your initials <input type="text" id="who" size="5" maxlength="12" autocomplete="off"></label>
+    <label class="muted">Show <select id="show">
+      <option value="open">not yet reviewed</option><option value="all">all</option>
+      <option value="correct">correct</option><option value="wrong">wrong</option><option value="unsure">unsure</option></select></label>
+    <label class="muted">Type <select id="type"><option value="">all</option><option value="label">labels</option>
+      <option value="stamp">stamps</option><option value="inscription">inscriptions</option><option value="other">other</option></select></label>
+    <input type="search" id="q" placeholder="Inv. no., text …" aria-label="Search">
+    <span class="muted" id="pos"></span>
+    <span style="flex:1"></span>
+    <button class="btn" id="export">Download my decisions (CSV)</button>
+    <label class="btn" for="import" style="display:inline-block">Load decisions …</label>
+    <input type="file" id="import" accept=".csv,text/csv" hidden>
+  </div>
+  <div id="empty" class="note" hidden>Nothing left to review with these filters.</div>
+  <div class="stage" id="stage" hidden>
+    <div class="panel">
+      <svg class="view" id="crop" role="img" aria-label="The proposed box with its surroundings"></svg>
+      <div class="decide">
+        <button class="btn ok" data-d="correct">✓ Correct <kbd>Y</kbd></button>
+        <button class="btn bad" data-d="wrong">✗ Wrong <kbd>N</kbd></button>
+        <button class="btn unsure" data-d="unsure">? Unsure <kbd>U</kbd></button>
+        <span style="flex:1"></span>
+        <button class="btn" id="prev">← Previous</button>
+        <button class="btn" id="next">Next →</button>
+      </div>
+      <div class="muted">Keys: <kbd>Y</kbd> correct · <kbd>N</kbd> wrong · <kbd>U</kbd> unsure · <kbd>←</kbd> <kbd>→</kbd> move. After a decision the next open proposal follows.</div>
+    </div>
+    <div class="panel">
+      <h2 id="title"></h2>
+      <div class="status" id="status"></div>
+      <dl id="facts"></dl>
+      <p style="margin:12px 0 6px" class="muted">The whole back</p>
+      <svg class="view" id="whole" role="img" aria-label="The whole back with the proposed box and the area named in the data sheet"></svg>
+      <p class="muted" style="margin-top:8px"><a id="zoom" target="_blank" rel="noopener">Open the back zoomable</a> · <a id="obj" target="_blank" rel="noopener">SKKG collection</a></p>
+    </div>
+  </div>
+  <p class="muted" id="saved"></p>
+</main>
+<script>
+(() => {
+  'use strict';
+  const $ = s => document.querySelector(s);
+  const KEY = 'pp-model-review-v1', WHO = 'pp-model-review-who';
+  const store = {
+    get(k, fallback) { try { const v = localStorage.getItem(k); return v === null ? fallback : JSON.parse(v); } catch { return fallback; } },
+    set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch { return false; } },
+  };
+  let R, items = [], list = [], at = 0, mine = store.get(KEY, {});  // mine: key -> {d, t, r}
+  const decision = it => (mine[it.k] || {}).d || it.rv || '';
+  const kind = it => /label/.test(it.type) ? 'label' : /stamp/.test(it.type) ? 'stamp' : /inscription/.test(it.type) ? 'inscription' : 'other';
+
+  function svg(el, iiif, vb, imgBox, size, shapes) {
+    const NS = 'http://www.w3.org/2000/svg';
+    el.setAttribute('viewBox', vb.join(' '));
+    el.replaceChildren();
+    const img = document.createElementNS(NS, 'image');
+    const url = imgBox ? `${iiif}/${imgBox.join(',')}/${imgBox[2] > size || imgBox[3] > size ? `!${size},${size}` : 'max'}/0/default.jpg`
+                       : `${iiif}/full/!${size},${size}/0/default.jpg`;
+    const [x, y, w, h] = imgBox || [0, 0, vb[2], vb[3]];
+    Object.entries({ href: url, x, y, width: w, height: h }).forEach(([k, v]) => img.setAttribute(k, v));
+    el.append(img);
+    for (const [cls, b] of shapes) {
+      const r = document.createElementNS(NS, 'rect');
+      Object.entries({ class: cls, x: b[0], y: b[1], width: Math.max(b[2], 4), height: Math.max(b[3], 4) }).forEach(([k, v]) => r.setAttribute(k, v));
+      el.append(r);
+    }
+  }
+  function context(it) {  // the box with a margin around it, inside the image
+    const [W, H] = R.dims[it.iiif] || [it.box[0] + it.box[2], it.box[1] + it.box[3]];
+    const m = Math.max(it.box[2], it.box[3]) * 0.6 + 0.02 * Math.max(W, H);
+    const x = Math.max(0, it.box[0] - m), y = Math.max(0, it.box[1] - m);
+    return [x, y, Math.min(W, it.box[0] + it.box[2] + m) - x, Math.min(H, it.box[1] + it.box[3] + m) - y].map(Math.round);
+  }
+  function filter() {
+    const show = $('#show').value, type = $('#type').value, q = $('#q').value.toLowerCase().trim();
+    list = items.filter(it => (show === 'all' || (show === 'open' ? !decision(it) : decision(it) === show))
+      && (!type || kind(it) === type) && (!q || it.hay.includes(q)));
+    at = Math.min(at, Math.max(0, list.length - 1));
+  }
+  function progress() {
+    const n = { correct: 0, wrong: 0, unsure: 0 };
+    items.forEach(it => { const d = decision(it); if (d) n[d]++; });
+    const done = n.correct + n.wrong + n.unsure, pct = v => (v / items.length * 100) + '%';
+    $('#progress').textContent = `${done.toLocaleString('en')} of ${items.length.toLocaleString('en')} reviewed · ${n.correct} correct · ${n.wrong} wrong · ${n.unsure} unsure`;
+    $('#pOk').style.width = pct(n.correct); $('#pBad').style.width = pct(n.wrong); $('#pUnsure').style.width = pct(n.unsure);
+  }
+  function show() {
+    progress();
+    $('#empty').hidden = list.length > 0;
+    $('#stage').hidden = !list.length;
+    $('#pos').textContent = list.length ? `${at + 1} of ${list.length} in this list` : '';
+    if (!list.length) return;
+    const it = list[at], w = R.works[it.w] || ['?', '', ''];
+    const ctx = context(it), [W, H] = R.dims[it.iiif] || [ctx[0] + ctx[2], ctx[1] + ctx[3]];
+    svg($('#crop'), it.iiif, ctx, ctx, 1000, [['box', it.box]]);
+    svg($('#whole'), it.iiif, [0, 0, W, H], null, 700, [['area', it.area], ['box', it.box]]);
+    $('#title').textContent = `Inv. ${w[0]} · ${w[1]}`;
+    const d = decision(it), by = mine[it.k] ? `you${mine[it.k].r ? ' (' + mine[it.k].r + ')' : ''}` : 'the team (merged)';
+    $('#status').textContent = d ? `Decided: ${d} — by ${by}` : 'Not reviewed yet';
+    $('#status').style.color = { correct: 'var(--ok)', wrong: 'var(--bad)', unsure: 'var(--unsure)' }[d] || 'var(--muted)';
+    const facts = [['Position', it.pos], ['Type', it.type], it.t && ['Text on it', `«${it.t}»`], ['Data sheet says', it.d]].filter(Boolean);
+    $('#facts').replaceChildren(...facts.flatMap(([k, v]) => {
+      const dt = document.createElement('dt'), dd = document.createElement('dd');
+      dt.textContent = k; dd.textContent = v; if (k === 'Text on it') dd.className = 'q';
+      return [dt, dd];
+    }));
+    document.querySelectorAll('.decide [data-d]').forEach(b => b.classList.toggle('on', b.dataset.d === d));
+    const p = new URLSearchParams({ iiif: it.iiif, xywh: it.box.join(','), area: it.area.join(','), title: `Inv. ${w[0]} · ${it.pos}`,
+                                    note: 'proposed by the vision-language model; dashed: area named in the data sheet', colour: 'bf5af2', zoom: '1' });
+    $('#zoom').href = 'viewer.html?' + p;
+    $('#obj').href = w[2];
+    $('#prev').disabled = at === 0;
+    $('#next').disabled = at >= list.length - 1;
+    const nx = list[at + 1];  // load the next pictures early
+    if (nx) { const c = context(nx); new Image().src = `${nx.iiif}/${c.join(',')}/${c[2] > 1000 || c[3] > 1000 ? '!1000,1000' : 'max'}/0/default.jpg`; }
+  }
+  function decide(d) {
+    if (!list.length) return;
+    const it = list[at];
+    mine[it.k] = { d, t: new Date().toISOString(), r: $('#who').value.trim() };
+    const ok = store.set(KEY, mine);
+    $('#saved').innerHTML = ok ? `Saved in this browser (${Object.keys(mine).length} of your decisions). Download them before you switch computers.`
+                               : '<span class="warn">This browser does not keep the decisions: download them before you leave the page.</span>';
+    if ($('#show').value === 'open') { filter(); } else if (at < list.length - 1) { at++; }
+    show();
+  }
+  function csvCell(v) { v = String(v ?? ''); return /[;"\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; }
+  function exportCsv() {
+    const by = {}; items.forEach(it => { by[it.k] = it; });
+    const rows = [['key', 'inv_nr', 'position', 'quoted_text', 'decision', 'reviewer', 'time']];
+    for (const [k, v] of Object.entries(mine)) {
+      const it = by[k], w = it ? R.works[it.w] : null;
+      rows.push([k, w ? w[0] : '', it ? it.pos : '', it ? it.t : '', v.d, v.r || $('#who').value.trim(), v.t]);
+    }
+    const blob = new Blob(['﻿' + rows.map(r => r.map(csvCell).join(';')).join('\n')], { type: 'text/csv;charset=utf-8' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `model_box_review_${($('#who').value.trim() || 'anonymous').replace(/\W+/g, '')}_${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.append(a); a.click(); a.remove();
+  }
+  function parseCsv(text) {
+    const rows = [];
+    let row = [], cell = '', q = false;
+    for (let i = 0; i < text.length; i++) {
+      const c = text[i];
+      if (q) { if (c === '"' && text[i + 1] === '"') { cell += '"'; i++; } else if (c === '"') q = false; else cell += c; }
+      else if (c === '"') q = true; else if (c === ';') { row.push(cell); cell = ''; }
+      else if (c === '\n' || c === '\r') { if (c === '\r' && text[i + 1] === '\n') i++; row.push(cell); rows.push(row); row = []; cell = ''; }
+      else cell += c;
+    }
+    if (cell || row.length) { row.push(cell); rows.push(row); }
+    return rows;
+  }
+  $('#import').addEventListener('change', async e => {
+    const f = e.target.files[0];
+    if (!f) return;
+    const rows = parseCsv((await f.text()).replace(/^﻿/, ''));
+    const head = rows.shift() || [], ix = n => head.indexOf(n);
+    let n = 0;
+    for (const r of rows) {
+      const k = r[ix('key')], d = r[ix('decision')], t = r[ix('time')] || '';
+      if (!k || !['correct', 'wrong', 'unsure'].includes(d)) continue;
+      if (!mine[k] || (mine[k].t || '') < t) { mine[k] = { d, t, r: r[ix('reviewer')] || '' }; n++; }
+    }
+    store.set(KEY, mine);
+    $('#saved').textContent = `${n} decisions loaded from ${f.name}.`;
+    e.target.value = '';
+    filter(); show();
+  });
+  document.querySelectorAll('.decide [data-d]').forEach(b => b.addEventListener('click', () => decide(b.dataset.d)));
+  $('#prev').addEventListener('click', () => { if (at > 0) { at--; show(); } });
+  $('#next').addEventListener('click', () => { if (at < list.length - 1) { at++; show(); } });
+  ['#show', '#type'].forEach(id => $(id).addEventListener('change', () => { at = 0; filter(); show(); }));
+  $('#q').addEventListener('input', () => { at = 0; filter(); show(); });
+  $('#who').value = store.get(WHO, '');
+  $('#who').addEventListener('input', e => store.set(WHO, e.target.value.trim()));
+  $('#export').addEventListener('click', exportCsv);
+  document.addEventListener('keydown', e => {
+    if (e.target.closest('input, select, textarea') || e.metaKey || e.ctrlKey || e.altKey) return;
+    const k = e.key.toLowerCase();
+    if (k === 'y' || k === '1') decide('correct');
+    else if (k === 'n' || k === '2') decide('wrong');
+    else if (k === 'u' || k === '3') decide('unsure');
+    else if (e.key === 'ArrowLeft') $('#prev').click();
+    else if (e.key === 'ArrowRight') $('#next').click();
+    else return;
+    e.preventDefault();
+  });
+  fetch('review.json', { cache: 'no-cache' }).then(r => r.json()).then(data => {
+    R = data;
+    items = R.items;
+    items.forEach(it => { const w = R.works[it.w] || []; it.hay = [w[0], w[1], it.t, it.d, it.pos, it.type].join(' ').toLowerCase(); });
+    filter(); show();
+  }).catch(() => { $('#progress').textContent = 'The proposals could not be loaded.'; });
+})();
+</script>
+</body>
+</html>

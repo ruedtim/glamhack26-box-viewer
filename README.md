@@ -9,6 +9,8 @@ works carry the same label. *Have I seen this label before?*
   the same seller, the provenance).
 - **Workbook: [provenance_pursuit_results.xlsx](https://ruedtim.github.io/glamhack26-box-viewer/provenance_pursuit_results.xlsx)**
   – all results in one Excel file; its first sheet explains the others.
+- **Review page: [review.html](https://ruedtim.github.io/glamhack26-box-viewer/review.html)** – check the boxes the
+  vision-language model proposed (correct, wrong, unsure) and download your decisions for the team.
 - **Label box viewer: `viewer.html`** – any image straight from a IIIF server with one or more boxes drawn on it.
 
 All images are loaded live from the SKKG IIIF server (`iiif.digital.skkg.ch`); nothing is copied. Boxes are in
