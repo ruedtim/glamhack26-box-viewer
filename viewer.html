@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Label box viewer</title>
+<meta name="description" content="Shows a whole image straight from a IIIF image server with one or more boxes drawn on it.">
+<!--
+  Label box viewer – GLAMhack 2026, challenge 304 "Provenance Pursuit".
+  Loads the original image from the IIIF image server (deep zoom, nothing is copied) and draws the box(es) on it.
+
+  Address:  viewer.html?iiif=<IIIF image service URL>&xywh=x,y,w,h
+  Optional: &xywh=… (more boxes, or several separated by ;)  &area=x,y,w,h (approximate area, always dashed)
+            &title=…  &note=…  &page=<collection page URL>
+            &colour=ff3b30 (box colour, hex)  &style=dashed (approximate position)  &zoom=1 (start on the box)
+            &static=1 (plain image without deep zoom)
+  x, y, w, h are pixels of the original image, as in the IIIF region parameter.
+-->
+<style>
+  :root { --bg: #161616; --bar: #232323; --line: #383838; --fg: #f1f1f1; --muted: #b4b4b4; --link: #9cc2ff;
+          --box: #ff3b30; }
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  html, body { height: 100%; margin: 0; }
+  body { display: flex; flex-direction: column; background: var(--bg); color: var(--fg);
+         font: 14px/1.4 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  header { padding: 10px 16px; background: var(--bar); border-bottom: 1px solid var(--line); }
+  h1 { font-size: 16px; margin: 0; font-weight: 600; overflow-wrap: anywhere; }
+  #note { color: var(--muted); margin: 2px 0 0; overflow-wrap: anywhere; }
+  .bar { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; margin-top: 8px; }
+  button { font: inherit; color: var(--fg); background: #333; border: 1px solid #555; border-radius: 4px;
+           padding: 3px 10px; cursor: pointer; }
+  button:hover:not(:disabled) { background: #404040; }
+  button:disabled { opacity: .45; cursor: default; }
+  #links { display: flex; flex-wrap: wrap; gap: 4px 14px; }
+  a { color: var(--link); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  #view { position: relative; flex: 1; min-height: 260px; }
+  #msg { position: absolute; inset: 0; display: grid; place-items: center; padding: 16px; text-align: center;
+         color: var(--muted); }
+  #flat { position: absolute; inset: 0; }
+  #flat svg { display: block; width: 100%; height: 100%; }
+  .box { outline: 3px solid var(--box); box-shadow: 0 0 0 5px rgba(0, 0, 0, .45), inset 0 0 0 1px rgba(0, 0, 0, .5); }
+  .box.dashed { outline-style: dashed; }
+  footer { padding: 6px 16px; font-size: 12px; color: var(--muted); background: var(--bar);
+           border-top: 1px solid var(--line); }
+</style>
+</head>
+<body>
+<header>
+  <h1 id="title">Label box viewer</h1>
+  <p id="note" hidden></p>
+  <div class="bar">
+    <button id="whole" type="button">Whole image</button>
+    <button id="zoom" type="button">Zoom to box</button>
+    <span id="links"></span>
+  </div>
+</header>
+<div id="view"><div id="msg">Loading the image …</div><div id="flat" hidden></div></div>
+<footer>Image loaded from the IIIF image server <span id="host"></span>. Box = pixels of the original image
+(x, y, width, height); a dashed box marks an approximate position. Scroll or pinch to zoom, drag to move.</footer>
+<noscript><p style="padding:16px">This viewer needs JavaScript.</p></noscript>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/openseadragon/4.1.0/openseadragon.min.js"
+        integrity="sha384-4BsIv4BUV37POdA1NZ6UcVAsFk96MQXmFLog7pWs+JP+a8k2XjilfManEVdWDxTe"
+        crossorigin="anonymous"></script>
+<script>
+(() => {
+  'use strict';
+  const params = new URLSearchParams(location.search);
+  const $ = id => document.getElementById(id);
+  const isHttp = u => /^https?:\/\/\S+$/i.test(u || '');
+  const msg = $('msg');
+  const say = text => { msg.textContent = text; msg.hidden = false; };
+
+  // IIIF image service: accepts the service URL, its info.json or any image request URL of it
+  let base = (params.get('iiif') || '').trim().replace(/\/info\.json$/i, '').replace(/\/+$/, '');
+  const parts = base.split('/');
+  if (parts.length > 7 && /^(default|color|colour|gray|grey|bitonal|native)\.\w+$/i.test(parts[parts.length - 1])) {
+    base = parts.slice(0, -4).join('/');
+  }
+  const parseBoxes = name => params.getAll(name).flatMap(v => v.split(';'))
+    .map(v => v.split(',').map(s => Number(s.trim())))
+    .filter(b => b.length === 4 && b.every(Number.isFinite) && b[2] > 0 && b[3] > 0);
+  const boxes = parseBoxes('xywh'), areas = parseBoxes('area');  // area: always dashed (approximate area)
+  const colour = (params.get('colour') || params.get('color') || '').replace(/^#/, '');
+  if (/^([0-9a-f]{3}){1,2}$/i.test(colour)) document.documentElement.style.setProperty('--box', '#' + colour);
+  const dashed = /^(dashed|approximate)$/i.test(params.get('style') || '');
+
+  const title = params.get('title');
+  if (title) { $('title').textContent = title; document.title = title + ' – label box viewer'; }
+  if (params.get('note')) { $('note').textContent = params.get('note'); $('note').hidden = false; }
+  const addLink = (text, href) => {
+    if (!isHttp(href)) return;
+    const a = document.createElement('a');
+    a.href = href; a.textContent = text; a.target = '_blank'; a.rel = 'noopener';
+    $('links').append(a);
+  };
+  const focus = boxes.length ? boxes : areas;  // «Zoom to box» goes to the boxes, else to the areas
+  const shapes = [...boxes.map(b => [b, dashed]), ...areas.map(b => [b, true])];
+  if (!focus.length) $('zoom').disabled = true;
+  if (!isHttp(base)) {
+    $('zoom').disabled = $('whole').disabled = true;
+    say('No image given. Open this page as viewer.html?iiif=<IIIF image service URL>&xywh=x,y,w,h');
+    return;
+  }
+  $('host').textContent = new URL(base).host;
+  addLink('Whole image (IIIF)', base + '/full/max/0/default.jpg');
+  boxes.forEach((b, i) => addLink(boxes.length > 1 ? `Box ${i + 1} (IIIF region)` : 'Box (IIIF region)',
+                                  `${base}/${b.map(Math.round).join(',')}/max/0/default.jpg`));
+  addLink('Collection page', params.get('page'));
+
+  // the boxes with a margin around them, kept inside the image
+  const union = focus.reduce((u, [x, y, w, h]) => [Math.min(u[0], x), Math.min(u[1], y),
+                                                   Math.max(u[2], x + w), Math.max(u[3], y + h)],
+                             [Infinity, Infinity, -Infinity, -Infinity]);
+  function around(W, H) {
+    const m = Math.max(union[2] - union[0], union[3] - union[1]) * 0.5 + 0.02 * Math.max(W, H);
+    const x = Math.max(0, union[0] - m), y = Math.max(0, union[1] - m);
+    return [x, y, Math.min(W, union[2] + m) - x, Math.min(H, union[3] + m) - y];
+  }
+
+  function deepZoom() {
+    const viewer = OpenSeadragon({
+      element: $('view'), tileSources: base + '/info.json', crossOriginPolicy: 'Anonymous',
+      showNavigationControl: false, visibilityRatio: 0.2, minZoomImageRatio: 0.5, maxZoomPixelRatio: 4,
+      gestureSettingsMouse: { clickToZoom: false },
+    });
+    viewer.addOnceHandler('tile-drawn', () => { msg.hidden = true; });  // «Loading …» stays until the first tile
+    viewer.addHandler('open', () => {
+      const vp = viewer.viewport, size = viewer.world.getItemAt(0).getContentSize();
+      for (const [[x, y, w, h], dash] of shapes) {
+        const el = document.createElement('div');
+        el.className = dash ? 'box dashed' : 'box';
+        viewer.addOverlay({ element: el, location: vp.imageToViewportRectangle(x, y, w, h) });
+      }
+      $('whole').onclick = () => vp.goHome();
+      $('zoom').onclick = () => vp.fitBounds(vp.imageToViewportRectangle(...around(size.x, size.y)));
+      if (params.get('zoom') === '1' && focus.length) vp.fitBounds(vp.imageToViewportRectangle(...around(size.x, size.y)), true);
+    });
+    viewer.addHandler('open-failed', () => { viewer.destroy(); flat(); });
+  }
+
+  function flat() {  // without deep zoom: one rendering of the whole image, boxes drawn as SVG
+    say('Loading the image …');
+    fetch(base + '/info.json').then(r => { if (!r.ok) throw new Error(r.status); return r.json(); }).then(info => {
+      const W = info.width, H = info.height, NS = 'http://www.w3.org/2000/svg';
+      const el = (name, attrs) => {
+        const e = document.createElementNS(NS, name);
+        for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, v);
+        return e;
+      };
+      const svg = el('svg', { viewBox: `0 0 ${W} ${H}`, preserveAspectRatio: 'xMidYMid meet', role: 'img',
+                             'aria-label': 'Whole image with the box drawn on it' });
+      svg.append(el('image', { href: `${base}/full/!2400,2400/0/default.jpg`, width: W, height: H }));
+      const stroke = getComputedStyle(document.documentElement).getPropertyValue('--box').trim();
+      for (const [[x, y, w, h], dash] of shapes) {
+        const common = { x, y, width: w, height: h, fill: 'none', 'vector-effect': 'non-scaling-stroke' };
+        svg.append(el('rect', { ...common, stroke: 'rgba(0,0,0,.5)', 'stroke-width': 9 }));
+        svg.append(el('rect', { ...common, stroke, 'stroke-width': 3, ...(dash ? { 'stroke-dasharray': '10 6' } : {}) }));
+      }
+      $('flat').replaceChildren(svg);
+      $('flat').hidden = false;
+      msg.hidden = true;
+      $('whole').onclick = () => svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+      $('zoom').onclick = () => svg.setAttribute('viewBox', around(W, H).join(' '));
+      if (params.get('zoom') === '1' && focus.length) $('zoom').onclick();
+    }).catch(() => say('The image could not be loaded from the IIIF server.'));
+  }
+
+  if (window.OpenSeadragon && params.get('static') !== '1') deepZoom(); else flat();
+})();
+</script>
+</body>
+</html>
