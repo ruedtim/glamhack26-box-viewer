@@ -6,6 +6,7 @@
 <title>How we got here – Provenance Pursuit</title>
 <meta name="description" content="The steps from the challenge's raw material to the results site, the workbook and the tools of Provenance Pursuit (GLAMhack 2026, challenge 304, SKKG): what we tried, what worked, what didn't, and what we decided.">
 <script src="feedback.js"></script>
+<script src="nav.js"></script>
 <style>
   /* Tokens as on the results site (index.html), plus the chart colours of this page (validated for colour vision deficiency
      against the panel colour in both modes). */
@@ -37,7 +38,7 @@
   nav.tabs a { padding: 10px 12px 9px; text-decoration: none; color: var(--muted); border-bottom: 3px solid transparent; font-weight: 600; font-size: 14px; }
   nav.tabs a:hover { color: var(--ink); }
   nav.tabs a[aria-current="page"] { color: var(--ink); border-bottom-color: var(--accent); }
-  @media (max-width: 760px) { .top { padding-top: 10px; } nav.tabs a { padding: 8px 9px 7px; } }
+  @media (max-width: 760px) { .top { padding-top: 10px; } nav.tabs a, nav.tabs details > summary.ppnav-sum { padding: 8px 9px 7px; } }
   main { padding: 18px 0 72px; }
   code { font: 13px/1.4 ui-monospace, "SF Mono", Menlo, monospace; background: var(--chip); padding: 1px 4px; border-radius: 4px; overflow-wrap: anywhere; }
   b, strong { font-weight: 650; }
@@ -264,7 +265,7 @@
           <li><a href="#s10"><span class="tn">10</span>Ten ideas, each with a probe</a></li>
           <li><a href="#s11"><span class="tn">11</span>SIK-ISEA: links and counts</a></li>
           <li><a href="#s12"><span class="tn">12</span>Entry form, search by photo</a></li>
-          <li><a href="#s13"><span class="tn">13</span>Masking private owners</a></li>
+          <li><a href="#s13"><span class="tn">13</span>Private owners: masked, then named</a></li>
         </ol>
         <h4>Saturday 14 November</h4>
         <ol>
@@ -668,7 +669,7 @@
                 the label detector's text was added on Saturday).</p>
               <p><span class="tag dec">Decided</span>(17:57) SIK-ISEA's
                 <a href="https://www.sik-isea.ch/de-ch/%C3%9Cber-uns/%C3%9Cber-uns/Rechtliche-Hinweise">legal notice</a> does
-                not allow its content to be republished without consent, and its ownership histories name private owners. So the
+                not allow its content to be republished without consent. So the
                 public site and workbook link to SIK-ISEA's records and count what they add, next to our own label evidence;
                 no exhibitions, venues, years, lots, titles or dates from the portal. The details stay in the team's internal
                 workbook, and the raw responses never leave the internal folder. Since 17:59 there are two workbooks: the
@@ -697,9 +698,9 @@
             </div>
           </li>
 
-          <li class="step" id="s13" data-sec="Step 13: Masking private owners">
-            <h3><span class="n">13</span>Masking private owners</h3>
-            <span class="when"><time datetime="2026-11-13T18:18+01:00">18:18</time>, tightened Saturday <time datetime="2026-11-14T12:32+01:00">12:32</time></span>
+          <li class="step" id="s13" data-sec="Step 13: Private owners, masked, then named">
+            <h3><span class="n">13</span>Private owners: masked, then named</h3>
+            <span class="when"><time datetime="2026-11-13T18:18+01:00">18:18</time>, tightened Saturday <time datetime="2026-11-14T12:32+01:00">12:32</time>, reversed for names <time datetime="2026-11-14T14:36+01:00">14:36</time></span>
             <div class="card">
               <p><span class="tag no">Found</span>Before the publication at 18:21, a scan of the public files found label
                 transcriptions from the data sheets with names and addresses of former private owners. They had been in the
@@ -710,11 +711,15 @@
               <p><span class="tag no">Didn't hold</span>On Saturday, while linking labels to timeline events, about 17 published
                 label texts turned up in which a private owner's name had slipped through: owner fields in capitals or after a
                 «|» («EIGENTUM VON | …»), «SAMMLUNG …», «reserviert für …», lender fields.</p>
-              <p><span class="tag ok">Fixed</span>(12:32) The masking now ignores case and «|» and covers inclusive forms; a name
-                that a data sheet's description gives as owner is hidden in the label's quoted text too. Names left in label
-                texts are those SKKG itself publishes as provenance actors; in the timelines, persons appear only by their
-                role. At 13:47 the team confirmed that the label detector's text stays public, masked in the same way: the
-                search and the entry form rely on it.</p>
+              <p><span class="tag ok">Fixed</span>(12:32) The masking then ignored case and «|» and covered inclusive forms; a
+                name that a data sheet's description gives as owner was hidden in the label's quoted text too. The names left
+                in label texts were those SKKG itself publishes as provenance actors; in the timelines, persons appeared only
+                by their role. At 13:47 the team confirmed that the label detector's text stays public, masked in the same
+                way: the search and the entry form rely on it.</p>
+              <p><span class="tag dec">Decided</span>(14:36) Reversed for names. On 14 November the team decided to show names
+                from public sources: they are already published there, and for provenance research the names matter most.
+                Addresses stay masked («[address]»). Since then owners, heirs and sellers appear by name in the timelines, and
+                label texts show the names the labels give.</p>
             </div>
           </li>
         </ol>
@@ -772,7 +777,7 @@
                 <p>Each work's labels lift off its back, beside a timeline from SKKG's records: provenance, exhibitions,
                   acquisition. Clicking an event lights up the labels that document it, and the other way round. 594 works have
                   a timeline; 533 of 2,015 events are documented by a label (252 strongly), through 805 links from 575 labels
-                  on 291 works. Persons appear by role only. Live at 12:32.</p>
+                  on 291 works. Live at 12:32, with persons by their role only; since the decision on names (step 13), by name.</p>
               </div>
               <div class="sub no">
                 <h4>2 · Its mark finder as a second detector: added almost nothing</h4>
@@ -829,14 +834,14 @@
                 a public page. The first relay needed a personal GitHub token pasted into its settings; a way without any token
                 replaced it within the hour.</p>
               <p><span class="tag ok">Worked</span>(12:19–12:21) The form on the page sends the message to a small relay, a
-                Google Apps Script web app that only keeps it, for six hours at most, and holds no secret. Every 10 minutes a
+                Google Apps Script web app that only keeps it for a limited time (six hours at first, 48 since Saturday afternoon) and holds no secret. Every 10 minutes a
                 GitHub Action in the site's repository fetches new messages and opens one public issue each, with the
                 short-lived token GitHub gives every run. No personal token is stored anywhere. A test message went through end
                 to end, and the test issue was deleted.</p>
               <figure class="fig">
                 <svg class="dg w-flow" viewBox="0 0 300 232" role="img" aria-labelledby="fb-t fb-d">
                   <title id="fb-t">How feedback becomes an issue</title>
-                  <desc id="fb-d">Form on the page: no account needed, page, work and box go along. Relay, a Google Apps Script web app: keeps messages for at most 6 hours and holds no secret. GitHub Action, every 10 minutes: uses the token GitHub gives each run. Public issue in the site's repository, 10 to 20 minutes after sending.</desc>
+                  <desc id="fb-d">Form on the page: no account needed, page, work and box go along. Relay, a Google Apps Script web app: keeps messages for at most 48 hours and holds no secret. GitHub Action, every 10 minutes: uses the token GitHub gives each run. Public issue in the site's repository, when the Action next runs.</desc>
                   <defs><marker id="ah2" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah" d="M0,0 L8,4 L0,8 z"/></marker></defs>
                   <rect class="box" x="0.5" y="0.5" width="299" height="46" rx="6"/>
                   <text class="t" x="12" y="20">Form on the page</text>
@@ -844,7 +849,7 @@
                   <path class="ar" d="M150 47 V60" marker-end="url(#ah2)"/>
                   <rect class="box" x="0.5" y="62.5" width="299" height="46" rx="6"/>
                   <text class="t" x="12" y="82">Relay: a Google Apps Script web app</text>
-                  <text class="s" x="12" y="98">keeps messages ≤ 6 hours, holds no secret</text>
+                  <text class="s" x="12" y="98">keeps messages ≤ 48 hours, holds no secret</text>
                   <path class="ar" d="M150 109 V122" marker-end="url(#ah2)"/>
                   <rect class="box" x="0.5" y="124.5" width="299" height="46" rx="6"/>
                   <text class="t" x="12" y="144">GitHub Action, every 10 minutes</text>
@@ -852,13 +857,17 @@
                   <path class="ar" d="M150 171 V184" marker-end="url(#ah2)"/>
                   <rect class="hub" x="0.8" y="186.8" width="298.4" height="44.4" rx="6"/>
                   <text class="t" x="12" y="206">Public issue in the site's repository</text>
-                  <text class="s" x="12" y="222">10 to 20 minutes after sending</text>
+                  <text class="s" x="12" y="222">when the Action next runs</text>
                 </svg>
                 <figcaption>No step holds a personal token. Those with a GitHub account can still open the prefilled issue on
                   GitHub directly.</figcaption>
               </figure>
-              <p><span class="tag dec">Decided</span>The price is a wait of 10 to 20 minutes: the schedule, plus GitHub's own
-                delays around the full hour. The team kept the 10-minute schedule (13:53). «Report a problem» links on labels,
+              <p><span class="tag dec">Decided</span>The price is a wait: 10 to 20 minutes by design (the schedule, plus
+                GitHub's own delays). The team kept the 10-minute schedule (13:53).</p>
+              <p><span class="tag no">Didn't work yet</span>By Saturday 14:50 GitHub's timer had not started the Action by
+                itself once. Messages are safe meanwhile: they wait in the relay and become issues as soon as the Action runs,
+                by timer or started by hand.</p>
+              <p><span class="tag">Also</span> «Report a problem» links on labels,
                 boxes, matches and timeline events carry the same context.</p>
               <p class="live"><span class="tag live">Live</span>11:56 button · 12:19 relay and Action · 12:21 form without an
                 account</p>
@@ -936,19 +945,18 @@
           </div>
           <div class="dc">
             <h3>SIK-ISEA: links and counts</h3>
-            <p><b>Why:</b> SIK-ISEA's legal notice does not allow its portal's content to be republished without consent, and
-              its ownership histories name private owners.</p>
+            <p><b>Why:</b> SIK-ISEA's legal notice does not allow its portal's content to be republished without consent.</p>
             <p>So the public site and workbook link to SIK-ISEA's records and say how much they add (536 items, 51 of them
               matched by a label on the back). The details stay in the team's internal workbook.</p>
             <p class="see"><a href="#s11">Step 11</a> · <a href="sik_isea.html">What SIK-ISEA adds</a></p>
           </div>
           <div class="dc">
-            <h3>Private owners masked</h3>
-            <p><b>Why:</b> labels and data sheets transcribe names and addresses of former private owners, and the site is
-              public.</p>
-            <p>Everything public masks them («[private owner]», «[address]»); sellers who are persons are not named, and the
-              timelines show persons only by their role. Dealers, auction houses and museums are named as SKKG records them.
-              The internal workbook keeps the full text for the team.</p>
+            <h3>Names shown, addresses masked</h3>
+            <p><b>Why:</b> the names are already published in the sources we use, and for provenance research they matter
+              most. Addresses are not needed.</p>
+            <p>At first everything public masked both the names and the addresses of former private owners. On Saturday
+              afternoon the team decided to show names from public sources; addresses stay masked («[address]»). SIK-ISEA's
+              content stays out for another reason: its terms of use.</p>
             <p class="see"><a href="#s13">Step 13</a></p>
           </div>
           <div class="dc">
@@ -956,7 +964,7 @@
             <p><b>Why:</b> most of the people whose feedback matters have no GitHub account, and a token must not sit in a
               public page.</p>
             <p>So feedback goes through a form on the page, a relay that holds no secret and a scheduled GitHub Action. The
-              price is a wait of 10 to 20 minutes.</p>
+              price is a wait until the scheduled Action runs.</p>
             <p class="see"><a href="#s17">Step 17</a></p>
           </div>
           <div class="dc">
@@ -995,7 +1003,7 @@
           <li><b>Pictures in the workbook</b>Replaced by links to the whole image with the box. <a href="#s9">Step 9</a></li>
           <li><b>Label families by image similarity</b>AUC 0.63; the vectors see paper on wood, not the design. <a href="#s10">Step 10</a></li>
           <li><b>Smaller or faster models in the browser</b>The quantised model was unusable, WebGPU drifted. <a href="#s12">Step 12</a></li>
-          <li><b>Masking that missed fields</b>About 17 label texts with owners' names; tightened on Saturday. <a href="#s13">Step 13</a></li>
+          <li><b>Masking that missed fields</b>About 17 label texts with owners' names slipped through; tightened, then dropped for names. <a href="#s13">Step 13</a></li>
           <li><b>A second detector</b>73&nbsp;% became 77&nbsp;% together, with two genuinely new marks. <a href="#s16">Step 16</a></li>
           <li><b>Shared storage in hosted pages</b>They cannot load SKKG's images or the site's data. <a href="#s16">Step 16</a></li>
           <li><b>Feedback through GitHub's own form</b>It needs an account most people don't have. <a href="#s17">Step 17</a></li>

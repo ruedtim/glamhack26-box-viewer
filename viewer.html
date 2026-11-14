@@ -16,7 +16,11 @@
             &static=1 (plain image without deep zoom)
             &label=<key> (one per xywh box, in the same order: the box links to the entry form form.html?label=<key>
             next to this page; the results site passes the stable label keys of its data.json)
+            &credit=… (a credit line under the image, e.g. «Front: artist, title · SKKG, CC BY 4.0»)
+            &rights=<licence URL> (links the licence named at the end of the credit)
   x, y, w, h are pixels of the original image, as in the IIIF region parameter.
+  Without xywh and area the viewer simply shows the image, zoomable (the results site opens the fronts of the works
+  this way).
 -->
 <style>
   :root { --bg: #161616; --bar: #232323; --line: #383838; --fg: #f1f1f1; --muted: #b4b4b4; --link: #9cc2ff;
@@ -48,6 +52,7 @@
   #formhint { color: var(--muted); }
   footer { padding: 6px 16px; font-size: 12px; color: var(--muted); background: var(--bar);
            border-top: 1px solid var(--line); }
+  #credit { margin: 0 0 3px; color: var(--fg); overflow-wrap: anywhere; }
 </style>
 <script src="feedback.js"></script>  <!-- «Feedback» button: prefilled GitHub issue -->
 <script>
@@ -70,8 +75,8 @@
   </div>
 </header>
 <div id="view"><div id="msg">Loading the image …</div><div id="flat" hidden></div></div>
-<footer>Image loaded from the IIIF image server <span id="host"></span>. Box = pixels of the original image
-(x, y, width, height); a dashed box marks an approximate position. Scroll or pinch to zoom, drag to move.</footer>
+<footer><p id="credit" hidden></p>Image loaded from the IIIF image server <span id="host"></span>. <span id="boxhelp">Box = pixels of the original image
+(x, y, width, height); a dashed box marks an approximate position.</span> Scroll or pinch to zoom, drag to move.</footer>
 <noscript><p style="padding:16px">This viewer needs JavaScript.</p></noscript>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/openseadragon/4.1.0/openseadragon.min.js"
         integrity="sha384-4BsIv4BUV37POdA1NZ6UcVAsFk96MQXmFLog7pWs+JP+a8k2XjilfManEVdWDxTe"
@@ -114,7 +119,18 @@
   const keyOf = i => (keys.length === boxes.length && keys[i]) || '';
   const formHref = key => 'form.html?label=' + encodeURIComponent(key);
   const shapes = [...boxes.map((b, i) => [b, dashed, keyOf(i)]), ...areas.map(b => [b, true, ''])];
-  if (!focus.length) $('zoom').disabled = true;
+  if (!focus.length) { $('zoom').hidden = true; $('boxhelp').hidden = true; }  // no box: just the image, zoomable
+  const credit = (params.get('credit') || '').trim(), rights = params.get('rights');
+  if (credit) {  // e.g. a work's front: «Front: artist, title · SKKG, CC BY 4.0», the licence linked
+    const m = isHttp(rights) && credit.match(/(CC BY[\w .-]*\d\.\d|CC0 1\.0|Public Domain Mark[\w .]*)$/);
+    $('credit').textContent = m ? credit.slice(0, m.index) : credit;
+    if (m) {
+      const a = document.createElement('a');
+      a.href = rights; a.textContent = m[1]; a.target = '_blank'; a.rel = 'license noopener';
+      $('credit').append(a);
+    }
+    $('credit').hidden = false;
+  }
   if (!isHttp(base)) {
     $('zoom').disabled = $('whole').disabled = true;
     say('No image given. Open this page as viewer.html?iiif=<IIIF image service URL>&xywh=x,y,w,h');

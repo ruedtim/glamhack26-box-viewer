@@ -6,90 +6,160 @@
 <title>Review the model's proposals – Provenance Pursuit</title>
 <meta name="description" content="Check the boxes a vision-language model proposed for provenance marks described in SKKG's data sheets.">
 <script src="feedback.js"></script>
+<script src="nav.js"></script>
 <style>
   :root { --bg: #f5f3ef; --panel: #fff; --ink: #1d1d1b; --muted: #6b6860; --line: #e2ded6; --accent: #1f4e8c;
-          --ok: #1a7f4b; --bad: #c0392b; --unsure: #a86b00; --model: #bf5af2; --chip: #efece6;
+          --ok: #1a7f4b; --bad: #c0392b; --unsure: #a86b00; --model: #bf5af2; --sheet: #762a83; --chip: #efece6;
           --shadow: 0 1px 2px rgba(0,0,0,.06), 0 3px 10px rgba(0,0,0,.05); }
   :root[data-theme="dark"] { --bg: #171716; --panel: #222220; --ink: #ecebe7; --muted: #a8a59d; --line: #36342f;
-          --accent: #9cc2ff; --ok: #52c891; --bad: #ff8a7a; --unsure: #e8b54a; --chip: #2d2b28; --shadow: none; }
+          --accent: #9cc2ff; --ok: #52c891; --bad: #ff8a7a; --unsure: #e8b54a; --sheet: #cf9be0; --chip: #2d2b28; --shadow: none; }
   @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg: #171716; --panel: #222220;
           --ink: #ecebe7; --muted: #a8a59d; --line: #36342f; --accent: #9cc2ff; --ok: #52c891; --bad: #ff8a7a;
-          --unsure: #e8b54a; --chip: #2d2b28; --shadow: none; } }
+          --unsure: #e8b54a; --sheet: #cf9be0; --chip: #2d2b28; --shadow: none; } }
   * { box-sizing: border-box; }
   body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
   a { color: var(--accent); }
   .wrap { max-width: 1280px; margin: 0 auto; padding: 0 16px; }
-  main.wrap { padding-bottom: 72px; }  /* room for the floating feedback button */
-  header { background: var(--panel); border-bottom: 1px solid var(--line); }
-  .top { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px 20px; padding: 12px 0; }
-  h1 { font-size: 20px; margin: 0; }
+  main.wrap { padding-top: 14px; padding-bottom: 72px; }  /* below: room for the floating feedback button */
+  /* the site header comes from nav.js, which hides [data-ppnav-hide]; without it .back is the way to the results */
+  .back { margin: 0 0 6px; font-size: 13px; }
+  .ppnav-on [data-ppnav-hide] { display: none; }
+  .head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 4px 24px; }
+  .prog { flex: 1; min-width: 260px; max-width: 520px; }
+  h1 { font-size: 22px; margin: 0; letter-spacing: -.01em; }
   .muted { color: var(--muted); font-size: 13px; }
-  .bar { height: 8px; background: var(--chip); border-radius: 99px; overflow: hidden; display: flex; margin: 8px 0 2px; }
+  .bar { height: 8px; background: var(--chip); border-radius: 99px; overflow: hidden; display: flex; margin: 4px 0 2px; }
   .bar i { display: block; height: 100%; }
-  .controls { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; margin: 14px 0; }
+  /* the question, and behind «How to review» everything else there is to say */
+  .intro { margin: 8px 0 0; }
+  .intro > p { display: inline; margin: 0 12px 0 0; }
+  .how { display: inline-block; }  /* closed: on the line of the question; open: a block of its own */
+  .how[open] { display: block; margin-top: 2px; }
+  .how > summary { cursor: pointer; color: var(--accent); font-size: 13px; font-weight: 600; white-space: nowrap; }
+  .how .note { margin: 6px 0 0; max-width: 860px; }
+  .how .note p { margin: 0; }
+  .how .note p + p { margin-top: 6px; }
+  /* filters on the left, the hand-in on the right; on a phone arrange() puts the hand-in below the task */
+  .tools { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 8px 24px; margin: 12px 0; }
+  .controls { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; }
+  .handin { margin-left: auto; }
+  .handin .controls { justify-content: flex-end; }
+  .handin .hint { margin: 6px 0 0; text-align: right; }
+  main > .handin { margin: 18px 0 0; padding: 12px 14px; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; box-shadow: var(--shadow); }
+  main > .handin .controls { justify-content: flex-start; }
+  main > .handin .hint { text-align: left; }
+  #q { flex: 1 1 130px; min-width: 0; max-width: 230px; }
   input[type=search], input[type=text], select { font: inherit; font-size: 14px; padding: 6px 9px; border: 1px solid var(--line); border-radius: 6px; background: var(--panel); color: var(--ink); }
   .btn { font: inherit; font-size: 14px; padding: 7px 14px; border-radius: 6px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); cursor: pointer; }
+  label.btn { display: inline-block; }
+  /* a file input is not shown but takes the keyboard focus (Enter or Space opens the file picker); its label, right
+     after it, is the button and shows the focus ring */
+  input[type=file] { position: absolute; width: 1px; height: 1px; opacity: 0; overflow: hidden; clip-path: inset(50%); pointer-events: none; }
+  input[type=file]:focus-visible + label.btn { outline: 2px solid var(--accent); outline-offset: 2px; }
   .btn:disabled { opacity: .45; cursor: default; }
-  .decide { display: flex; flex-wrap: wrap; gap: 8px; margin: 14px 0 6px; }
+  .decide { display: flex; flex-wrap: wrap; gap: 8px; margin: 14px 0 0; }
   .decide .btn { font-weight: 600; padding: 10px 18px; }
   .btn.ok { border-color: var(--ok); color: var(--ok); } .btn.bad { border-color: var(--bad); color: var(--bad); } .btn.unsure { border-color: var(--unsure); color: var(--unsure); }
-  .btn.on.ok { background: var(--ok); color: #fff; } .btn.on.bad { background: var(--bad); color: #fff; } .btn.on.unsure { background: var(--unsure); color: #fff; }
+  .btn.on.ok { background: var(--ok); color: var(--panel); } .btn.on.bad { background: var(--bad); color: var(--panel); } .btn.on.unsure { background: var(--unsure); color: var(--panel); }
   kbd { font: 11px ui-monospace, monospace; border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 4px; padding: 0 4px; margin-left: 4px; color: var(--muted); }
-  .stage { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 18px; }
-  @media (max-width: 820px) { .stage { grid-template-columns: 1fr; } }
+  .btn.on kbd { color: inherit; border-color: currentColor; opacity: .8; }
+  .stage { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 18px; align-items: start; }
+  .stage[hidden] { display: none; }  /* an empty list shows the note only, not the last proposal */
   .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 14px; box-shadow: var(--shadow); }
   svg.view { display: block; width: 100%; height: auto; max-height: 62vh; background: var(--chip); border-radius: 6px; }
+  /* the picture's area has one height for every proposal, so the buttons under it stay in place and in view
+     (not higher than the window allows, nor much higher than the area is wide) */
+  #crop { height: max(240px, min(62vh, 100vh - 400px, 46vw, 560px)); max-height: none; }
+  /* One column: arrange() puts the buttons above the picture and what the data sheet says below it. So the buttons are
+     the first thing of a proposal, keep their place, and stay clear of the feedback button at the bottom right. */
+  @media (max-width: 980px) {  /* the same width as in arrange() */
+    .stage { grid-template-columns: 1fr; }
+    #crop { height: auto; max-height: max(220px, 50vh); }
+    .stage .decide { margin: 0 0 14px; }
+  }
+  @media (max-width: 520px) {  /* a phone: two buttons side by side, and a picture that leaves room for the text under it */
+    #crop { max-height: max(220px, 38vh); }
+    .stage .decide { display: grid; grid-template-columns: 1fr 1fr; }
+    .stage .decide > span { display: none; }
+    .stage .decide .btn { padding: 10px 6px; }
+  }
   .box { fill: transparent; stroke: var(--model); stroke-width: 3; vector-effect: non-scaling-stroke; filter: drop-shadow(0 0 1.5px #000); }
   .area { fill: transparent; stroke: #fff; stroke-width: 2; stroke-dasharray: 8 6; vector-effect: non-scaling-stroke; filter: drop-shadow(0 0 1.5px #000); }
   h2 { font-size: 17px; margin: 0 0 4px; overflow-wrap: anywhere; }
   dl { display: grid; grid-template-columns: max-content 1fr; gap: 6px 12px; margin: 10px 0 0; font-size: 14px; }
   dt { color: var(--muted); } dd { margin: 0; overflow-wrap: anywhere; }
-  .q { color: #762a83; font-weight: 600; }
+  .q { color: var(--sheet); font-weight: 600; }
   .status { font-size: 13px; font-weight: 600; }
   .note { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 10px 14px; font-size: 14px; margin: 14px 0 0; }
   .warn { color: var(--bad); }
-  .btn.redraw { border-color: var(--accent); color: var(--accent); } .btn.on.redraw { background: var(--accent); color: #fff; }
+  .btn.redraw { border-color: var(--accent); color: var(--accent); } .btn.on.redraw { background: var(--accent); color: var(--panel); }
   .drawn { fill: transparent; stroke: #30d158; stroke-width: 3; vector-effect: non-scaling-stroke; filter: drop-shadow(0 0 1.5px #000); }
   dialog#ed { border: 1px solid var(--line); border-radius: 10px; padding: 14px; background: var(--panel); color: var(--ink); max-width: 96vw; }
   dialog#ed::backdrop { background: rgba(0,0,0,.5); }
   #edwrap { position: relative; display: inline-block; touch-action: none; user-select: none; -webkit-user-select: none; cursor: crosshair; margin: 10px 0; }
-  #edimg { display: block; max-width: min(1000px, 90vw); max-height: 70vh; }
+  #edimg { display: block; max-width: min(1000px, 96vw - 30px); max-height: 70vh; }  /* inside the dialog's padding, also on a phone */
   .edbox { position: absolute; pointer-events: none; box-sizing: border-box; }
   .edbox.old { border: 2px solid var(--model); } .edbox.area { border: 2px dashed #fff; box-shadow: 0 0 0 1px rgba(0,0,0,.6); }
   .edbox.new { border: 3px solid #30d158; box-shadow: 0 0 0 1px rgba(0,0,0,.6); }
+  /* the work's front: the photograph SKKG publishes, credited under it (review.json works[oid][3]) */
+  .front { float: right; width: 128px; margin: 0 0 8px 14px; }
+  .front a.fimg { display: grid; place-items: center; background: var(--chip); border-radius: 4px; overflow: hidden; min-height: 48px; }
+  .front img { display: block; max-width: 100%; max-height: 150px; width: auto; height: auto; }
+  .front figcaption { font-size: 11px; line-height: 1.35; color: var(--muted); margin-top: 4px; overflow-wrap: anywhere; }
+  .front figcaption a { color: inherit; }
+  @media (max-width: 520px) { .front { width: 96px; } .front img { max-height: 120px; } #facts { clear: both; } }
+  .wholep { clear: both; }
 </style>
 </head>
 <body>
-<header>
-  <div class="wrap top">
-    <div><h1>Review the model's proposals</h1>
-      <div class="muted">Provenance Pursuit · <a href="./">back to the results</a></div></div>
-    <div style="min-width:280px;flex:1;max-width:520px">
+<main class="wrap">
+  <p class="back" data-ppnav-hide><a href="./">← Provenance Pursuit results</a></p>
+  <div class="head">
+    <h1>Review the model's proposals</h1>
+    <div class="prog">
       <div class="muted" id="progress">Loading …</div>
       <div class="bar" aria-hidden="true"><i id="pOk" style="background:var(--ok)"></i><i id="pRedrawn" style="background:var(--accent)"></i><i id="pBad" style="background:var(--bad)"></i><i id="pUnsure" style="background:var(--unsure)"></i></div>
     </div>
   </div>
-</header>
-<main class="wrap">
-  <div class="note">A vision-language model proposed a box for the marks described in SKKG's provenance data sheets
-    that the text recognition could not find. Is the <b style="color:var(--model)">box</b> on the mark the data sheet
-    describes? The white dashed frame is the area the data sheet names. If the mark is visible but the box is wrong
-    or too loose, use <b>Redraw box</b> and drag the right one. Your decisions stay in this browser:
-    <b>download them</b> when you are done (or before you leave) and put the file into the team's folder; they are
-    merged with everyone else's.</div>
-  <div class="controls">
-    <label class="muted">Your initials <input type="text" id="who" size="5" maxlength="12" autocomplete="off"></label>
-    <label class="muted">Show <select id="show">
-      <option value="open">not yet reviewed</option><option value="all">all</option>
-      <option value="correct">correct</option><option value="redrawn">redrawn</option><option value="wrong">wrong</option><option value="unsure">unsure</option></select></label>
-    <label class="muted">Type <select id="type"><option value="">all</option><option value="label">labels</option>
-      <option value="stamp">stamps</option><option value="inscription">inscriptions</option><option value="other">other</option></select></label>
-    <input type="search" id="q" placeholder="Inv. no., text …" aria-label="Search">
-    <span class="muted" id="pos"></span>
-    <span style="flex:1"></span>
-    <button class="btn" id="export">Download my decisions (CSV)</button>
-    <label class="btn" for="import" style="display:inline-block">Load decisions …</label>
-    <input type="file" id="import" accept=".csv,text/csv" hidden>
+  <div class="intro">
+    <p>Is the <b style="color:var(--model)">purple box</b> on the mark the data sheet describes? If the mark is visible
+      but the box is off, redraw it.</p>
+    <details class="how">
+      <summary>How to review</summary>
+      <div class="note">
+        <p>A vision-language model proposed a box for the marks described in SKKG's provenance data sheets that the
+          text recognition could not find. The white dashed frame on the whole back is the area the data sheet names.</p>
+        <p>If the mark is visible but the box is wrong or too loose, use <b>Redraw box</b> and drag the right one; it
+          is then shown in green. After a decision the next open proposal follows.</p>
+        <p>Keys: <kbd>Y</kbd> correct · <kbd>N</kbd> wrong · <kbd>U</kbd> unsure · <kbd>R</kbd> redraw ·
+          <kbd>←</kbd> <kbd>→</kbd> move.</p>
+        <p>Names appear as the records and labels give them; addresses are masked («[address]»).</p>
+        <p>Your decisions stay in this browser: download them when you are done (or before you leave) and put the
+          file into the team's folder; they are merged with everyone else's.
+          <a href="./#about-review">More in About →</a></p>
+      </div>
+    </details>
+  </div>
+  <div class="tools" id="tools">
+    <div class="controls">
+      <label class="muted">Show <select id="show">
+        <option value="open">not yet reviewed</option><option value="all">all</option>
+        <option value="correct">correct</option><option value="redrawn">redrawn</option><option value="wrong">wrong</option><option value="unsure">unsure</option></select></label>
+      <label class="muted">Type <select id="type"><option value="">all</option><option value="label">labels</option>
+        <option value="stamp">stamps</option><option value="inscription">inscriptions</option><option value="other">other</option></select></label>
+      <input type="search" id="q" placeholder="Inv. no., text …" aria-label="Search">
+      <span class="muted" id="pos"></span>
+    </div>
+    <div class="handin" id="handin">
+      <div class="controls">
+        <label class="muted">Your initials <input type="text" id="who" size="5" maxlength="12" autocomplete="off"></label>
+        <button class="btn" id="export">Download my decisions (CSV)</button>
+        <input type="file" id="import" accept=".csv,text/csv">
+        <label class="btn" for="import">Load decisions …</label>
+      </div>
+      <p class="hint muted"><span id="saved">Your decisions stay in this browser.</span> Download them and put the file
+        into the team's folder.</p>
+    </div>
   </div>
   <div id="empty" class="note" hidden>Nothing left to review with these filters.</div>
   <div class="stage" id="stage" hidden>
@@ -99,23 +169,22 @@
         <button class="btn ok" data-d="correct">✓ Correct <kbd>Y</kbd></button>
         <button class="btn bad" data-d="wrong">✗ Wrong <kbd>N</kbd></button>
         <button class="btn unsure" data-d="unsure">? Unsure <kbd>U</kbd></button>
-        <button class="btn redraw" id="redraw" data-mark="redrawn">✎ Redraw box <kbd>R</kbd></button>
+        <button class="btn redraw" id="redraw" data-mark="redrawn" title="The mark is visible but the box is wrong or too loose: draw the right one">✎ Redraw box <kbd>R</kbd></button>
         <span style="flex:1"></span>
-        <button class="btn" id="prev">← Previous</button>
-        <button class="btn" id="next">Next →</button>
+        <button class="btn" id="prev" title="Previous proposal (←)">← Previous</button>
+        <button class="btn" id="next" title="Next proposal (→)">Next →</button>
       </div>
-      <div class="muted">Keys: <kbd>Y</kbd> correct · <kbd>N</kbd> wrong · <kbd>U</kbd> unsure · <kbd>R</kbd> redraw · <kbd>←</kbd> <kbd>→</kbd> move. After a decision the next open proposal follows. A redrawn box is shown in green.</div>
     </div>
     <div class="panel">
+      <figure class="front" id="front" hidden></figure>
       <h2 id="title"></h2>
       <div class="status" id="status"></div>
       <dl id="facts"></dl>
-      <p style="margin:12px 0 6px" class="muted">The whole back</p>
+      <p style="margin:12px 0 6px" class="muted wholep">The whole back</p>
       <svg class="view" id="whole" role="img" aria-label="The whole back with the proposed box and the area named in the data sheet"></svg>
       <p class="muted" style="margin-top:8px"><a id="zoom" target="_blank" rel="noopener">Open the back zoomable</a> · <a id="obj" target="_blank" rel="noopener">SKKG collection</a><span id="fb"></span></p>
     </div>
   </div>
-  <p class="muted" id="saved"></p>
 </main>
 <dialog id="ed" aria-labelledby="edtitle">
   <b id="edtitle">Draw the box around the mark</b>
@@ -176,11 +245,29 @@
     $('#pOk').style.width = pct(n.correct); $('#pRedrawn').style.width = pct(n.redrawn);
     $('#pBad').style.width = pct(n.wrong); $('#pUnsure').style.width = pct(n.unsure);
   }
+  // the work's front (review.json works[oid][3], build_site.py): the photograph SKKG publishes, credited as SKKG gives
+  // its rights («© holder ·» where SKKG names one, then «SKKG» and the licence); works without one show none
+  const LICENCE = { 'CC BY 4.0': 'https://creativecommons.org/licenses/by/4.0/', 'CC0 1.0': 'https://creativecommons.org/publicdomain/zero/1.0/' };
+  const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+  function showFront(w) {
+    const el = $('#front'), f = w[3], im = f && f.img ? f.img[0] : null;
+    if (!im) { el.hidden = true; el.replaceChildren(); el.dataset.iiif = ''; return; }
+    if (el.dataset.iiif === im[0]) return;
+    el.dataset.iiif = im[0];
+    const lic = im.length > 3 ? im[3] : f.lic, holder = im.length > 3 ? im[4] : (f.c || ''), t = f.t || w[1], url = LICENCE[lic];
+    const c = holder ? `© ${holder} · ` : lic === '©' ? '© all rights reserved · ' : '';
+    const p = new URLSearchParams({ iiif: im[0], title: `Inv. ${w[0]} · ${w[1]}`, note: 'Front',
+      credit: `Front: ${f.by ? f.by + ', ' : ''}«${t}» · ${c}SKKG${url ? ', ' + lic : ''}`, rights: url || '' });
+    if (w[2]) p.set('page', w[2]);
+    el.innerHTML = `<a class="fimg" href="viewer.html?${esc(p)}" target="_blank" rel="noopener" title="Front of the work, zoomable"><img alt="Front of the work" decoding="async" width="${im[1]}" height="${im[2]}" src="${esc(`${im[0]}/full/!300,300/0/default.jpg`)}"></a>
+      <figcaption>Front: ${f.by ? esc(f.by) + ', ' : ''}<i>${esc(t)}</i> · ${esc(c)}SKKG${url ? `, <a href="${esc(url)}" target="_blank" rel="license noopener">${esc(lic)}</a>` : ''}</figcaption>`;
+    el.hidden = false;
+  }
   function show() {
     progress();
     $('#empty').hidden = list.length > 0;
     $('#stage').hidden = !list.length;
-    $('#pos').textContent = list.length ? `${at + 1} of ${list.length} in this list` : '';
+    $('#pos').textContent = list.length ? `${(at + 1).toLocaleString('en')} of ${list.length.toLocaleString('en')} in this list` : '';
     if (!list.length) return;
     const it = list[at], w = R.works[it.w] || ['?', '', ''];
     const own = (mine[it.k] || {}).box || (!mine[it.k] && it.rb) || null;  // yours, else the team's merged one
@@ -188,6 +275,7 @@
     svg($('#crop'), it.iiif, ctx, ctx, 1000, [['box', it.box], ...(own ? [['drawn', own]] : [])]);
     svg($('#whole'), it.iiif, [0, 0, W, H], null, 700, [['area', it.area], ['box', it.box], ...(own ? [['drawn', own]] : [])]);
     $('#title').textContent = `Inv. ${w[0]} · ${w[1]}`;
+    showFront(w);
     const d = decision(it), by = mine[it.k] ? `you${mine[it.k].r ? ' (' + mine[it.k].r + ')' : ''}` : 'the team (merged)';
     $('#status').textContent = d ? `Decided: ${d} — by ${by}` : 'Not reviewed yet';
     $('#status').style.color = { correct: 'var(--ok)', redrawn: 'var(--accent)', wrong: 'var(--bad)', unsure: 'var(--unsure)' }[d] || 'var(--muted)';
@@ -210,13 +298,16 @@
     const nx = list[at + 1];  // load the next pictures early
     if (nx) { const c = context(nx); new Image().src = `${nx.iiif}/${c.join(',')}/${c[2] > 1000 || c[3] > 1000 ? '!1000,1000' : 'max'}/0/default.jpg`; }
   }
+  function savedNote(ok = true) {  // the first sentence of the hand-in hint; «Download them and put the file …» follows it
+    const n = Object.keys(mine).length;
+    $('#saved').innerHTML = !ok ? '<span class="warn">This browser does not keep your decisions: they are lost when you leave the page.</span>'
+      : n ? `${n.toLocaleString('en')} decision${n > 1 ? 's' : ''} saved in this browser.` : 'Your decisions stay in this browser.';
+  }
   function decide(d, box) {
     if (!list.length) return;
     const it = list[at];
     mine[it.k] = { d, t: new Date().toISOString(), r: $('#who').value.trim(), ...(box ? { box } : {}) };
-    const ok = store.set(KEY, mine);
-    $('#saved').innerHTML = ok ? `Saved in this browser (${Object.keys(mine).length} of your decisions). Download them before you switch computers.`
-                               : '<span class="warn">This browser does not keep the decisions: download them before you leave the page.</span>';
+    savedNote(store.set(KEY, mine));
     if ($('#show').value === 'open') { filter(); } else if (at < list.length - 1) { at++; }
     show();
   }
@@ -264,7 +355,7 @@
       }
     }
     store.set(KEY, mine);
-    $('#saved').textContent = `${n} decisions loaded from ${f.name}.`;
+    $('#saved').textContent = `${n} decision${n === 1 ? '' : 's'} loaded from ${f.name}.`;
     e.target.value = '';
     filter(); show();
   });
@@ -317,8 +408,22 @@
   $('#who').value = store.get(WHO, '');
   $('#who').addEventListener('input', e => store.set(WHO, e.target.value.trim()));
   $('#export').addEventListener('click', exportCsv);
+  savedNote();
+  // One column (narrow windows): buttons, picture, what the data sheet says, so that a decision needs no scrolling past
+  // the work and the whole back. On a phone the hand-in also moves below the task. Otherwise everything is where the
+  // markup has it. The widths are those of the style sheet.
+  const narrow = matchMedia('(max-width: 980px)'), phone = matchMedia('(max-width: 520px)'), buttons = $('.stage .decide');
+  function arrange() {
+    if (narrow.matches) { $('#crop').before(buttons); $('#crop').after($('#facts')); }
+    else { $('#crop').after(buttons); $('#status').after($('#facts')); }
+    if (phone.matches) $('#stage').after($('#handin')); else $('#tools').append($('#handin'));
+  }
+  narrow.addEventListener('change', arrange);
+  phone.addEventListener('change', arrange);
+  arrange();
   document.addEventListener('keydown', e => {
-    if (e.target.closest('input, select, textarea') || e.metaKey || e.ctrlKey || e.altKey || ed.open) return;
+    // (the file input behind «Load decisions …» counts as a button, not as a text field: the keys work as before after it)
+    if (e.target.closest('input:not([type=file]), select, textarea') || e.metaKey || e.ctrlKey || e.altKey || ed.open) return;
     const k = e.key.toLowerCase();
     if (k === 'r') openEditor();
     else if (k === 'y' || k === '1') decide('correct');

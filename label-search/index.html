@@ -3,31 +3,48 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Seen This Label?</title>
-<meta name="description" content="Photograph a provenance label and find the most similar backs among 872 SKKG artworks. Runs entirely in your browser.">
+<title>Search by photo – Provenance Pursuit</title>
+<meta name="description" content="Photograph a provenance label and find the most similar backs of artworks in the SKKG collection. Runs entirely in your browser.">
 <style>
-  :root { --bg: #fbfaf7; --fg: #1c1b19; --muted: #6b6760; --line: #dcd8d0; --card: #fff; --accent: #8a3b12; --accent-fg: #fff; --sel: #e0662a;
+  /* colours and type of the results site (the values of its --bg, --panel, --ink, --muted, --line, --accent) */
+  :root { --bg: #f5f3ef; --fg: #1d1d1b; --muted: #6b6860; --line: #e2ded6; --card: #fff; --accent: #1f4e8c; --accent-fg: #fff; --sel: #30d158;
           --ok: #1a7f4b; --bad: #c0392b; --unsure: #a86b00; }
   @media (prefers-color-scheme: dark) {
-    :root:not([data-theme="light"]) { --bg: #171614; --fg: #ece9e3; --muted: #a29d94; --line: #3a3733; --card: #22201d; --accent: #e08a5a; --accent-fg: #171614; }
+    :root:not([data-theme="light"]) { --bg: #171716; --fg: #ecebe7; --muted: #a8a59d; --line: #36342f; --card: #222220; --accent: #9cc2ff; --accent-fg: #171716;
+          --ok: #52c891; --bad: #ff8a7a; --unsure: #e8b54a; }
   }
-  :root[data-theme="dark"] { --bg: #171614; --fg: #ece9e3; --muted: #a29d94; --line: #3a3733; --card: #22201d; --accent: #e08a5a; --accent-fg: #171614; }
+  :root[data-theme="dark"] { --bg: #171716; --fg: #ecebe7; --muted: #a8a59d; --line: #36342f; --card: #222220; --accent: #9cc2ff; --accent-fg: #171716;
+          --ok: #52c891; --bad: #ff8a7a; --unsure: #e8b54a; }
   * { box-sizing: border-box; }
-  body { margin: 0; background: var(--bg); color: var(--fg); font: 16px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
-  main { max-width: 1100px; margin: 0 auto; padding: 20px 16px 48px; }
-  h1 { font-size: 1.6rem; margin: 0 0 4px; }
-  .lead { color: var(--muted); margin: 0 0 16px; max-width: 70ch; }
-  .privacy { border-left: 3px solid var(--accent); padding: 8px 12px; background: var(--card); margin: 0 0 20px; max-width: 70ch; }
+  body { margin: 0; background: var(--bg); color: var(--fg); font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  a { color: var(--accent); }
+  main { max-width: 1280px; margin: 0 auto; padding: 14px 16px 72px; }  /* below: room for the floating feedback button */
+  /* the site header comes from nav.js, which hides [data-ppnav-hide]; without it #home is the way to the results */
+  #home { margin: 0 0 6px; }
+  .ppnav-on [data-ppnav-hide] { display: none; }
+  h1 { font-size: 22px; margin: 0 0 4px; letter-spacing: -.01em; }
+  /* what the page does, and behind «How it works and its limits» everything that need not be read before the first photo */
+  .intro { margin: 0 0 14px; max-width: 860px; }
+  .intro > p { display: inline; margin: 0 12px 0 0; }
+  .more { display: inline-block; }  /* closed: on the last line of the sentence; open: a block of its own */
+  .more[open] { display: block; margin-top: 2px; }
+  .more > summary { cursor: pointer; color: var(--accent); font-size: 13px; font-weight: 600; white-space: nowrap; }
+  .more .note { margin: 6px 0 0; padding: 10px 14px; background: var(--card); border: 1px solid var(--line); border-radius: 8px; font-size: 14px; }
+  .more .note p { margin: 0; }
+  .more .note p + p { margin-top: 6px; }
   .buttons { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
-  button, label.btn { font: inherit; border: 1px solid var(--line); background: var(--card); color: var(--fg); padding: 10px 16px; border-radius: 8px; cursor: pointer; }
+  button, label.btn { font: inherit; font-size: 14px; border: 1px solid var(--line); background: var(--card); color: var(--fg); padding: 10px 16px; border-radius: 6px; cursor: pointer; }
   button.primary { background: var(--accent); color: var(--accent-fg); border-color: var(--accent); }
   button:disabled { opacity: .5; cursor: default; }
-  input[type=file] { display: none; }
+  /* a file input is not shown but takes the keyboard focus (Enter or Space opens the file picker); its label, right
+     after it, is the button and shows the focus ring */
+  input[type=file] { position: absolute; width: 1px; height: 1px; opacity: 0; overflow: hidden; clip-path: inset(50%); pointer-events: none; }
+  input[type=file]:focus-visible + label.btn { outline: 2px solid var(--accent); outline-offset: 2px; }
   #stage { display: none; }
   .crop-wrap { position: relative; display: inline-block; overflow: hidden; max-width: 100%; touch-action: none; user-select: none; -webkit-user-select: none; }
   .crop-wrap img { display: block; max-width: 100%; max-height: 60vh; }
   #sel { position: absolute; border: 2px solid var(--sel); box-shadow: 0 0 0 9999px rgba(0,0,0,.45); display: none; pointer-events: none; }
-  .hint { color: var(--muted); font-size: .9rem; margin: 6px 0 12px; }
+  .hint { color: var(--muted); font-size: 13px; margin: 6px 0 12px; }
   .progress { height: 8px; background: var(--line); border-radius: 4px; overflow: hidden; max-width: 480px; margin: 6px 0; display: none; }
   .progress > div { height: 100%; width: 0; background: var(--accent); transition: width .2s; }
   #status { color: var(--muted); min-height: 1.5em; }
@@ -35,46 +52,73 @@
   .card { background: var(--card); border: 1px solid var(--line); border-radius: 8px; overflow: hidden; display: flex; flex-direction: column; }
   .card .thumb { aspect-ratio: 1; background: var(--line); display: flex; align-items: center; justify-content: center; }
   .card img { max-width: 100%; max-height: 100%; display: block; }
-  .card .body { padding: 8px 10px; font-size: .9rem; }
-  .card .body b { font-size: 1rem; }
-  .card a { color: var(--accent); }
+  .card .body { padding: 8px 10px; font-size: 13px; }
+  .card .body b { font-size: 14px; }
   .card .links { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 4px; }
   .card.same { border: 2px solid var(--ok); } .card.not { opacity: .55; } .card.unsure { border: 2px dashed var(--unsure); }
   .decide { display: flex; gap: 4px; margin-top: 6px; flex-wrap: wrap; }
-  .decide button { padding: 5px 8px; font-size: .85rem; border-radius: 6px; }
-  .decide button.on[data-d="same"] { background: var(--ok); color: #fff; border-color: var(--ok); }
-  .decide button.on[data-d="not"] { background: var(--bad); color: #fff; border-color: var(--bad); }
-  .decide button.on[data-d="unsure"] { background: var(--unsure); color: #fff; border-color: var(--unsure); }
-  .tag { font-size: .78rem; color: var(--muted); }
+  .decide button { padding: 5px 8px; font-size: 13px; }
+  .decide button.on[data-d="same"] { background: var(--ok); color: var(--accent-fg); border-color: var(--ok); }
+  .decide button.on[data-d="not"] { background: var(--bad); color: var(--accent-fg); border-color: var(--bad); }
+  .decide button.on[data-d="unsure"] { background: var(--unsure); color: var(--accent-fg); border-color: var(--unsure); }
+  .tag { font-size: 13px; color: var(--muted); }
+  /* checking the hits and the hand-in; the hand-in also shows without hits while this browser holds decisions */
   #review { display: none; background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; margin-top: 12px; }
+  #review.nohits .hits-only { display: none; }
   #review .row { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; }
-  #review input[type=text] { font: inherit; padding: 6px 8px; border: 1px solid var(--line); border-radius: 6px; background: var(--bg); color: var(--fg); }
+  #review .hint { margin: 0 0 8px; }
+  #review .row + .hint { margin: 8px 0 0; }
+  #review input[type=text] { font: inherit; font-size: 14px; padding: 6px 8px; border: 1px solid var(--line); border-radius: 6px; background: var(--bg); color: var(--fg); }
+  #review button, #review label.btn { padding: 7px 14px; }
   dialog { border: 1px solid var(--line); border-radius: 10px; background: var(--card); color: var(--fg); padding: 12px; width: min(96vw, 1000px); }
   dialog::backdrop { background: rgba(0,0,0,.6); }
   .ed-wrap { position: relative; display: inline-block; max-width: 100%; touch-action: none; user-select: none; -webkit-user-select: none; overflow: hidden; }
   .ed-wrap img { display: block; max-width: 100%; max-height: 70vh; }
-  .ed-box { position: absolute; border: 2px solid var(--sel); pointer-events: none; }
+  .ed-box { position: absolute; border: 2px solid var(--sel); box-shadow: 0 0 0 1px rgba(0,0,0,.6); pointer-events: none; }
   .ed-box.old { border: 2px dashed #fff; box-shadow: 0 0 0 1px #000; }
-  details { margin-top: 28px; color: var(--muted); max-width: 75ch; }
-  details summary { cursor: pointer; color: var(--fg); }
 </style>
 <script src="../feedback.js"></script>  <!-- «Feedback» button: prefilled GitHub issue -->
+<script src="../nav.js"></script>  <!-- the site header -->
 </head>
 <body>
 <main>
-  <p class="tag" id="home" hidden><a href="../index.html" style="color:var(--accent)">← Provenance Pursuit results</a></p>
+  <p class="tag" id="home" data-ppnav-hide hidden><a href="../index.html">← Provenance Pursuit results</a></p>
   <h1>Have I seen this label before?</h1>
-  <p class="lead">Photograph or upload a label, stamp or inscription from the back of an artwork. The page compares it
-    with 143,963 image windows on the backs of 872 artworks of the SKKG collection (Winterthur) and shows the 20 most
-    similar backs.</p>
-  <p class="privacy"><b>Your photo never leaves your browser.</b> The image model runs on your device; nothing is
-    uploaded. The page only downloads the model (about 174&nbsp;MB, once, then cached) and the search index (about 8&nbsp;MB).</p>
+  <div class="intro">
+    <p>Photograph or upload a label, stamp or inscription from the back of an artwork and see the 20 most similar
+      backs in the SKKG collection. <b>Your photo never leaves your browser</b>; the first search downloads the image
+      model (about 174&nbsp;MB, once).</p>
+    <!-- the numbers in [data-m] are filled in from data/meta.json when the page loads; the text here is the fallback -->
+    <details class="more">
+      <summary>How it works and its limits</summary>
+      <div class="note">
+        <p>The image model runs on your device; nothing is uploaded. The page only downloads the model
+          (about 174&nbsp;MB, once, then cached) and the search index (about <span data-m="index_mb">8</span>&nbsp;MB).
+          On a phone, make the first search on Wi-Fi.</p>
+        <p>Your image is compared with <span data-m="windows">143,891</span> image windows on
+          <span data-m="backs">872</span> backs of works in the SKKG collection (Winterthur). It is padded to a square
+          with its mean colour, scaled to 224&nbsp;px and embedded with DINOv2-base
+          (<code>Xenova/dinov2-base</code>, fp16 ONNX, via transformers.js on WebAssembly; WebGPU is not used because its half-precision arithmetic changes the vectors too much).
+          The 1,536-value vector is projected to 256 dimensions (PCA) and compared with 1-bit codes of every window. A
+          back scores as its best-matching window; the thumbnail shows that window.</p>
+        <p><b>Only the coarse search runs here.</b> On <span data-m="eval_photos">197</span> test photos the correct
+          back is first in <span data-m="R@1">37%</span> of searches, in the top 5 in <span data-m="R@5">48%</span> and
+          in the top 20 in <span data-m="R@20">59%</span>. The full pipeline re-checks candidates with LightGlue
+          keypoint matching, which lifts the first-place rate to 56%; that step does not run in the browser. Treat the
+          results as candidates to look at, not as identifications.</p>
+        <p>When you check the hits, your decisions stay in this browser: download them when you are done (or before you
+          leave) and put the file into the team's folder; they are merged with everyone else's.</p>
+        <p>Images: SKKG IIIF server. Collection records: <a href="https://digital.skkg.ch/">digital.skkg.ch</a>.
+          GLAMhack 2026, challenge «Provenance Pursuit».</p>
+      </div>
+    </details>
+  </div>
 
   <div class="buttons">
-    <label class="btn" for="camera">📷 Take photo</label>
     <input id="camera" type="file" accept="image/*" capture="environment">
-    <label class="btn" for="file">Choose image…</label>
+    <label class="btn" for="camera">📷 Take photo</label>
     <input id="file" type="file" accept="image/*">
+    <label class="btn" for="file">Choose image…</label>
   </div>
 
   <section id="stage">
@@ -88,19 +132,18 @@
 
   <div class="progress" id="bar"><div></div></div>
   <p id="status" aria-live="polite"></p>
-  <section id="review">
-    <p class="hint" style="margin-top:0">Help check the hits: mark a back as <b>same label</b>, <b>not it</b> or
-      <b>unsure</b>, and use <b>Redraw box</b> to draw the exact box around the label on the back (also when the label
-      sits elsewhere on that back). Your decisions stay in this browser: download them and put the file into the
-      team's folder; they are merged with everyone else's.</p>
+  <section id="review" class="nohits">
+    <p class="hint hits-only">Help check the hits: mark a back as <b>same label</b>, <b>not it</b> or <b>unsure</b>;
+      <b>Redraw box</b> draws the exact box around the label, also when it sits elsewhere on that back.</p>
     <div class="row">
       <label class="tag">Your initials <input type="text" id="who" size="5" maxlength="12" autocomplete="off"></label>
-      <label class="tag">What did you photograph? <input type="text" id="qnote" size="28" maxlength="120"
+      <label class="tag hits-only">What did you photograph? <input type="text" id="qnote" size="28" maxlength="120"
         placeholder="e.g. Kunsthaus Zürich exhibition label" autocomplete="off"></label>
       <button id="export">Download my decisions (CSV)</button>
-      <label class="btn" for="import">Load decisions…</label><input type="file" id="import" accept=".csv,text/csv">
-      <span class="tag" id="saved"></span>
+      <input type="file" id="import" accept=".csv,text/csv"><label class="btn" for="import">Load decisions …</label>
     </div>
+    <p class="hint"><span id="saved">Your decisions stay in this browser.</span> Download them and put the file into
+      the team's folder.</p>
   </section>
   <div id="results"></div>
 
@@ -114,20 +157,6 @@
       <button id="ed-cancel">Cancel</button>
     </div>
   </dialog>
-
-  <details>
-    <summary>How it works and its limits</summary>
-    <p>The image is padded to a square with its mean colour, scaled to 224&nbsp;px and embedded with DINOv2-base
-      (<code>Xenova/dinov2-base</code>, fp16 ONNX, via transformers.js on WebAssembly; WebGPU is not used because its half-precision arithmetic changes the vectors too much).
-      The 1,536-value vector is projected to 256 dimensions (PCA) and compared with 1-bit codes of every window. A back
-      scores as its best-matching window; the thumbnail shows that window.</p>
-    <p><b>Only the coarse search runs here.</b> On 197 test photos the correct back is first in 36% of searches, in
-      the top 5 in 48% and in the top 20 in 58%. The full pipeline re-checks candidates with LightGlue keypoint
-      matching, which lifts the first-place rate to 56%; that step does not run in the browser. Treat the results as
-      candidates to look at, not as identifications.</p>
-    <p>Images: SKKG IIIF server. Collection records: <a href="https://digital.skkg.ch/">digital.skkg.ch</a>.
-      GLAMhack 2026, challenge «Provenance Pursuit».</p>
-  </details>
 </main>
 
 <script type="module">
@@ -208,8 +237,9 @@ $("go").onclick = async () => {
     const v = await embed(model, x);
     const hits = search(idx, v, 20);
     searchTime = new Date().toISOString();
+    const r20 = idx.meta?.recall_eval_photos?.["R@20"]; // the index's own figure, so the sentence cannot go stale
     status(`Top 20 of ${idx.backs.length} backs (${((performance.now() - t0) / 1000).toFixed(1)} s). ` +
-      `Coarse search only: the right back is in the top 20 in about 58% of test searches.`);
+      `Coarse search only: the right back is in the top 20 in about ${r20 ? Math.round(100 * r20) : 59}% of test searches.`);
     show(hits);
   } catch (e) {
     console.error(e);
@@ -231,10 +261,10 @@ const viewerUrl = (base, r) => `https://ruedtim.github.io/glamhack26-box-viewer/
 $("who").value = store.get(WHO, "");
 $("who").addEventListener("change", () => store.set(WHO, $("who").value.trim()));
 
-function savedNote(ok = true) {
+function savedNote(ok = true) { // the first sentence of the hand-in hint; «Download them and put the file …» follows it
   const n = Object.keys(mine).length;
-  $("saved").innerHTML = ok ? (n ? `${n} decision${n > 1 ? "s" : ""} saved in this browser. Download them before you switch computers.` : "")
-    : `<span style="color:var(--bad)">This browser does not keep the decisions: download them before you leave the page.</span>`;
+  $("saved").innerHTML = !ok ? `<span style="color:var(--bad)">This browser does not keep your decisions: they are lost when you leave the page.</span>`
+    : n ? `${n.toLocaleString("en")} decision${n > 1 ? "s" : ""} saved in this browser.` : "Your decisions stay in this browser.";
 }
 
 function decide(h, d, box = null) {
@@ -249,7 +279,9 @@ function decide(h, d, box = null) {
 
 function show(hits) {
   hitsNow = hits;
-  $("review").style.display = hits.length ? "block" : "none";
+  // the hand-in stays reachable while this browser holds decisions, also before a search; the rest needs hits
+  $("review").style.display = hits.length || Object.keys(mine).length ? "block" : "none";
+  $("review").classList.toggle("nohits", !hits.length);
   const box = $("results");
   box.innerHTML = "";
   for (const h of hits) {
@@ -269,7 +301,7 @@ function show(hits) {
         <div class="decide">
           <button data-d="same" title="The same label is on this back">✓ Same</button>
           <button data-d="not" title="Not the same label">✗ Not it</button>
-          <button data-d="unsure">?</button>
+          <button data-d="unsure" title="Unsure" aria-label="Unsure">?</button>
           <button data-edit title="Draw the exact box around the label on this back">Redraw box</button></div></div>`;
     card.querySelectorAll("[data-d]").forEach((btn) => {
       if (rec && rec.d === btn.dataset.d) btn.classList.add("on");
@@ -359,13 +391,24 @@ $("import").addEventListener("change", async (e) => {
     n++;
   }
   store.set(KEY, mine);
-  $("saved").textContent = `${n} decisions loaded from ${f.name}.`;
+  $("saved").textContent = `${n} decision${n === 1 ? "" : "s"} loaded from ${f.name}.`;
   e.target.value = "";
   show(hitsNow);
 });
 savedNote();
-// link back to the results site when this page is part of it (site/label-search/)
-fetch("../data.json", { method: "HEAD" }).then((r) => { if (r.ok) $("home").hidden = false; }).catch(() => {});
+show([]); // decisions from an earlier visit: the hand-in is there from the start
+// link back to the results site when this page is part of it (site/label-search/) and the site header (nav.js) is missing
+if (!document.documentElement.classList.contains("ppnav-on"))
+  fetch("../data.json", { method: "HEAD" }).then((r) => { if (r.ok) $("home").hidden = false; }).catch(() => {});
+
+// The numbers in the text ([data-m]) come from the index itself, so they cannot go stale; the text in the page is the fallback.
+fetch("data/meta.json", { cache: "no-cache" }).then((r) => (r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`)))).then((m) => {
+  const count = (v) => (Number.isFinite(v) ? v.toLocaleString("en") : null), share = (v) => (Number.isFinite(v) ? `${Math.round(100 * v)}%` : null);
+  const recall = m.recall_eval_photos || {}, bytes = Object.values(m.files || {}).reduce((a, b) => a + b, 0);
+  const values = { windows: count(m.windows), backs: count(m.backs), index_mb: bytes ? String(Math.round(bytes / 1e6)) : null,
+    eval_photos: count(recall.eval_photos), "R@1": share(recall["R@1"]), "R@5": share(recall["R@5"]), "R@20": share(recall["R@20"]) };
+  document.querySelectorAll("[data-m]").forEach((el) => { const v = values[el.dataset.m]; if (v) el.textContent = v; });
+}).catch(() => {});
 </script>
 </body>
 </html>

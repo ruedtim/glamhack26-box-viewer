@@ -386,7 +386,7 @@
           strongly). The timeline holds only what SKKG's records hold, so a label without an event may document a station or an
           exhibition the records lack. The order is reconstructed: an undated station stays after the dated one before it, and
           exhibitions are placed by their year. «+1 with an unverified box» under an event means that a hidden box documents it
-          too. A link is evidence to weigh, not proof. Private owners, heirs and private sellers appear only by their role.</dd>
+          too. A link is evidence to weigh, not proof. Owners, heirs and sellers are named as SKKG records them.</dd>
       </dl>
     </div>
 
@@ -438,8 +438,8 @@
           number in the work's collection address.</dd>
         <dt>Watch for</dt>
         <dd><i class="b warn">check</i> after «Located by» marks a box that is not reliable. «Kind (guess)», «Issuer (guess)»
-          and «Text read (OCR)» of a detected label are machine readings: expect misspellings and masked names
-          («[private owner]»).</dd>
+          and «Text read (OCR)» of a detected label are machine readings: expect misspellings and masked addresses
+          («[address]»).</dd>
       </dl>
     </div>
 
@@ -599,7 +599,7 @@
         <dd>Every box has two links: «region» opens the cut-out on the IIIF server, «view» the whole image with the box in the
           box viewer. Sort and filter as in any spreadsheet.</dd>
         <dt>Watch for</dt>
-        <dd>This is the public copy: names and addresses of private owners are masked, and SIK-ISEA appears only as links and
+        <dd>This is the public copy: addresses are masked (names are shown), and SIK-ISEA appears only as links and
           counts. Apart from the label register's own pictures it holds no images. It is a snapshot from the build date in the
           footer.</dd>
       </dl>
@@ -618,8 +618,8 @@
           the same issue, prefilled.</dd>
         <dt>Watch for</dt>
         <dd>Your message becomes a <b>public</b> issue in the <a href="https://github.com/ruedtim/glamhack26-box-viewer/issues">site's
-          GitHub repository</a>, usually 10 to 20 minutes after you send it. Don't write names or addresses of private owners,
-          or your own contact details. Your text goes in as plain text, together with the lines under «Sent along» (page,
+          GitHub repository</a>, usually 10 to 20 minutes after you send it. Names from the records are fine; don't write
+          addresses or your own contact details. Your text goes in as plain text, together with the lines under «Sent along» (page,
           the work's SKKG title, label key, box, browser), never a label's text.</dd>
       </dl>
     </div>
@@ -731,17 +731,16 @@
 
     <h2 id="about-privacy">Privacy</h2>
     <ul>
-      <li>Names and addresses of private owners that labels, data sheets or the text recognition transcribe are masked
-        («[private owner]», «[address]»). The masking follows patterns and can miss a name: if you see one, report it with
-        «Report a problem» without repeating the name.</li>
-      <li>Sellers to SKKG who are persons are not named. In the timeline, private owners, heirs and private sellers appear
-        only by their role; dealers, auction houses and museums are named as SKKG records them, and provenance actors are
-        shown as SKKG publishes them.</li>
+      <li>Names are shown, owners, lenders and sellers included: they come from public sources (SKKG's data sheets,
+        knowledge graph and photographs), and for provenance research they matter most. This was the team's decision on
+        14 Nov 2026; until then, owners' names were masked.</li>
+      <li>Addresses that labels, data sheets or the text recognition transcribe are masked («[address]»). The masking
+        follows patterns and can miss one: if you see an address, report it with «Report a problem» without repeating it.</li>
       <li>The comments in column L of SKKG's label register are not published.</li>
       <li>The search by photo keeps your photo in your browser. Entries in the form and decisions on the review and search
         pages stay in your browser until you download them.</li>
-      <li>Feedback becomes a public GitHub issue: no names or addresses of private owners, and no contact details, please.
-        It travels through a small relay on Google Apps Script that keeps each message for a few hours.</li>
+      <li>Feedback becomes a public GitHub issue: names from the records are fine, but no addresses or contact details,
+        please. It travels through a small relay on Google Apps Script that keeps each message for up to 48 hours.</li>
       <li>Besides SKKG's image server, the pages load a few things from elsewhere: the box viewer its zoom library from
         cdnjs, the entry form its fonts from Google Fonts, the search by photo its image model from Hugging Face and its code
         library from jsDelivr.</li>
