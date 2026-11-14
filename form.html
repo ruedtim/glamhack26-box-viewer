@@ -418,6 +418,7 @@ const region = (iiif, b, s) => `${iiif}/${b.join(',')}/${b[2] > s || b[3] > s ? 
 const full = (iiif, s) => `${iiif}/full/!${s},${s}/0/default.jpg`;
 const formUrl = k => 'form.html?label=' + encodeURIComponent(k);
 const points = n => `${n} matching points`;
+const pointsDe = n => `${n} übereinstimmende Bildpunkte`;  // for the comment in column L (German)
 const invOf = w => (WORK[w] || {}).inv || '?';
 
 function labelTitle(l) {
@@ -440,21 +441,21 @@ function howShort(l) {
     'vision-language model': 'proposed by a vision-language model (Qwen3-VL), unverified',
     'vision-language model, confirmed': 'proposed by a vision-language model (Qwen3-VL), confirmed by the team' }[l.how] || l.how;
 }
-function howSentence(l) {  // comment (column L): how the box was found
-  const check = l.ok ? '' : ', uncertain, please check';
+function howSentence(l) {  // the comment for column L, how the box was found: German, like everything the form writes into the register
+  const check = l.ok ? '' : ', unsicher, bitte prüfen';
   if (l.src === 'register') return l.st === 'retrieval only'
-    ? 'Box only approximate: the window of the back photo most similar to the picture in the label register, please check.'
-    : `Box: picture from the label register found on the back photo (image matching, ${points(l.n)})${check}.`;
-  if (l.src === 'photo') return `Box: detail photo of the label found on the back photo (image matching, ${points(l.n)})${check}.`;
-  if (l.src === 'hit') return `Box: the same label as on Inv. ${invOf(LAB_ID[l.hit.q].w)} found again on this back photo (image search, ${points(l.n)}); a lead, not proof.`;
-  if (l.src === 'detected') return `Box: found on the back photo by the label detector (OWLv2, score ${l.score}); not recorded in the register or in any data sheet`
-    + (l.iss ? `; issuer only guessed from the text read (${l.iss})` : '') + ', please check.';
-  return { 'text found (OCR)': 'Box: text from the provenance data sheet read on the back photo (OCR).',
-    'text found elsewhere (OCR)': 'Box: text from the provenance data sheet read on the back photo (OCR), but not at the place the data sheet names, please check.',
-    'template, same issuer': `Box: found with a label of the same issuer (template on Inv. ${l.tpl}, image matching, ${points(l.n)}).`,
-    'template, similar label': `Box: found with a similar label (template on Inv. ${l.tpl}, ${points(l.n)}), please check.`,
-    'vision-language model': 'Box: proposed by a vision-language model (Qwen3-VL) from the description in the data sheet, unverified.',
-    'vision-language model, confirmed': 'Box: proposed by a vision-language model (Qwen3-VL) from the description in the data sheet, confirmed by the team.' }[l.how] || '';
+    ? 'Box nur ungefähr: ähnlichster Ausschnitt des Rückseitenfotos zum Bild im Etikettenverzeichnis, bitte prüfen.'
+    : `Box: Bild aus dem Etikettenverzeichnis auf dem Rückseitenfoto gefunden (Bildabgleich, ${pointsDe(l.n)})${check}.`;
+  if (l.src === 'photo') return `Box: Detailfoto der Etikette auf dem Rückseitenfoto gefunden (Bildabgleich, ${pointsDe(l.n)})${check}.`;
+  if (l.src === 'hit') return `Box: dieselbe Etikette wie auf Inv. ${invOf(LAB_ID[l.hit.q].w)} auf diesem Rückseitenfoto wiedergefunden (Bildsuche, ${pointsDe(l.n)}); ein Hinweis, kein Beweis.`;
+  if (l.src === 'detected') return `Box: vom Etikettendetektor (OWLv2, Wert ${l.score}) auf dem Rückseitenfoto gefunden; in keinem Register und keinem Datenblatt verzeichnet`
+    + (l.iss ? `; Aussteller nur aus dem gelesenen Text vermutet (${l.iss})` : '') + ', bitte prüfen.';
+  return { 'text found (OCR)': 'Box: Text aus dem Provenienzdatenblatt auf dem Rückseitenfoto gelesen (Texterkennung).',
+    'text found elsewhere (OCR)': 'Box: Text aus dem Provenienzdatenblatt auf dem Rückseitenfoto gelesen (Texterkennung), aber nicht an der im Datenblatt genannten Stelle, bitte prüfen.',
+    'template, same issuer': `Box: über ein Etikett desselben Ausstellers gefunden (Vorlage auf Inv. ${l.tpl}, Bildabgleich, ${pointsDe(l.n)}).`,
+    'template, similar label': `Box: über ein ähnliches Etikett gefunden (Vorlage auf Inv. ${l.tpl}, ${pointsDe(l.n)}), bitte prüfen.`,
+    'vision-language model': 'Box: Vorschlag eines Bild-Sprach-Modells (Qwen3-VL) nach der Beschreibung im Datenblatt, ungeprüft.',
+    'vision-language model, confirmed': 'Box: Vorschlag eines Bild-Sprach-Modells (Qwen3-VL) nach der Beschreibung im Datenblatt, vom Team bestätigt.' }[l.how] || '';
 }
 function evText(ev) {
   const out = [];
@@ -462,6 +463,13 @@ function evText(ev) {
   if (ev.seller) out.push('same seller to SKKG: ' + ev.seller);
   if (ev.provenance) out.push('provenance: ' + ev.provenance);
   return out.join(' · ') || 'no evidence in the records yet';
+}
+function evTextDe(ev) {  // evidence for the comment in column L (German)
+  const out = [];
+  if (ev.exhibition) out.push('gemeinsame Ausstellung: ' + ev.exhibition.split(' | ').join('; '));
+  if (ev.seller) out.push('gleicher Verkäufer an SKKG: ' + ev.seller);
+  if (ev.provenance) out.push('Provenienz: ' + (ev.provenance === 'issuer named in the provenance' ? 'Aussteller in der Provenienz genannt' : ev.provenance));
+  return out.join(' · ') || 'noch kein Beleg in den Akten';
 }
 function viewerUrl(l, drawn) {  // with a redrawn box: that one green, the box from the data dashed
   const w = WORK[l.w], p = new URLSearchParams({ iiif: l.iiif, xywh: (drawn || l.box).join(','), title: `Inv. ${w.inv} · ${w.title}`,
@@ -703,8 +711,8 @@ function prefill(l) {
     notes.KL.push((reg ? 'Register, column K' : 'Image search (found again)') + `: Inv. ${list.join(', ')}`);
   }
   const parts = [howSentence(l)];
-  if (l.src === 'hit') parts.push(Object.keys(l.hit.ev).length ? `Evidence in the records: ${evText(l.hit.ev)}.` : 'No evidence in the records yet.');
-  else if (rev.length) parts.push(`The same label as on Inv. ${[...new Set(rev.map(h => invOf(LAB_ID[h.q].w)))].join(', ')} (image search).`);
+  if (l.src === 'hit') parts.push(Object.keys(l.hit.ev).length ? `Beleg in den Akten: ${evTextDe(l.hit.ev)}.` : 'Noch kein Beleg in den Akten.');
+  else if (rev.length) parts.push(`Dieselbe Etikette wie auf Inv. ${[...new Set(rev.map(h => invOf(LAB_ID[h.q].w)))].join(', ')} (Bildsuche).`);
   put('komm', parts.join(' '), 'data', 'Box', 'How the box was found (Provenance Pursuit, GLAMhack 2026)');
   if (l.lc) notes.KL.push('The register already has a comment in column L; it is not shown here because it can contain names of persons. When pasting, keep the existing comment and add to it.');
   return { v, s, notes };
