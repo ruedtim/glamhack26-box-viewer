@@ -18,8 +18,12 @@ works carry the same label. *Have I seen this label before?*
 - **What SIK-ISEA adds: [sik_isea.html](https://ruedtim.github.io/glamhack26-box-viewer/sik_isea.html)** – links to
   SIK-ISEA's records and counts only.
 - **Label box viewer: `viewer.html`** – any image straight from a IIIF server with one or more boxes drawn on it.
-- **Feedback** – the «Feedback» button on the pages opens a prefilled issue in this repository (page, work, label key
-  and box are filled in; issues are public, so don't write names or addresses of private owners).
+- **Feedback** – the «Feedback» button and the «Report a problem» links open a small form; no GitHub account is
+  needed. Page, work, label key and box are filled in. The message becomes a public issue in this repository within
+  about 10 to 20 minutes (`feedback-relay/`, `.github/workflows/feedback.yml`), so don't write names or addresses
+  of private owners. With an account you can also open the prefilled issue on GitHub directly.
+- **Entry form «Ways of seeing»** – filters for the label picture (local contrast, flat field, colour channels,
+  decorrelation stretch and more), computed in the browser, to read faint pencil, blue crayon and stamps.
 
 All images are loaded live from the SKKG IIIF server (`iiif.digital.skkg.ch`); nothing is copied. Boxes are in
 pixels of the original images (x, y, width, height), exactly as in a IIIF region request.

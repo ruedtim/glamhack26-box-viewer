@@ -13,11 +13,16 @@
             sheet:<hash>, box:<IIIF id>:<x>,<y>,<w>,<h>; see build_site.py)
   Reads data.json, fills in what the data already know (marked), and saves the entries per key in
   this browser (localStorage). Download / load CSV to merge the team's entries.
+  «Ways of seeing»: the label picture (the IIIF region of the box, or SKKG's detail photo) is drawn on a canvas and
+  can be shown through image filters (local contrast, flat field, high-pass, decorrelation stretch, threshold, single
+  colour channels, inverted), computed in the browser; nothing is stored or uploaded. Idea from the prototype
+  github.com/iniphi/verso-decomposition («ways of seeing» layers); the code here is our own.
   The interface is English. What goes into SKKG's German label register stays German: the values of the
   selects and buttons (with English glosses on screen), the column headings F–L, and the row's conventions
   («o. D.», «(Lot …)»).
 -->
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;700&family=Fraunces:opsz,wght@9..144,600&display=swap">
+<script src="feedback.js"></script>
 <style>
 :root{--bg:#eef1f4;--card:#fff;--ink:#1d2733;--mute:#5d6b7a;--line:#cfd7df;--blue:#1f4fa3;--red:#c23a2e;--wash:#e3eaf5;--ok:#2f7a4d;
 --pfbg:#e6eefb;--pfline:#b4c7ea;--sug:#875800;--sugbg:#fbf0d8;--sugline:#e6cb8f;
@@ -29,18 +34,42 @@ html{scroll-padding-top:env(safe-area-inset-top,0px)}
 [hidden]{display:none!important}
 body{margin:0;background:var(--bg);color:var(--ink);font:400 15px/1.5 "Hanken Grotesk",system-ui,sans-serif}
 a{color:var(--blue)}
-.wrap{max-width:1180px;margin:0 auto;padding:20px 16px 48px}
+.wrap{max-width:1180px;margin:0 auto;padding:20px 16px 72px}
 .crumbs{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:13px;color:var(--mute);margin-bottom:10px}
 .crumbs a{font-weight:700;text-decoration:none}
 h1{font:600 26px/1.2 Fraunces,Georgia,serif;margin:0 0 4px}
 .sub{color:var(--mute);margin:0 0 18px;max-width:70ch}
 .work{display:flex;flex-wrap:wrap;gap:14px;align-items:center;background:var(--card);border:1px solid var(--line);border-left:6px solid var(--blue);padding:12px 14px;margin-bottom:18px}
 .ph{width:64px;height:64px;flex:none;border:1px dashed var(--line);display:grid;place-items:center;color:var(--mute);font-size:11px;text-align:center;text-decoration:none;overflow:hidden}
-.ph.img{width:150px;height:150px;border:0;background:var(--bg)}
-.ph img{max-width:100%;max-height:100%;display:block}
 .work b{display:block}.work span{color:var(--mute)}
 .wtext{flex:1;min-width:220px}.wtext span{display:block}
 .wl{margin-top:4px;font-size:13px}
+/* the label picture and its ways of seeing: filters computed in this browser on a canvas, nothing is stored */
+.work.has-pic{display:grid;grid-template-columns:minmax(0,440px) minmax(0,1fr);grid-template-areas:"pic text" "pic ways";align-items:start;gap:12px 20px}
+.work.has-pic .ph{display:none}
+.work.has-pic .wtext{grid-area:text;min-width:0}
+.work.has-pic.wide{grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-areas:"pic pic" "text ways"}
+.work.has-pic.big{grid-template-columns:minmax(0,1fr);grid-template-areas:"pic" "ways" "text"}
+@media(max-width:700px){.work.has-pic,.work.has-pic.wide{grid-template-columns:minmax(0,1fr);grid-template-areas:"text" "pic" "ways"}}
+.lv{grid-area:pic;margin:0;position:relative;min-width:0}
+.lv canvas{display:block;width:100%;height:auto;max-height:320px;object-fit:contain;background:var(--bg);cursor:zoom-in}
+.work.big .lv canvas{max-height:78vh;cursor:zoom-out}
+.lvbig{position:absolute;top:6px;right:6px;width:32px;height:32px;display:grid;place-items:center;border:1px solid var(--line);border-radius:3px;background:var(--card);color:var(--ink);font-size:16px;line-height:1;font-family:inherit;cursor:pointer;opacity:.9}
+.lvbig:hover{opacity:1;border-color:var(--blue)}
+.lvmsg{position:absolute;inset:0;display:grid;place-items:center;padding:12px;text-align:center;font-size:13px;color:var(--mute);pointer-events:none}
+.ways{grid-area:ways;min-width:0}
+.ways .wayhead span{font-size:13px}
+.ways .seg{gap:6px;align-items:center;margin-top:8px}
+.ways .seg span{padding:4px 10px}
+.ways .seg input:checked+span{font-weight:inherit;box-shadow:inset 0 0 0 1px var(--blue)}
+.ways .seg input:disabled+span{opacity:.45;cursor:default}
+.ways .waycap{display:block;width:100%;font-size:12px;color:var(--mute);margin-bottom:-2px}
+.ways .wayin{font-size:13px;color:var(--mute)}
+.wayctl{display:flex;flex-wrap:wrap;gap:6px 18px;align-items:center;margin-top:8px}
+.wayctl .seg{margin-top:0}
+.wayctl label.wayp{display:flex;align-items:center;gap:8px;margin:0;font-size:13px;color:var(--mute)}
+.wayctl input[type=range]{width:150px;accent-color:var(--blue)}
+.ways .hint{margin:8px 0 0;max-width:70ch}
 .grid{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:20px;align-items:start}
 @media(max-width:860px){.grid{grid-template-columns:1fr}}
 fieldset{border:1px solid var(--line);background:var(--card);margin:0 0 14px;padding:14px 16px 16px;min-width:0}
@@ -138,9 +167,27 @@ dialog#ed::backdrop{background:rgba(0,0,0,.5)}
 <h1>Record a label</h1>
 <p class="sub">Form for columns F to L of SKKG's label register. What the data already know is prefilled and marked: add to it or correct it. The panel on the right shows the row as it will go into the register. The register is German, so the terms you pick (shape, colour, support, event, evidence) and the column headings stay German; the English glosses are for orientation.</p>
 
-<div class="work">
-  <a class="ph" id="ph">Label photo</a>
+<div class="work" id="work">
+  <span class="ph" id="ph">Label photo</span>
+  <figure class="lv" id="lv" hidden>
+    <canvas id="lvc" role="img" aria-label="Label picture"></canvas>
+    <div class="lvmsg" id="lvmsg">Loading the picture …</div>
+    <button class="lvbig" id="lvbig" type="button" aria-pressed="false" title="Enlarge the picture" aria-label="Enlarge the picture">⤢</button>
+  </figure>
   <div class="wtext"><b id="wt">No label selected</b><span id="ws">Loading the data …</span><span class="wl" id="wl"></span></div>
+  <div class="ways" id="ways" hidden>
+    <div class="wayhead"><b id="wayslab">Ways of seeing</b><span>Filters that help to read faint pencil, blue crayon and stamps. They are computed in this browser; nothing is saved or uploaded.</span></div>
+    <div role="radiogroup" aria-labelledby="wayslab">
+      <div class="seg" id="ways1"><small class="waycap">Enhance</small></div>
+      <div class="seg" id="ways2"><small class="waycap">One colour channel</small></div>
+    </div>
+    <div class="wayctl">
+      <div class="seg"><label><input type="checkbox" id="wayinv"><span>Invert</span></label></div>
+      <label class="wayp" id="waypl" for="wayp" hidden title="Double-click for the default"><span id="waypn">Strength</span><input type="range" id="wayp" min="0" max="100" value="50"></label>
+      <div class="seg" id="waysrc" hidden role="radiogroup" aria-labelledby="waysrcl"><small class="wayin" id="waysrcl">Picture</small><label><input type="radio" name="waysrc" value="back" checked><span>Back photo</span></label><label><input type="radio" name="waysrc" value="photo"><span>SKKG's detail photo</span></label></div>
+    </div>
+    <p class="hint" id="wayhint" aria-live="polite"></p>
+  </div>
 </div>
 
 <section class="known" id="known" hidden aria-labelledby="khead">
@@ -718,6 +765,303 @@ function prefill(l) {
   return { v, s, notes };
 }
 
+// ---------------------------------------------------------------- Ways of seeing
+// The label's IIIF region on a canvas, passed through standard image filters so that faint pencil, blue crayon and
+// stamps become easier to read (idea: the «ways of seeing» layers of the verso-decomposition prototype). Everything is
+// computed in this browser from the pixels the IIIF server sends (it allows cross-origin reading); nothing is
+// stored or uploaded, and the choice of filter is not saved.
+const IP = (() => {  // image processing on typed arrays: luminance, blur, quantiles, CLAHE, decorrelation stretch, Lab
+  const luma = (px, n) => { const Y = new Float32Array(n); for (let i = 0, j = 0; i < n; i++, j += 4) Y[i] = 0.299 * px[j] + 0.587 * px[j + 1] + 0.114 * px[j + 2]; return Y; };
+  function boxH(src, dst, w, h, r) {  // running mean over [x-r, x+r], edge pixels repeated
+    const k = 1 / (2 * r + 1);
+    for (let y = 0; y < h; y++) {
+      const o = y * w;
+      let acc = (r + 1) * src[o];
+      for (let i = 1; i <= r; i++) acc += src[o + Math.min(i, w - 1)];
+      for (let x = 0; x < w; x++) { dst[o + x] = acc * k; acc += src[o + Math.min(x + r + 1, w - 1)] - src[o + Math.max(x - r, 0)]; }
+    }
+  }
+  function boxV(src, dst, w, h, r) {
+    const k = 1 / (2 * r + 1), acc = new Float64Array(w);
+    for (let x = 0; x < w; x++) { let a = (r + 1) * src[x]; for (let i = 1; i <= r; i++) a += src[Math.min(i, h - 1) * w + x]; acc[x] = a; }
+    for (let y = 0; y < h; y++) {
+      const o = y * w, add = Math.min(y + r + 1, h - 1) * w, sub = Math.max(y - r, 0) * w;
+      for (let x = 0; x < w; x++) { dst[o + x] = acc[x] * k; acc[x] += src[add + x] - src[sub + x]; }
+    }
+  }
+  function gauss(src, w, h, sigma) {  // three box blurs, close to a Gaussian blur with this sigma
+    const a = Float32Array.from(src), b = new Float32Array(src.length);
+    if (!(sigma > 0.3)) return a;
+    let wl = Math.floor(Math.sqrt(4 * sigma * sigma + 1)); if (wl % 2 === 0) wl--;
+    const m = Math.round((12 * sigma * sigma - 3 * wl * wl - 12 * wl - 9) / (-4 * wl - 4));
+    for (let i = 0; i < 3; i++) { const r = ((i < m ? wl : wl + 2) - 1) / 2; boxH(a, b, w, h, r); boxV(b, a, w, h, r); }
+    return a;
+  }
+  function range(a, lo = 0.005, hi = 0.995) {  // the values at two quantiles, for stretching to 0–255
+    let mn = Infinity, mx = -Infinity;
+    for (let i = 0; i < a.length; i++) { const v = a[i]; if (v < mn) mn = v; if (v > mx) mx = v; }
+    if (!(mx > mn)) return [mn, mn + 1];
+    const B = 4096, hist = new Uint32Array(B), s = (B - 1) / (mx - mn);
+    for (let i = 0; i < a.length; i++) hist[(a[i] - mn) * s | 0]++;
+    let c = 0, from = mn, to = mx, found = false;
+    for (let i = 0; i < B; i++) {
+      c += hist[i];
+      if (!found && c > a.length * lo) { from = mn + i / s; found = true; }
+      if (c >= a.length * hi) { to = mn + (i + 1) / s; break; }
+    }
+    return [from, Math.max(to, from + 1e-3)];
+  }
+  function clahe(Y, w, h, clip) {  // contrast-limited adaptive histogram equalisation, 8 tiles along the long side
+    const L = Math.max(w, h), nx = Math.max(2, Math.round(8 * w / L)), ny = Math.max(2, Math.round(8 * h / L));
+    const tw = w / nx, th = h / ny, lut = new Float32Array(nx * ny * 256), hist = new Float64Array(256);
+    for (let ty = 0; ty < ny; ty++) for (let tx = 0; tx < nx; tx++) {
+      const x0 = Math.floor(tx * tw), x1 = Math.max(x0 + 1, Math.floor((tx + 1) * tw)), y0 = Math.floor(ty * th), y1 = Math.max(y0 + 1, Math.floor((ty + 1) * th));
+      hist.fill(0);
+      for (let y = y0; y < y1; y++) for (let x = x0; x < x1; x++) hist[Y[y * w + x] | 0]++;
+      const cnt = (x1 - x0) * (y1 - y0), limit = Math.max(1, clip * cnt / 256);
+      let excess = 0;
+      for (let i = 0; i < 256; i++) if (hist[i] > limit) { excess += hist[i] - limit; hist[i] = limit; }
+      const add = excess / 256, o = (ty * nx + tx) * 256;
+      let c = 0;
+      for (let i = 0; i < 256; i++) { c += hist[i] + add; lut[o + i] = c * 255 / cnt; }
+    }
+    const out = new Float32Array(w * h);
+    for (let y = 0; y < h; y++) {
+      const gy = (y + 0.5) / th - 0.5, y0 = Math.min(ny - 1, Math.max(0, Math.floor(gy))), y1 = Math.min(ny - 1, y0 + 1), fy = Math.min(1, Math.max(0, gy - y0));
+      for (let x = 0; x < w; x++) {
+        const gx = (x + 0.5) / tw - 0.5, x0 = Math.min(nx - 1, Math.max(0, Math.floor(gx))), x1 = Math.min(nx - 1, x0 + 1), fx = Math.min(1, Math.max(0, gx - x0));
+        const v = Y[y * w + x] | 0, a = (y0 * nx + x0) * 256 + v, b = (y0 * nx + x1) * 256 + v, c = (y1 * nx + x0) * 256 + v, d = (y1 * nx + x1) * 256 + v;
+        out[y * w + x] = (lut[a] * (1 - fx) + lut[b] * fx) * (1 - fy) + (lut[c] * (1 - fx) + lut[d] * fx) * fy;
+      }
+    }
+    return out;
+  }
+  function eig3(A) {  // Jacobi rotations on a symmetric 3×3 matrix: eigenvalues, eigenvectors as the columns of vec
+    const a = A.map(r => r.slice()), v = [[1, 0, 0], [0, 1, 0], [0, 0, 1]];
+    for (let sweep = 0; sweep < 60; sweep++) {
+      if (Math.abs(a[0][1]) + Math.abs(a[0][2]) + Math.abs(a[1][2]) < 1e-9 * (Math.abs(a[0][0]) + Math.abs(a[1][1]) + Math.abs(a[2][2]) + 1e-12)) break;
+      for (const [p, q] of [[0, 1], [0, 2], [1, 2]]) {
+        if (Math.abs(a[p][q]) < 1e-300) continue;
+        const th = (a[q][q] - a[p][p]) / (2 * a[p][q]), t = (th >= 0 ? 1 : -1) / (Math.abs(th) + Math.sqrt(th * th + 1));
+        const c = 1 / Math.sqrt(t * t + 1), s = t * c;
+        for (let k = 0; k < 3; k++) { const kp = a[k][p], kq = a[k][q]; a[k][p] = c * kp - s * kq; a[k][q] = s * kp + c * kq; }
+        for (let k = 0; k < 3; k++) { const pk = a[p][k], qk = a[q][k]; a[p][k] = c * pk - s * qk; a[q][k] = s * pk + c * qk; }
+        for (let k = 0; k < 3; k++) { const kp = v[k][p], kq = v[k][q]; v[k][p] = c * kp - s * kq; v[k][q] = s * kp + c * kq; }
+      }
+    }
+    return { val: [a[0][0], a[1][1], a[2][2]], vec: v };
+  }
+  function dstretch(px, n, target) {  // decorrelation stretch: the principal components of RGB brought to the same spread
+    const step = Math.max(1, Math.floor(n / 250000)), m = [0, 0, 0], S = [[0, 0, 0], [0, 0, 0], [0, 0, 0]];
+    let k = 0;
+    for (let i = 0; i < n; i += step, k++) { const j = i * 4; for (let r = 0; r < 3; r++) { m[r] += px[j + r]; for (let c = r; c < 3; c++) S[r][c] += px[j + r] * px[j + c]; } }
+    for (let r = 0; r < 3; r++) m[r] /= k;
+    const C = [0, 1, 2].map(r => [0, 1, 2].map(c => (r <= c ? S[r][c] : S[c][r]) / k - m[r] * m[c]));
+    const { val, vec } = eig3(C), g = val.map(l => target / Math.sqrt(Math.max(l, 0) + 1));
+    const T = [0, 1, 2].map(r => [0, 1, 2].map(c => vec[r][0] * g[0] * vec[c][0] + vec[r][1] * g[1] * vec[c][1] + vec[r][2] * g[2] * vec[c][2]));
+    const out = new Uint8ClampedArray(n * 4);
+    for (let i = 0, j = 0; i < n; i++, j += 4) {
+      const d0 = px[j] - m[0], d1 = px[j + 1] - m[1], d2 = px[j + 2] - m[2];
+      out[j] = m[0] + T[0][0] * d0 + T[0][1] * d1 + T[0][2] * d2;
+      out[j + 1] = m[1] + T[1][0] * d0 + T[1][1] * d1 + T[1][2] * d2;
+      out[j + 2] = m[2] + T[2][0] * d0 + T[2][1] * d1 + T[2][2] * d2;
+      out[j + 3] = 255;
+    }
+    return out;
+  }
+  const LIN = new Float32Array(256).map((_, i) => { const c = i / 255; return c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4; });
+  const fl = t => t > 0.008856 ? Math.cbrt(t) : 7.787 * t + 16 / 116;
+  function lab(px, n) {  // CIELAB a* (green–red) and b* (blue–yellow), sRGB with D65 white
+    const A = new Float32Array(n), B = new Float32Array(n);
+    for (let i = 0, j = 0; i < n; i++, j += 4) {
+      const r = LIN[px[j]], g = LIN[px[j + 1]], b = LIN[px[j + 2]];
+      const fx = fl((0.4124 * r + 0.3576 * g + 0.1805 * b) / 0.95047), fy = fl(0.2126 * r + 0.7152 * g + 0.0722 * b), fz = fl((0.0193 * r + 0.1192 * g + 0.9505 * b) / 1.08883);
+      A[i] = 500 * (fx - fy); B[i] = 200 * (fy - fz);
+    }
+    return { A, B };
+  }
+  return { luma, gauss, range, clahe, dstretch, lab };
+})();
+const WAYS = [  // g: row of the switch; p: name of the slider, if the filter has one
+  { id: 'photo', g: 1, name: 'Photo', hint: 'The photo as it is.' },
+  { id: 'clahe', g: 1, name: 'Local contrast', p: 'Strength', hint: 'Contrast raised area by area (CLAHE): faint pencil and worn print get darker, while light and dark parts both stay readable.' },
+  { id: 'flat', g: 1, name: 'Flat field', p: 'Strength', hint: 'Light and shadow evened out (the picture divided by a blurred copy of itself): uneven lighting, stains and yellowing recede.' },
+  { id: 'hipass', g: 1, name: 'High-pass', p: 'Detail size', hint: 'Only fine detail kept (the picture minus a blurred copy of itself): strokes and edges stand out from the tone of the paper.' },
+  { id: 'dstretch', g: 1, name: 'Decorrelation stretch', p: 'Strength', hint: 'Small differences in colour exaggerated: stamps, coloured crayon and faded ink stand out from the paper.' },
+  { id: 'thresh', g: 1, name: 'Threshold', p: 'Sensitivity', hint: 'Black and white, cut at a local threshold after evening out the light: like a photocopy of the writing.' },
+  { id: 'red', g: 2, name: 'Red', hint: 'The red channel only: blue crayon and blue ink come out dark, red ink fades.' },
+  { id: 'green', g: 2, name: 'Green', hint: 'The green channel only: red and blue marks both come out dark; the closest to a plain grey picture.' },
+  { id: 'blue', g: 2, name: 'Blue', hint: 'The blue channel only: red, brown and black marks come out dark, blue ink fades and yellowed paper darkens.' },
+  { id: 'bink', g: 2, name: 'Blue ink', hint: 'The blue–yellow axis (b* of CIELAB): anything blue, such as crayon, ballpoint or stamp ink, comes out dark; yellowed paper comes out light.' },
+  { id: 'rink', g: 2, name: 'Red ink', hint: 'The green–red axis (a* of CIELAB): anything red, such as stamps, crayon or sealing wax, comes out dark.' },
+];
+const WAY = Object.fromEntries(WAYS.map(x => [x.id, x]));
+const SEE = { url: '', src: 'back', way: 'photo', inv: false, p: {}, img: null, cors: false, w: 0, h: 0, k: 1, px: null, filters: false, scale: 1,
+  Y: null, lab: null, blur: new Map(), raf: 0 };
+[1, 2].forEach(g => $('#ways' + g).insertAdjacentHTML('beforeend', WAYS.filter(x => x.g === g).map(x =>
+  `<label title="${esc(x.hint)}"><input type="radio" name="way" value="${x.id}"${x.id === 'photo' ? ' checked' : ''}><span>${esc(x.name)}</span></label>`).join('')));
+
+function seeShow(b) {  // show the picture of the current box (or SKKG's detail photo); load it if it changed
+  $('#work').classList.add('has-pic');
+  $('#lv').hidden = $('#ways').hidden = false;
+  $('#waysrc').hidden = !L.photo;
+  if (!L.photo) SEE.src = 'back';
+  const url = SEE.src === 'photo' ? full(L.photo, 1600) : region(L.iiif, b, 1600);
+  SEE.scale = SEE.src === 'photo' ? 1 : Math.min(1, 1600 / Math.max(b[2], b[3]));  // rendering / original pixels
+  if (url !== SEE.url) seeLoad(url);
+}
+const seeMsg = t => { $('#lvmsg').textContent = t; $('#lvmsg').hidden = !t; };
+function seeLoad(url) {
+  Object.assign(SEE, { url, img: null, px: null, filters: false, Y: null, lab: null });
+  SEE.blur.clear();
+  seeMsg('Loading the picture …');
+  seeControls();
+  const load = cors => {
+    const img = new Image();
+    if (cors) img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      if (SEE.url !== url) return;  // another picture was asked for meanwhile
+      Object.assign(SEE, { img, cors, px: null });
+      $('#work').classList.toggle('wide', img.naturalWidth > 2.4 * img.naturalHeight);  // a long strip gets the whole width
+      seeMsg(''); seePrepare(); seeControls(); seeRender();
+    };
+    img.onerror = () => {
+      if (SEE.url !== url) return;
+      if (cors) { load(false); return; }  // without cross-origin reading: the photo only, no filters
+      const cv = $('#lvc');
+      cv.width = 300; cv.height = 150;  // clears an earlier picture
+      seeMsg('The picture could not be loaded. «Label in full resolution (IIIF)» opens it at the image server.');
+      seeControls();
+    };
+    img.src = url;
+  };
+  load(true);
+}
+function seePrepare() {  // the pixels the filters work on: at most 1000 long in the normal view, the whole download enlarged
+  const { img } = SEE, nw = img.naturalWidth, nh = img.naturalHeight;
+  const k = Math.min(1, ($('#work').classList.contains('big') ? 1600 : 1000) / Math.max(nw, nh));
+  const w = Math.max(1, Math.round(nw * k)), h = Math.max(1, Math.round(nh * k));
+  if (SEE.px && w === SEE.w && h === SEE.h) return false;
+  Object.assign(SEE, { w, h, k, px: null, filters: false, Y: null, lab: null });
+  SEE.blur.clear();
+  const cv = $('#lvc');
+  cv.width = w; cv.height = h;
+  if (SEE.cors) try {
+    const c = document.createElement('canvas');
+    c.width = w; c.height = h;
+    const g = c.getContext('2d', { willReadFrequently: true });
+    g.imageSmoothingQuality = 'high';
+    g.drawImage(img, 0, 0, w, h);
+    SEE.px = g.getImageData(0, 0, w, h).data;
+    SEE.filters = true;
+  } catch (_) { SEE.filters = false; }
+  return true;
+}
+function seeControls() {
+  const x = WAY[SEE.way], on = SEE.filters;
+  $$('#ways input[name=way]').forEach(i => { i.disabled = !on && i.value !== 'photo'; });
+  $('#wayinv').disabled = !on;
+  $('#waypl').hidden = !on || !x.p;
+  if (x.p) { $('#waypn').textContent = x.p; $('#wayp').value = SEE.p[x.id] ?? 50; }
+  $('#wayhint').textContent = !SEE.img ? '' : on ? x.hint + (SEE.inv ? ' Inverted: dark becomes light.' : '')
+    : 'The filters are not available for this picture: the image server did not let the browser read its pixels.';
+}
+const seeY = () => SEE.Y || (SEE.Y = IP.luma(SEE.px, SEE.w * SEE.h));
+const seeLab = () => {  // smoothed a little: JPEG stores colour at half resolution, in blocks
+  if (!SEE.lab) { const { A, B } = IP.lab(SEE.px, SEE.w * SEE.h); SEE.lab = { A: IP.gauss(A, SEE.w, SEE.h, 1), B: IP.gauss(B, SEE.w, SEE.h, 1) }; }
+  return SEE.lab;
+};
+function seeBlur(sigma) {  // blurred luminance, the last few kept (the slider asks for many)
+  const k = Math.round(sigma * 4) / 4;
+  if (SEE.blur.has(k)) { const v = SEE.blur.get(k); SEE.blur.delete(k); SEE.blur.set(k, v); return v; }
+  const v = IP.gauss(seeY(), SEE.w, SEE.h, k);
+  SEE.blur.set(k, v);
+  if (SEE.blur.size > 6) SEE.blur.delete(SEE.blur.keys().next().value);
+  return v;
+}
+function seePixels(way) {  // the picture's pixels through one way of seeing, as RGBA
+  const { w, h, px } = SEE, n = w * h, L = Math.max(w, h), p = (SEE.p[way] ?? 50) / 100;
+  let out = new Uint8ClampedArray(n * 4);
+  const grey = (v, a, b) => {  // a -> black, b -> white
+    const k = 255 / (b - a);
+    for (let i = 0, j = 0; i < n; i++, j += 4) { out[j] = out[j + 1] = out[j + 2] = (v[i] - a) * k; out[j + 3] = 255; }
+  };
+  switch (way) {
+    case 'clahe': {  // on the luminance; colours shift with it
+      const Y = seeY(), Z = IP.clahe(Y, w, h, 1 + 4 * p);
+      for (let i = 0, j = 0; i < n; i++, j += 4) { const d = Z[i] - Y[i]; out[j] = px[j] + d; out[j + 1] = px[j + 1] + d; out[j + 2] = px[j + 2] + d; out[j + 3] = 255; }
+      break;
+    }
+    case 'flat': {  // each pixel divided by the light around it, then stretched
+      const Y = seeY(), I = seeBlur(L * (0.2 - 0.17 * p)), f = new Float32Array(n), Yf = new Float32Array(n);
+      let m = 0;
+      for (let i = 0; i < n; i++) m += I[i];
+      m /= n;
+      for (let i = 0; i < n; i++) { f[i] = m / Math.max(I[i], 1); Yf[i] = Y[i] * f[i]; }
+      const [a, b] = IP.range(Yf), k = 255 / (b - a);
+      for (let i = 0, j = 0; i < n; i++, j += 4) { out[j] = (px[j] * f[i] - a) * k; out[j + 1] = (px[j + 1] * f[i] - a) * k; out[j + 2] = (px[j + 2] * f[i] - a) * k; out[j + 3] = 255; }
+      break;
+    }
+    case 'hipass': {  // picture minus its blur; the detail size is in pixels of the original photo
+      const Y = seeY(), B = seeBlur(Math.max(0.8, SEE.scale * SEE.k * (2 + 16 * p))), D = new Float32Array(n);
+      for (let i = 0; i < n; i++) D[i] = Y[i] - B[i];
+      const [a, b] = IP.range(D, 0.002, 0.998), P = Math.max(-a, b, 1);
+      grey(D, -P, P);
+      break;
+    }
+    case 'dstretch': out = IP.dstretch(px, n, 25 + 70 * p); break;
+    case 'thresh': {  // flat field, then black where a pixel is clearly darker than its surroundings
+      const Y = seeY(), I = seeBlur(L / 10), F = new Float32Array(n);
+      for (let i = 0; i < n; i++) F[i] = Y[i] / Math.max(I[i], 1);
+      const [a, b] = IP.range(F), k = 255 / (b - a);
+      for (let i = 0; i < n; i++) F[i] = (F[i] - a) * k;
+      const M = IP.gauss(F, w, h, Math.max(2, L / 40)), C = 40 - 34 * p;
+      for (let i = 0, j = 0; i < n; i++, j += 4) { out[j] = out[j + 1] = out[j + 2] = F[i] < M[i] - C ? 0 : 255; out[j + 3] = 255; }
+      break;
+    }
+    case 'red': case 'green': case 'blue': {
+      const c = { red: 0, green: 1, blue: 2 }[way], v = new Float32Array(n);
+      for (let i = 0; i < n; i++) v[i] = px[i * 4 + c];
+      grey(v, ...IP.range(v));
+      break;
+    }
+    case 'bink': { const B = seeLab().B; grey(B, ...IP.range(B)); break; }  // blue (low b*) dark
+    case 'rink': { const A = seeLab().A, [a, b] = IP.range(A); grey(A, b, a); break; }  // red (high a*) dark
+    default: out.set(px);
+  }
+  if (SEE.inv) for (let j = 0; j < out.length; j += 4) { out[j] = 255 - out[j]; out[j + 1] = 255 - out[j + 1]; out[j + 2] = 255 - out[j + 2]; }
+  return out;
+}
+function seeRender() {
+  cancelAnimationFrame(SEE.raf);
+  SEE.raf = 0;
+  if (!SEE.img) return;
+  const cv = $('#lvc'), g = cv.getContext('2d'), way = SEE.filters ? SEE.way : 'photo';
+  if (!SEE.filters || (way === 'photo' && !SEE.inv)) { g.imageSmoothingQuality = 'high'; g.drawImage(SEE.img, 0, 0, SEE.w, SEE.h); }
+  else g.putImageData(new ImageData(seePixels(way), SEE.w, SEE.h), 0, 0);
+  cv.setAttribute('aria-label', `${SEE.src === 'photo' ? "SKKG's detail photo" : 'Detail of the back photo'}: ${L ? labelTitle(L) : ''} · ${WAY[way].name}${SEE.filters && SEE.inv ? ', inverted' : ''}`);
+}
+const seeBig = on => {
+  $('#work').classList.toggle('big', on);
+  const t = on ? 'Make the picture smaller' : 'Enlarge the picture';
+  $('#lvbig').setAttribute('aria-pressed', String(on));
+  $('#lvbig').setAttribute('aria-label', t);
+  $('#lvbig').title = t;
+  if (SEE.img && seePrepare()) { seeControls(); seeRender(); }  // enlarged: the filters work on the whole download
+};
+$('#ways').addEventListener('change', e => {
+  const t = e.target;
+  if (t.name === 'way') SEE.way = t.value;
+  else if (t.id === 'wayinv') SEE.inv = t.checked;
+  else if (t.name === 'waysrc') { SEE.src = t.value; if (L) seeShow(curBox()); return; }
+  else return;
+  seeControls(); seeRender();
+});
+$('#wayp').addEventListener('input', e => { SEE.p[SEE.way] = +e.target.value; if (!SEE.raf) SEE.raf = requestAnimationFrame(seeRender); });
+$('#wayp').addEventListener('dblclick', e => { e.target.value = 50; SEE.p[SEE.way] = 50; seeRender(); });
+$('#lvbig').addEventListener('click', () => seeBig(!$('#work').classList.contains('big')));
+$('#lvc').addEventListener('click', () => seeBig(!$('#work').classList.contains('big')));
+
 // ---------------------------------------------------------------- Display
 function find(k) {
   if (!k) return null;
@@ -741,10 +1085,7 @@ function header() {
   document.title = `Record a label · Inv. ${w.inv} – Provenance Pursuit`;
   $('#wt').textContent = `Inv. ${w.inv} · ${w.title}`;
   $('#ws').textContent = `${w.type} · work (columns A–E), read-only · ${SRC_DE[L.src]}: ${labelTitle(L)}`;
-  const ph = $('#ph');
-  Object.assign(ph, { href: view, target: '_blank', rel: 'noopener', title: 'Whole back with the box, zoomable' });
-  ph.className = 'ph img';
-  ph.innerHTML = `<img alt="Detail of the back photo: ${esc(labelTitle(L))}" src="${esc(region(L.iiif, b, 900))}">`;
+  seeShow(b);  // the label picture follows the current box
   $('#wl').innerHTML = [`<a href="${esc(view)}" target="_blank" rel="noopener">Whole back (zoomable)</a>`,
     `<a href="${esc(`${L.iiif}/${b.join(',')}/max/0/default.jpg`)}" target="_blank" rel="noopener">Label in full resolution (IIIF)</a>`,
     w.url && `<a href="${esc(w.url)}" target="_blank" rel="noopener">SKKG collection</a>`,
@@ -1042,6 +1383,10 @@ window.addEventListener('storage', e => { if (e.key === STORE) renderList(); });
       $('#back').addEventListener('click', e => { e.preventDefault(); history.back(); });
   } catch (_) { /* no previous page */ }
 })();
+
+// The feedback button (feedback.js) asks what is open when it is clicked. The issue is public: only the label's key,
+// inventory number, title and box from the data go into it, never what the team typed or drew.
+window.ppFeedbackContext = () => L ? { where: 'Entry form', inv: WORK[L.w].inv, title: labelTitle(L), key: L.key, iiif: L.iiif, box: L.box } : {};
 
 render(); renderList(); savedLine(null);
 fetch('data.json', { cache: 'no-cache' }).then(r => { if (!r.ok) throw new Error(r.status); return r.json(); }).then(data => {

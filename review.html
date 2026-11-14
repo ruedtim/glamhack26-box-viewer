@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Review the model's proposals – Provenance Pursuit</title>
 <meta name="description" content="Check the boxes a vision-language model proposed for provenance marks described in SKKG's data sheets.">
+<script src="feedback.js"></script>
 <style>
   :root { --bg: #f5f3ef; --panel: #fff; --ink: #1d1d1b; --muted: #6b6860; --line: #e2ded6; --accent: #1f4e8c;
           --ok: #1a7f4b; --bad: #c0392b; --unsure: #a86b00; --model: #bf5af2; --chip: #efece6;
@@ -18,6 +19,7 @@
   body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
   a { color: var(--accent); }
   .wrap { max-width: 1280px; margin: 0 auto; padding: 0 16px; }
+  main.wrap { padding-bottom: 72px; }  /* room for the floating feedback button */
   header { background: var(--panel); border-bottom: 1px solid var(--line); }
   .top { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px 20px; padding: 12px 0; }
   h1 { font-size: 20px; margin: 0; }
@@ -110,7 +112,7 @@
       <dl id="facts"></dl>
       <p style="margin:12px 0 6px" class="muted">The whole back</p>
       <svg class="view" id="whole" role="img" aria-label="The whole back with the proposed box and the area named in the data sheet"></svg>
-      <p class="muted" style="margin-top:8px"><a id="zoom" target="_blank" rel="noopener">Open the back zoomable</a> · <a id="obj" target="_blank" rel="noopener">SKKG collection</a></p>
+      <p class="muted" style="margin-top:8px"><a id="zoom" target="_blank" rel="noopener">Open the back zoomable</a> · <a id="obj" target="_blank" rel="noopener">SKKG collection</a><span id="fb"></span></p>
     </div>
   </div>
   <p class="muted" id="saved"></p>
@@ -201,6 +203,8 @@
                                     note: 'proposed by the vision-language model; dashed: area named in the data sheet', colour: 'bf5af2', zoom: '1' });
     $('#zoom').href = 'viewer.html?' + p;
     $('#obj').href = w[2];
+    $('#fb').innerHTML = window.ppFeedback ? ' · ' + ppFeedback.html({ where: 'Review', key: 'sheet:' + it.k, inv: w[0], iiif: it.iiif, box: it.box,
+                                                                        kind: 'A box is wrong or missing' }, 'Report a problem') : '';
     $('#prev').disabled = at === 0;
     $('#next').disabled = at >= list.length - 1;
     const nx = list[at + 1];  // load the next pictures early
@@ -325,6 +329,12 @@
     else return;
     e.preventDefault();
   });
+  // The feedback button (feedback.js) asks what is open when it is clicked. The issue is public: only the item's key,
+  // inventory number and the model's box go into it, never a decision or a box someone drew.
+  window.ppFeedbackContext = () => {
+    const it = list[at];
+    return it ? { where: 'Review', key: 'sheet:' + it.k, inv: (R.works[it.w] || [])[0], iiif: it.iiif, box: it.box } : { where: 'Review' };
+  };
   fetch('review.json', { cache: 'no-cache' }).then(r => r.json()).then(data => {
     R = data;
     items = R.items;
