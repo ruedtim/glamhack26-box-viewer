@@ -6,6 +6,7 @@
 <title>Provenance Pursuit – labels on the backs of SKKG works</title>
 <meta name="description" content="Have I seen this label before? Provenance labels, stamps and marks located on the backs of works in the SKKG collection – GLAMhack 2026, challenge 304.">
 <script src="feedback.js"></script>
+<script src="facets.js"></script>
 <script src="nav.js"></script>
 <style>
   :root { --bg: #f5f3ef; --panel: #fff; --ink: #1d1d1b; --muted: #6b6860; --line: #e2ded6; --accent: #1f4e8c;
@@ -451,6 +452,18 @@
           <li><b>Show</b>, «With unverified leads» (the default is «All located») adds <span data-n="unverified"></span> boxes: the
             <span data-n="model"></span> proposals of the vision-language model and the <span data-n="notext"></span> detector
             finds without readable text. The «unverified boxes» checkbox in a work's dialog is the same switch.</li>
+          <li><b>Data sheet facets</b> (in «Filters», after source, «Show» and «found on other works»): issuer, owner, type, kind
+            of issuer, event, date, place, country, language, technique, support, position, side, shape, edge, colours and
+            writing medium of the <span data-n="facet_labels"></span> labels that a provenance data sheet describes, as
+            the <a href="https://github.com/kintopp/glamhack26-prov-parser">prov-parser</a> read the descriptions (and
+            register entries that show such a mark). Values of one facet add up (or), facets narrow down (and), together
+            with the search and the other filters; the number beside a value says how many labels it would
+            leave. Values are in German as in the data sheets, with English glosses; names in their most frequent
+            spelling, the spellings of one actor merged by SKKG's list of actors; long lists show the most frequent
+            first, with «Show all» and a find field; «andere» gathers values of fewer than five marks.
+            <i class="fx-llm">LLM</i>: filled by a language model, verify in the data sheet; <b class="fx-u">?</b>:
+            uncertain (inferred while coding, or read from the photo or the provenance chain), left out with «only
+            certain values». The address keeps all the filters, so a link shows the same selection.</li>
           <li>The filters combine, and «Filters» folds them away (on a phone they start folded); the count says how many
             labels match, and «Show more» loads the next 96. Labels found on the
             most works come first, then the reliable ones. Click a card for the <a href="#about-label">label dialog</a>.</li>
@@ -475,6 +488,9 @@
           <li>Search by inventory number, title, object type, provenance actor, exhibition, acquisition or the text of a label.
             «only works with located labels» (on by default: <span data-n="works_labels"></span> works) and «only works that
             share a label» (<span data-n="works_shared"></span>) narrow the list. Works with the most labels come first.</li>
+          <li><b>Data sheet facets</b>: the same groups, in «Filters», for the <span data-n="facet_works"></span> works with a provenance data
+            sheet. A work counts for a value when any mark its data sheet describes has it, also a mark on the front or one
+            that was not placed on the back. Combined with the search and the switches; the address keeps them.</li>
           <li>Click a work, for example <a href="#work=5545">Inv. 4954</a>. At the top of its dialog: <b>The back, exploded</b>
             beside the <b>Provenance timeline</b>. A work without located labels shows the timeline only.</li>
           <li><b>Explode</b>: drag the slider. The back shrinks to half its size and every label lifts onto a ring around it,
@@ -879,6 +895,9 @@
         label register and object list from the challenge.</li>
       <li>Exhibitions and acquisitions were read from the knowledge graph following
         <a href="https://github.com/kintopp/skkg-mcp">skkg-mcp</a> (RISE, University of Basel).</li>
+      <li>Data sheet facets: the marks of the provenance data sheets as the <a href="https://github.com/kintopp/glamhack26-prov-parser">prov-parser</a> read
+        them (MIT licence, © 2026 University of Basel; rules for the physical description, a language model for issuer,
+        owner, event, date, place, country and language), matched to the labels by this project (prov_parser/facets.py).</li>
       <li>These pages copy no images: every picture is requested from SKKG's IIIF image server, and boxes are kept as x, y,
         width and height in pixels of the original image.</li>
       <li>SIK-ISEA's research portal is only linked and counted (<a href="sik_isea.html">What SIK-ISEA adds</a>): its content
@@ -1147,6 +1166,7 @@
       l.pos && ['Position', esc(l.pos)], typed && [l.src === 'detected' ? 'Kind (guess)' : 'Type', esc(l.type)],
       l.src === 'detected' && l.iss && ['Issuer (guess)', esc(l.iss)],
       l.d && [l.src === 'detected' ? 'Text read (OCR)' : 'Description', esc(l.d)],
+      window.ppFacets && ppFacets.fact(l, 'labels'),
       (l.tl || []).length && ['Provenance events', l.tl.map(([i, s, b]) => `${dots(s)} ${esc(evLine(evView(w, w.tl[i])))} <span class="mute">(${STRENGTH[s]}: ${esc(basisText({ label: l }, b))})</span>`).join('<br>') +
         `<br><a href="#work=${l.w}">On the work's exploded back and timeline</a>`]].filter(Boolean);
     const others = w.labels.filter(o => o.id !== l.id && (state.lmodel || !unverified(o)));
@@ -1178,7 +1198,7 @@
     }).join('<br>');
     const facts = [['Object type', esc(w.type)], ['Collection', `<a href="${esc(w.url)}" target="_blank" rel="noopener">${esc(w.url)}</a>`],
       w.acq && ['Acquired by SKKG', esc(w.acq)], w.actors.length && ['Provenance actors', esc(w.actors.join(', '))],
-      w.ex.length && ['Exhibitions', w.ex.map(esc).join('<br>')]].filter(Boolean);
+      w.ex.length && ['Exhibitions', w.ex.map(esc).join('<br>')], window.ppFacets && ppFacets.fact(w, 'works')].filter(Boolean);
     const shown = w.labels.filter(l => state.lmodel || !unverified(l));
     const pieces = piecesOf(oid, w);
     const dl = `<dl>${facts.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join('')}</dl>`;
@@ -1563,7 +1583,7 @@
     if (name === 'again') renderAgain();
   }
   function route() {
-    const h = decodeURIComponent(location.hash.slice(1));
+    const h = (window.ppFacets ? ppFacets.route : x => x)(decodeURIComponent(location.hash.slice(1)));  // «labels?…»: filters from the address
     if (h.startsWith('label=')) {  // a label by its id or by its stable key (links from the entry form)
       if (document.querySelector('main > section:not([hidden])') === null) tab(current);
       const id = h.slice(6);
@@ -1651,6 +1671,17 @@
       `${num(n.hits_backed)} of them backed by the records of both works.`;
     $('#foot').innerHTML = `Provenance Pursuit · GLAMhack 2026, challenge 304 · built ${esc(D.built)} · data and images: SKKG Stiftung für Kunst, Kultur und Geschichte, Winterthur ` +
       '(metadata and backs CC0, data sheets CC BY 4.0, fronts as credited) · <a href="provenance_pursuit_results.xlsx">Excel</a> · <a href="#about">About</a> · <a href="how-we-got-here.html">How we got here</a>';
+    if (window.ppFacets) {  // data sheet facets (site/facets.js): groups in #lfacets and #wfacets, filters in the address
+      ppFacets.setup(D, {
+        labels: { spot: '#lfacets', grid: '#lgrid', base: baseLabels, render: () => { state.lpage = 1; renderLabels(); },
+                  about: '#about-labels', home: true, controls: { q: '#lq', src: '#lsrc', show: '#lshow', again: '#lagain' } },
+        works: { spot: '#wfacets', grid: '#wgrid', base: baseWorks, render: () => { state.wpage = 1; renderWorks(); },
+                 about: '#about-works', controls: { q: '#wq', lab: '#wlab', again: '#wagain' } } });
+      facetPass = l => ppFacets.pass('labels', l);
+      facetSummary = () => ppFacets.summary('labels');
+      workPass = e => ppFacets.pass('works', e);
+      workFacetSummary = () => ppFacets.summary('works');
+    }
     route();
   }).catch(() => { document.querySelector('main').innerHTML = '<p class="empty">The data could not be loaded.</p>'; });
 })();

@@ -8,6 +8,9 @@ works carry the same label. *Have I seen this label before?*
   their boxes, and the labels found again on other works with the evidence from the records (shared exhibitions,
   the same seller, the provenance). Each work also shows its back «exploded»: the labels lift off, and a
   provenance timeline from SKKG's records lights up the labels that document each event (persons by role only).
+- **Faceted search (`facets.js`)** – in «Filters» on the Labels and Works tabs: 19 groups from the provenance
+  data sheets as the [prov-parser](https://github.com/kintopp/glamhack26-prov-parser) read them (issuer, owner,
+  type, event, date, place, technique, colours …), with live counts; every filter is kept in the address.
 - **Workbook: [provenance_pursuit_results.xlsx](https://ruedtim.github.io/glamhack26-box-viewer/provenance_pursuit_results.xlsx)**
   – all results in one Excel file; its first sheet explains the others.
 - **Review page: [review.html](https://ruedtim.github.io/glamhack26-box-viewer/review.html)** – check the boxes the
