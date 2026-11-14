@@ -5,16 +5,20 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Provenance Pursuit – labels on the backs of SKKG works</title>
 <meta name="description" content="Have I seen this label before? Provenance labels, stamps and marks located on the backs of works in the SKKG collection – GLAMhack 2026, challenge 304.">
+<script src="feedback.js"></script>
 <style>
   :root { --bg: #f5f3ef; --panel: #fff; --ink: #1d1d1b; --muted: #6b6860; --line: #e2ded6; --accent: #1f4e8c;
           --register: #2166ac; --photo: #c0392b; --sheet: #762a83; --model: #a86b00; --again: #1a7f4b; --detected: #0f7b86;
-          --chip: #efece6; --shadow: 0 1px 2px rgba(0,0,0,.06), 0 3px 10px rgba(0,0,0,.05); }
+          --chip: #efece6; --shadow: 0 1px 2px rgba(0,0,0,.06), 0 3px 10px rgba(0,0,0,.05);
+          --tl-own: #8c5a24; --tl-ex: #2f7a68; --tl-acq: #1f4e8c; --lift: 0 4px 14px rgba(40,30,20,.28); }
   :root[data-theme="dark"] { --bg: #171716; --panel: #222220; --ink: #ecebe7; --muted: #a8a59d; --line: #36342f;
           --accent: #9cc2ff; --register: #6aa8e8; --photo: #ff8a7a; --sheet: #cf9be0; --model: #e8b54a; --detected: #5fd1db;
-          --again: #52c891; --chip: #2d2b28; --shadow: none; }
+          --again: #52c891; --chip: #2d2b28; --shadow: none;
+          --tl-own: #dca76a; --tl-ex: #6ccab3; --tl-acq: #9cc2ff; --lift: 0 4px 16px rgba(0,0,0,.6); }
   @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg: #171716; --panel: #222220;
           --ink: #ecebe7; --muted: #a8a59d; --line: #36342f; --accent: #9cc2ff; --register: #6aa8e8; --photo: #ff8a7a;
-          --sheet: #cf9be0; --model: #e8b54a; --detected: #5fd1db; --again: #52c891; --chip: #2d2b28; --shadow: none; } }
+          --sheet: #cf9be0; --model: #e8b54a; --detected: #5fd1db; --again: #52c891; --chip: #2d2b28; --shadow: none;
+          --tl-own: #dca76a; --tl-ex: #6ccab3; --tl-acq: #9cc2ff; --lift: 0 4px 16px rgba(0,0,0,.6); } }
   * { box-sizing: border-box; }
   body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
   a { color: var(--accent); }
@@ -33,7 +37,7 @@
   input[type=search] { font: inherit; padding: 7px 10px; border: 1px solid var(--line); border-radius: 6px; background: var(--panel); color: var(--ink); width: 280px; max-width: 100%; }
   .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; background: var(--panel); }
   .seg button { font: inherit; font-size: 13px; border: 0; background: none; color: var(--muted); padding: 6px 10px; cursor: pointer; }
-  .seg button[aria-pressed="true"] { background: var(--accent); color: #fff; }
+  .seg button[aria-pressed="true"] { background: var(--accent); color: var(--panel); }
   label.tg { font-size: 13px; color: var(--muted); display: inline-flex; gap: 5px; align-items: center; cursor: pointer; }
   .count { font-size: 13px; color: var(--muted); }
   .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 14px; }
@@ -63,6 +67,9 @@
   .arrow { align-self: center; color: var(--muted); font-size: 22px; flex: 0 0 auto; }
   .ev { display: flex; flex-direction: column; gap: 2px; font-size: 12px; }
   .ev span { color: var(--again); overflow: hidden; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; }
+  .hitc { flex: 0 0 180px; display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+  .hitc > .card { flex: 1 1 auto; }
+  .hitc .ppfb-link { font-size: 12px; padding: 0 2px; }
   dialog { width: min(1100px, 96vw); max-height: 92vh; border: 1px solid var(--line); border-radius: 10px; padding: 0; background: var(--panel); color: var(--ink); }
   dialog::backdrop { background: rgba(0,0,0,.45); }
   .dhead { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; padding: 14px 18px; border-bottom: 1px solid var(--line); position: sticky; top: 0; background: var(--panel); z-index: 2; }
@@ -89,6 +96,82 @@
   .prose { max-width: 860px; } .prose h2 { font-size: 18px; margin: 26px 0 6px; } .prose li { margin: 4px 0; }
   footer { border-top: 1px solid var(--line); color: var(--muted); font-size: 13px; padding: 16px 0 28px; }
   .empty { color: var(--muted); padding: 30px 0; }
+  .mute { color: var(--muted); }
+  /* exploded back and provenance timeline (work dialog) */
+  .xp { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); gap: 18px; margin-bottom: 22px; }
+  .xp.notl { grid-template-columns: minmax(0, 1fr); }
+  @media (max-width: 760px) { .xp { grid-template-columns: minmax(0, 1fr); } }
+  .xp h3 { margin: 0 0 6px; font-size: 15px; }
+  .xp h3 span { color: var(--muted); font-weight: 400; font-size: 13px; }
+  .xp-stage { position: relative; isolation: isolate; overflow: hidden; background: var(--chip); border-radius: 6px; touch-action: pan-y; user-select: none; -webkit-user-select: none; }
+  .xp-back { position: absolute; left: 0; top: 0; display: block; transform-origin: 0 0; box-shadow: var(--shadow); }
+  .xp-lines { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; }
+  .xp-hole { fill: var(--bg); stroke: var(--muted); stroke-width: 1; stroke-dasharray: 3 3; }
+  .xp-line { stroke: var(--muted); stroke-width: 1; fill: none; }
+  .xp-line.hot { stroke: var(--accent); stroke-width: 2; } .xp-line.hot.w1 { stroke-dasharray: 5 4; }
+  .xp-piece { position: absolute; left: 0; top: 0; padding: 0; margin: 0; border: 0; background: var(--panel); cursor: pointer;
+              outline: 1.5px solid var(--c, var(--sheet)); outline-offset: 0; transform-origin: 0 0; transition: opacity .2s, box-shadow .2s; }
+  .xp-piece img { display: block; width: 100%; height: 100%; object-fit: fill; pointer-events: none; }
+  .xp-piece.c-register { --c: var(--register); } .xp-piece.c-photo { --c: var(--photo); } .xp-piece.c-sheet { --c: var(--sheet); }
+  .xp-piece.c-model { --c: var(--model); } .xp-piece.c-detected { --c: var(--detected); } .xp-piece.c-hit { --c: var(--again); }
+  .xp-piece.c-model, .xp-piece.c-weak, .xp-piece.c-hit { outline-style: dashed; }
+  .xp-piece.lifted { box-shadow: var(--lift); }
+  .xp-piece:focus-visible { outline: 3px solid var(--ink); outline-offset: 2px; z-index: 30 !important; }
+  .xp-piece.dim { opacity: .18; }
+  .xp-piece.hot { outline: 3px solid var(--accent); z-index: 20 !important; }
+  .xp-piece.hot.w2 { outline-width: 2.5px; } .xp-piece.hot.w1 { outline: 2.5px dashed var(--accent); }
+  .xp-piece.sel { outline: 3px solid var(--ink); outline-offset: 1px; z-index: 25 !important; }
+  .xp-badge { position: absolute; right: -6px; top: -8px; min-width: 18px; height: 18px; padding: 0 4px; border-radius: 9px; font: 600 11px/18px system-ui, sans-serif;
+              background: var(--accent); color: var(--bg); text-align: center; pointer-events: none; }
+  .xp-piece:not(.lifted) .xp-badge { display: none; }
+  .xp-ctl { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; margin: 10px 0 4px; }
+  .xp-ctl label { font-size: 13px; color: var(--muted); display: inline-flex; align-items: center; gap: 8px; flex: 1 1 220px; }
+  .xp-ctl input[type=range] { flex: 1; min-width: 120px; accent-color: var(--accent); }
+  .xp-ctl .seg button { white-space: nowrap; }
+  .xp-legend { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 12px; color: var(--muted); margin: 6px 0 0; }
+  .xp-legend i { display: inline-block; width: 18px; border-top: 3px solid var(--accent); vertical-align: middle; margin-right: 5px; }
+  .xp-legend i.w2 { border-top-width: 2px; } .xp-legend i.w1 { border-top: 2px dashed var(--accent); }
+  .xp-detail { margin-top: 12px; padding: 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); font-size: 14px; min-height: 64px; }
+  .xp-detail .hintline { margin: 0; }
+  .xp-detail .pd { display: grid; grid-template-columns: 120px minmax(0, 1fr); gap: 12px; align-items: start; }
+  @media (max-width: 420px) { .xp-detail .pd { grid-template-columns: 84px minmax(0, 1fr); } }
+  .xp-detail .pd img { width: 100%; height: auto; max-height: 160px; object-fit: contain; background: var(--chip); border-radius: 4px; display: block; }
+  .xp-detail b { overflow-wrap: anywhere; }
+  .xp-detail ul { list-style: none; margin: 8px 0 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+  .xp-detail li button { all: unset; box-sizing: border-box; display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 2px 8px; width: 100%; cursor: pointer; padding: 5px 7px; border-radius: 6px; border: 1px solid var(--line); }
+  .xp-detail li button:hover, .xp-detail li button:focus-visible { border-color: var(--accent); }
+  .xp-detail li img { width: 44px; height: 44px; object-fit: contain; background: var(--chip); border-radius: 3px; grid-row: span 2; }
+  .xp-detail li .why, .tl-why { font-size: 12px; color: var(--muted); }
+  .xp-detail li.w1 .why, .tl-i.lk.w1 .tl-why { font-style: italic; }
+  .xp-detail .links { margin-top: 8px; }
+  .dots { letter-spacing: -1px; color: var(--accent); font-size: 11px; white-space: nowrap; }
+  .tl-wrap { min-width: 0; }
+  .tl-sum { font-size: 13px; color: var(--muted); margin: 0 0 8px; }
+  .tl { list-style: none; margin: 0; padding: 0 0 0 16px; border-left: 2px solid var(--line); max-height: min(72vh, 760px); overflow-y: auto; overscroll-behavior: contain; }
+  @media (max-width: 760px) { .tl { max-height: none; overflow: visible; } }
+  .tl-i { position: relative; margin: 0 0 4px; border-radius: 6px; }
+  .tl-i::before { content: ""; position: absolute; left: -23px; top: 12px; width: 10px; height: 10px; border-radius: 50%; background: var(--k, var(--tl-own)); border: 2px solid var(--panel); }
+  .tl-i.undated::before { background: var(--panel); border-color: var(--k, var(--tl-own)); }
+  .tl-i.k-x { --k: var(--tl-ex); } .tl-i.k-a { --k: var(--tl-acq); }
+  .tl-ev { all: unset; box-sizing: border-box; display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 8px; width: 100%; padding: 6px 8px; border-radius: 6px; cursor: pointer; border: 1px solid transparent; }
+  .tl-ev:hover, .tl-ev:focus-visible { border-color: var(--line); background: var(--chip); }
+  .tl-ev:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .tl-when { font-size: 12px; color: var(--muted); flex: 0 0 100%; }
+  .tl-role { font-size: 12px; font-weight: 600; color: var(--k, var(--tl-own)); }
+  .tl-what { font-size: 14px; overflow-wrap: anywhere; flex: 1 1 60%; }
+  .tl-note { font-size: 12px; color: var(--muted); flex: 0 0 100%; }
+  .tl-sup { font-size: 12px; color: var(--muted); flex: 0 0 100%; }
+  .tl-sup:empty { display: none; }
+  .tl-why { padding: 0 8px 6px; }
+  .tl-why:empty { display: none; }
+  .tl-i.on > .tl-ev { background: var(--chip); border-color: var(--accent); }
+  .tl-i.lk { background: color-mix(in srgb, var(--accent) 14%, transparent); }
+  .tl-i.lk.w2 { background: color-mix(in srgb, var(--accent) 9%, transparent); }
+  .tl-i.lk.w1 { background: transparent; outline: 1.5px dashed color-mix(in srgb, var(--accent) 60%, transparent); outline-offset: -1px; }
+  .tl.picking .tl-i:not(.lk) { opacity: .5; }
+  details.boxes { margin-top: 18px; }
+  details.boxes > summary { cursor: pointer; font-weight: 600; font-size: 15px; margin-bottom: 8px; }
+  @media (prefers-reduced-motion: reduce) { .xp-piece { transition: none; } }
 </style>
 </head>
 <body>
@@ -176,6 +259,13 @@
         labels at all, so all of them are marked to check.</li>
       <li><b>Found again.</b> Every reliably located label is searched on all other backs. A hit is backed when the
         records of both works explain it: a shared exhibition, the same seller to SKKG, or the provenance.</li>
+      <li><b>Exploded back and timeline.</b> Every work's dialog lifts its labels off the back and sets them beside a
+        provenance timeline from SKKG's own records: the stations of its provenance in order (dated where SKKG records
+        the sale or the dealer), its exhibitions and its acquisition by SKKG. A label is linked to an event when its
+        text agrees with the record: the issuer and the lot, date or year of a sale, the venue and year of an
+        exhibition, or the same label on another work that shares the event. <span data-n="events_linked"></span> of
+        <span data-n="events"></span> events are documented by a label (<span data-n="events_linked_strong"></span>
+        strongly).</li>
     </ol>
     <h2>How to read it</h2>
     <ul>
@@ -185,6 +275,11 @@
         expected, similar (not identical) labels, the vision-language model's proposals and the label detector's finds.</li>
       <li>A label found on another work is a lead, not proof: it can be the same design used for many years, or SKKG's
         own loan documentation.</li>
+      <li>In the timeline, <b>strong</b> links (solid frame) rest on two features that agree, <b>medium</b> links on one
+        distinctive feature, <b>weak</b> links (dashed) are ambiguous: several events fit, or OCR read a name only
+        approximately. Each link says its basis. Private owners, heirs and sellers who are persons appear only by their
+        role; dealers, auction houses and museums are named as SKKG records them. A label without an event may document
+        a station or an exhibition that the records lack.</li>
     </ul>
     <h2>Data and downloads</h2>
     <ul>
@@ -259,11 +354,16 @@
       <span class="cap"><b>${esc(l.t)}</b><span class="meta">${esc(workTitle(w))}</span><span class="badges">
       <i class="b ${kind(l)}">${esc(SRC[l.src])}</i>${l.ok ? '' : '<i class="b warn">check</i>'}${again ? `<i class="b again">on ${again} other work${again > 1 ? 's' : ''}</i>` : ''}</span></span></button>`;
   }
+  // feedback (site/feedback.js, the main session's): a public GitHub issue. Only the work's SKKG title, the stable label
+  // key and the box go along, never a label's text (it can hold an owner's name that the masking missed)
+  const feedback = (ctx, text) => window.ppFeedback ? window.ppFeedback.html(ctx, text) : '';
+  const hitFeedback = h => feedback({ where: 'Found again', inv: WORK[h.w].inv, title: WORK[h.w].title, key: h.key, iiif: h.iiif, box: h.box,
+    kind: 'A box is wrong or missing', note: `Same label as on Inv. ${WORK[LAB[h.q].w].inv} (label key ${LAB[h.q].key})` }, 'Report a problem with this match');
   function hitCard(h, title) {
     const w = WORK[h.w];
     const ev = Object.entries(h.ev).map(([k, v]) => `<span>${esc({ exhibition: 'Exhibition', seller: 'Same seller', provenance: 'Provenance' }[k])}: ${esc(v.split(' | ')[0])}</span>`).join('');
-    return `<button class="card" data-work="${h.w}"><span class="thumb"><img loading="lazy" alt="" src="${esc(region(h.iiif, h.box))}"></span>
-      <span class="cap"><b>${esc(title || workTitle(w))}</b><span class="meta">${h.n} inliers</span><span class="ev">${ev || '<i class="meta">no evidence in the records yet</i>'}</span></span></button>`;
+    return `<div class="hitc"><button class="card" data-work="${h.w}"><span class="thumb"><img loading="lazy" alt="" src="${esc(region(h.iiif, h.box))}"></span>
+      <span class="cap"><b>${esc(title || workTitle(w))}</b><span class="meta">${h.n} inliers</span><span class="ev">${ev || '<i class="meta">no evidence in the records yet</i>'}</span></span></button>${hitFeedback(h)}</div>`;
   }
   function backWithBoxes(iiif, boxes, size = 700) {  // boxes: [{box, cls, label, key, title}] in original pixels; a box with a key opens the form
     const [W, H] = DIM[iiif] || [1000, 1000];
@@ -324,6 +424,7 @@
   // ---------------------------------------------------------------- Details
   const dlg = $('#dlg');
   function openDialog(title, body) {
+    if (XP) { XP.destroy(); XP = null; }
     $('#dtitle').textContent = title;
     $('#dbody').innerHTML = body;
     $('#dbody').scrollTop = 0;
@@ -333,12 +434,15 @@
     const l = LAB[id];
     if (!l) return;
     const w = WORK[l.w];
+    OPEN = { label: l };
     const facts = [['Work', `<a href="#work=${l.w}">${esc(workTitle(w))}</a> (${esc(w.type)}) · <a href="${esc(w.url)}" target="_blank" rel="noopener">SKKG collection</a>`],
       ['Source', esc(SRC[l.src]) + (l.sub && l.sub !== l.t ? ` · ${esc(l.sub)}` : '')],
       ['Located by', esc(howText(l)) + (l.tpl ? ` (template from Inv. ${esc(l.tpl)})` : '') + (l.ok ? '' : ' · <i class="b warn">check</i>')],
       l.pos && ['Position', esc(l.pos)], l.type && l.src !== 'photo' && [l.src === 'detected' ? 'Kind (guess)' : 'Type', esc(l.type)],
       l.src === 'detected' && l.iss && ['Issuer (guess)', esc(l.iss)],
-      l.d && [l.src === 'detected' ? 'Text read (OCR)' : 'Description', esc(l.d)]].filter(Boolean);
+      l.d && [l.src === 'detected' ? 'Text read (OCR)' : 'Description', esc(l.d)],
+      (l.tl || []).length && ['Provenance events', l.tl.map(([i, s, b]) => `${dots(s)} ${esc(evLine(evView(w, w.tl[i])))} <span class="mute">(${STRENGTH[s]}: ${esc(basisText({ label: l }, b))})</span>`).join('<br>') +
+        `<br><a href="#work=${l.w}">On the work's exploded back and timeline</a>`]].filter(Boolean);
     const others = w.labels.filter(o => o.id !== l.id && (state.lmodel || !unverified(o)));
     const hits = (l.hits || []).map(i => D.hits[i]);
     const view = viewer(l.iiif, [l.box], workTitle(w), `${SRC[l.src]}: ${l.t}`, COLOUR[l.src], l.how === 'vision-language model', [l.key]);
@@ -347,13 +451,14 @@
       <div><dl>${facts.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join('')}</dl>
       <p class="formrow"><a class="formbtn" href="${esc(formUrl(l.key))}">✎ Record this label in the entry form</a><span>for SKKG's label register, prefilled with what is known</span></p>
       <h4>Where it sits on the back</h4>${backWithBoxes(l.iiif, [{ box: l.box, cls: kind(l) + ' sel', key: l.key, title: 'Click to open the entry form for this label' }], 700)}
-      <div class="links"><a href="${esc(view)}" target="_blank" rel="noopener">Whole back, zoomable</a><a href="${esc(`${l.iiif}/${l.box.join(',')}/max/0/default.jpg`)}" target="_blank" rel="noopener">Label in full resolution (IIIF)</a></div></div></div>
+      <div class="links"><a href="${esc(view)}" target="_blank" rel="noopener">Whole back, zoomable</a><a href="${esc(`${l.iiif}/${l.box.join(',')}/max/0/default.jpg`)}" target="_blank" rel="noopener">Label in full resolution (IIIF)</a>${feedback({ where: 'Label', inv: w.inv, title: w.title, key: l.key, iiif: l.iiif, box: l.box, kind: 'A box is wrong or missing' }, 'Report a problem with this box')}</div></div></div>
       ${hits.length ? `<h4>The same label on ${hits.length} other work${hits.length > 1 ? 's' : ''}</h4><div class="row">${hits.map(h => hitCard(h)).join('')}</div>` : ''}
       ${others.length ? `<h4>Other marks on this work</h4><div class="row">${others.slice(0, 20).map(labelCard).join('')}</div>` : ''}`);
   }
   function showWork(oid) {
     const w = WORK[oid];
     if (!w) return;
+    OPEN = { work: oid };
     const hitsHere = D.hits.filter(h => h.w === oid);
     const backs = w.backs.map(([iiif]) => {
       const mine = w.labels.filter(l => l.iiif === iiif && (state.lmodel || !unverified(l)));
@@ -366,9 +471,325 @@
       w.acq && ['Acquired by SKKG', esc(w.acq)], w.actors.length && ['Provenance actors', esc(w.actors.join(', '))],
       w.ex.length && ['Exhibitions', w.ex.map(esc).join('<br>')]].filter(Boolean);
     const shown = w.labels.filter(l => state.lmodel || !unverified(l));
-    openDialog(workTitle(w), `<div class="two"><div><p class="hintline">Click a box to open the entry form for that label (for SKKG's label register).</p>${backs}</div><div><dl>${facts.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join('')}</dl>
-      ${hitsHere.length ? `<h4>Labels it shares with other works</h4><div class="row">${hitsHere.map(h => `<button class="card" data-label="${h.q}"><span class="thumb"><img loading="lazy" alt="" src="${esc(region(h.iiif, h.box))}"></span><span class="cap"><b>${esc(LAB[h.q].t)}</b><span class="meta">also on Inv. ${esc(WORK[LAB[h.q].w].inv)}</span></span></button>`).join('')}</div>` : ''}</div></div>
+    const pieces = piecesOf(oid, w);
+    const dl = `<dl>${facts.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join('')}</dl>`;
+    const shares = hitsHere.length ? `<h4>Labels it shares with other works</h4><div class="row">${hitsHere.map(h => `<div class="hitc"><button class="card" data-label="${h.q}"><span class="thumb"><img loading="lazy" alt="" src="${esc(region(h.iiif, h.box))}"></span><span class="cap"><b>${esc(LAB[h.q].t)}</b><span class="meta">also on Inv. ${esc(WORK[LAB[h.q].w].inv)}</span></span></button>${hitFeedback(h)}</div>`).join('')}</div>` : '';
+    const hint = '<p class="hintline">Click a box to open the entry form for that label (for SKKG\'s label register).</p>';
+    // with located labels the exploded back comes first and the boxes for the entry form fold away below the facts
+    const main = pieces.length
+      ? `<div class="two"><div>${dl}</div><div>${shares}</div></div><details class="boxes"><summary>Boxes on the back: click a box to open the entry form</summary>${hint}${backs}</details>`
+      : `<div class="two"><div>${hint}${backs}</div><div>${dl}${shares}</div></div>`;
+    openDialog(workTitle(w), `${xpHTML(oid, w, pieces)}${main}
       <h4>${shown.length} label${shown.length === 1 ? '' : 's'} and marks located${state.lmodel ? '' : ' (without unverified boxes)'}</h4><div class="grid">${shown.map(labelCard).join('') || '<p class="empty">None located yet.</p>'}</div>`);
+    XP = explode($('#dbody').querySelector('.xp'), oid, w, pieces);
+  }
+
+  // ---------------------------------------------------------------- Exploded back and provenance timeline
+  // The labels lift off the photograph of the back onto a ring around it: every piece is the IIIF region of its box in
+  // the original image, nothing is copied. The timeline holds the events from SKKG's records (works[].tl: [kind, when,
+  // what, note]); labels[].tl and hits[].tl link a label to them: [event index, strength 3|2|1, basis].
+  const STRENGTH = { 3: 'strong', 2: 'medium', 1: 'weak' };
+  const ROLE = { r: 'The artist', o: 'Private owner', u: 'Unknown owner', e: 'Estate or heirs', d: 'Dealer',
+                 h: 'Auction house', m: 'Museum', s: 'SKKG', a: 'Acquired by SKKG', x: 'Exhibition' };
+  const GLOSS = { Auktion: 'auction', Freihandkauf: 'private sale', Ankauf: 'purchase', Schenkung: 'gift', Tausch: 'exchange',
+                  Pfandleihgabe: 'pledge' };
+  const VIA = { register: 'register', 'data sheet': 'data sheet', photo: 'OCR of the label photo', detected: 'OCR of the detected label' };
+  const dots = s => `<span class="dots" role="img" aria-label="${STRENGTH[s]} link" title="${STRENGTH[s]} link">${'●'.repeat(s)}${'○'.repeat(3 - s)}</span>`;
+  const reduced = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let XP = null;  // the exploded view of the open work dialog
+  let OPEN = null;  // what the dialog shows: { label } or { work }, for the feedback button
+  const TABS = { labels: 'Labels', works: 'Works', again: 'Found again', about: 'About' };
+  window.ppFeedbackContext = () => {  // asked by the floating «Feedback» button at the moment of the click
+    if (dlg.open && OPEN && OPEN.label) {
+      const l = OPEN.label, w = WORK[l.w];
+      return { where: 'Label', inv: w.inv, title: w.title, key: l.key, iiif: l.iiif, box: l.box };
+    }
+    if (dlg.open && OPEN && OPEN.work) {
+      const w = WORK[OPEN.work];
+      return { where: 'Work', inv: w.inv, title: w.title, ...(XP && XP.feedback ? XP.feedback() : {}) };
+    }
+    return { where: TABS[current] || 'Labels' };
+  };
+
+  function evView(w, e) {
+    const [k, when = '', what = '', note = ''] = e;
+    let role = ROLE[k] || k, txt = typeof what === 'number' ? (w.ex[what] || '') : String(what);
+    if (k === 'x') txt = txt.replace(/, (\d{4}|\?)\)$/, ')');  // the year is in «when»
+    if (k === 'e' && txt === 'of the artist') { role = 'Estate or heirs of the artist'; txt = ''; }
+    if (k === 's' && txt === 'founder') { role = "SKKG's founder"; txt = ''; }
+    if (k === 'a' && txt) txt = 'from ' + txt;
+    const gl = String(note).split(' · ').filter(Boolean).map(x => GLOSS[x] ? `${x} (${GLOSS[x]})` : x).join(' · ');
+    return { k, role, what: txt, note: gl, when: when || 'undated', dated: !!when };
+  }
+  const evLine = v => [v.when, v.role, v.what].filter(Boolean).join(' · ');
+  const basisText = (p, b) => b.startsWith('same label') || !p.label ? b : `${b} · ${VIA[p.label.src] || p.label.src}`;
+
+  function piecesOf(oid, w) {  // the labels on the work's backs, and the boxes where a label of another work was found again
+    const out = [], seen = new Set(), byKey = {};
+    w.labels.filter(l => state.lmodel || !unverified(l)).forEach(l => {
+      seen.add(l.iiif + '|' + l.key);
+      out.push({ iiif: l.iiif, box: l.box, cls: kind(l).split(' ').map(c => 'c-' + c).join(' '), title: l.t, label: l, key: l.key, links: l.tl || [] });
+    });
+    D.hits.forEach(h => {
+      if (h.w !== oid || seen.has(h.iiif + '|' + h.key)) return;
+      let p = byKey[h.iiif + '|' + h.key];
+      if (!p) {
+        p = byKey[h.iiif + '|' + h.key] = { iiif: h.iiif, box: h.box, cls: 'c-hit', title: `Same label as on Inv. ${WORK[LAB[h.q].w].inv}`, key: h.key, hits: [], links: [] };
+        out.push(p);
+      }
+      p.hits.push(h);
+      (h.tl || []).forEach(x => { const o = p.links.find(y => y[0] === x[0]); if (!o) p.links.push(x.slice()); else if (x[1] > o[1]) o.splice(0, 3, ...x); });
+    });
+    const order = out.slice().sort((a, b) => b.box[2] * b.box[3] - a.box[2] * a.box[3]);
+    out.forEach((p, i) => { p.i = i; p.z = 2 + order.indexOf(p); });  // smaller boxes on top of larger ones
+    return out;
+  }
+
+  function xpHTML(oid, w, pieces) {
+    const ev = w.tl || [];
+    const items = ev.map((e, i) => {
+      const v = evView(w, e);
+      const inner = `<span class="tl-when">${esc(v.when)}</span><span class="tl-role">${esc(v.role)}</span>${v.what ? `<span class="tl-what">${esc(v.what)}</span>` : ''}${v.note ? `<span class="tl-note">${esc(v.note)}</span>` : ''}<span class="tl-sup"></span>`;
+      return `<li class="tl-i k-${v.k}${v.dated ? '' : ' undated'}">${pieces.length ? `<button type="button" class="tl-ev" data-xe="${i}" aria-pressed="false">${inner}</button>` : `<div class="tl-ev">${inner}</div>`}<div class="tl-why"></div></li>`;
+    }).join('');
+    const timeline = `<div class="tl-wrap"><h3>Provenance timeline <span>· from SKKG's records</span></h3>
+      <p class="tl-sum">${ev.length ? '' : 'SKKG\'s records hold no provenance station, exhibition or acquisition for this work.'}</p>${ev.length ? `<ol class="tl">${items}</ol>` : ''}</div>`;
+    if (!pieces.length) return ev.length || w.labels.length ? `<section class="xp notl" aria-label="Provenance timeline">${timeline}${w.labels.length ? `<p class="hintline"><label class="tg"><input type="checkbox" class="xp-unv"${state.lmodel ? ' checked' : ''}> show the ${w.labels.length} unverified box${w.labels.length > 1 ? 'es' : ''} on the exploded back</label></p>` : ''}</section>` : '';
+    const backs = w.backs.map(b => b[0]).filter(b => pieces.some(p => p.iiif === b));
+    const n = pieces.length;
+    return `<section class="xp" aria-label="Exploded back and provenance timeline"><div>
+      <h3>The back, exploded <span>· ${n} label${n === 1 ? '' : 's'} and mark${n === 1 ? '' : 's'}${state.lmodel ? '' : ', without unverified boxes'}</span></h3>
+      <div class="xp-stage" role="group" aria-label="Back of the work; its labels are buttons"><img class="xp-back" alt="Back of the work" decoding="async"><svg class="xp-lines" aria-hidden="true"></svg>
+      ${pieces.map(p => `<button type="button" class="xp-piece ${p.cls}" data-xp="${p.i}" aria-pressed="false" title="${esc(p.title)}" aria-label="${esc(p.title)}${p.links.length ? `, linked to ${p.links.length} event${p.links.length > 1 ? 's' : ''}` : ''}" style="z-index:${p.z}" hidden><img alt="" loading="lazy" src="${esc(region(p.iiif, p.box))}">${p.links.length ? `<span class="xp-badge">${p.links.length}</span>` : ''}</button>`).join('')}</div>
+      <div class="xp-ctl"><label>Explode <input type="range" class="xp-range" min="0" max="100" value="0" aria-label="Lift the labels off the back"></label>
+      ${backs.length > 1 ? `<div class="seg xp-backs" role="group" aria-label="Photograph of the back">${backs.map((b, i) => `<button type="button" data-xb="${esc(b)}" aria-pressed="false">Back ${i + 1}</button>`).join('')}</div>` : ''}
+      ${w.labels.some(unverified) ? `<label class="tg"><input type="checkbox" class="xp-unv"${state.lmodel ? ' checked' : ''}> unverified boxes</label>` : ''}</div>
+      <p class="xp-legend"><span><i></i>strong</span><span><i class="w2"></i>medium</span><span><i class="w1"></i>weak link</span><span>the number on a label: its events</span></p>
+      <div class="xp-detail" aria-live="polite"></div></div>${timeline}</section>`;
+  }
+
+  function explode(root, oid, w, pieces) {
+    if (!root) return null;
+    const ev = w.tl || [], tl = root.querySelector('.tl'), sum = root.querySelector('.tl-sum');
+    const sup = ev.map(() => []);  // per event: the pieces that document it
+    pieces.forEach(p => p.links.forEach(([i, s, b]) => { if (sup[i]) sup[i].push({ p, s, b }); }));
+    sup.forEach(x => x.sort((a, b) => b.s - a.s));
+    const hidden = ev.map(() => 0);  // links of the labels hidden as unverified boxes
+    if (!state.lmodel) w.labels.filter(unverified).forEach(l => (l.tl || []).forEach(([i]) => { if (i in hidden) hidden[i]++; }));
+    if (tl) [...tl.children].forEach((li, i) => {
+      const x = sup[i], more = hidden[i] ? `<span class="mute">${x.length ? ' ' : ''}+${hidden[i]} with ${hidden[i] > 1 ? 'unverified boxes' : 'an unverified box'}</span>` : '';
+      if (x.length || more) li.querySelector('.tl-sup').innerHTML = (x.length ? `${dots(x[0].s)} ${x.length} label${x.length > 1 ? 's' : ''}` : '') + more;
+    });
+    root.querySelector('.xp-unv')?.addEventListener('change', e => {  // the same setting as the Labels tab's «include unverified boxes»
+      state.lmodel = e.target.checked;
+      $('#lmodel').checked = state.lmodel;
+      showWork(oid);
+    });
+    const linked = sup.filter(x => x.length).length, unseen = hidden.filter((h, i) => h && !sup[i].length).length;
+    if (sum && ev.length) sum.textContent = `${ev.length} event${ev.length > 1 ? 's' : ''}, ` +
+      (linked ? `${linked} documented by a label on the back${unseen ? `, ${unseen} more by a label with an unverified box` : ''}`
+        : unseen ? `${unseen} documented only by a label with an unverified box` : 'none linked to a label on the back yet') +
+      '.' + (pieces.length ? ' Click an event to see its labels, or a label to see its events.'
+        : w.labels.length ? ' The labels on this back have unverified boxes only.' : ' No labels located on the back yet.');
+    const stage = root.querySelector('.xp-stage');
+    if (!stage) return { destroy() {} };
+    const img = stage.querySelector('.xp-back'), svg = stage.querySelector('.xp-lines'), range = root.querySelector('.xp-range');
+    const detail = root.querySelector('.xp-detail'), els = [...stage.querySelectorAll('.xp-piece')];
+    const count = b => pieces.filter(p => p.iiif === b).length;
+    const S = { back: w.backs.map(b => b[0]).sort((a, b) => count(b) - count(a))[0], t: 0, piece: null, event: null, raf: 0, g: null };
+    const linkOf = (p, i) => p.links.find(l => l[0] === i);
+
+    function layout() {  // the slots on a ring around the back, shrunk to K at full explosion
+      const [W, H] = DIM[S.back] || [1000, 1000];
+      const Ws = stage.clientWidth || 600, Hs = Math.round(Math.max(240, Math.min(Ws * H / W * 1.25, innerHeight * 0.72)));
+      stage.style.height = Hs + 'px';
+      const s0 = Math.min(Ws / W, Hs / H), K = 0.5;
+      const bw = W * s0 * K, bh = H * s0 * K, bx = (Ws - bw) / 2, by = (Hs - bh) / 2;
+      const ps = pieces.filter(p => p.iiif === S.back), n = ps.length;
+      const x0 = bx / 2, y0 = by / 2, rw = Ws - bx, rh = Hs - by, P = 2 * (rw + rh), cx = Ws / 2, cy = Hs / 2;
+      const size = Math.max(22, Math.min(Math.min(bx, by) * 0.9, n ? P / n * 0.86 : Infinity));
+      const toU = (dx, dy) => {  // where the ray from the centre towards the label meets the ring (clockwise from top left)
+        if (!dx && !dy) dy = -1;
+        const f = Math.min(dx ? rw / 2 / Math.abs(dx) : Infinity, dy ? rh / 2 / Math.abs(dy) : Infinity);
+        const x = cx + dx * f - x0, y = cy + dy * f - y0;
+        if (y <= 0.5) return x;
+        if (x >= rw - 0.5) return rw + y;
+        if (y >= rh - 0.5) return rw + rh + (rw - x);
+        return 2 * rw + rh + (rh - y);
+      };
+      const toXY = u => {
+        u = ((u % P) + P) % P;
+        if (u < rw) return [x0 + u, y0];
+        if (u < rw + rh) return [x0 + rw, y0 + u - rw];
+        if (u < 2 * rw + rh) return [x0 + rw - (u - rw - rh), y0 + rh];
+        return [x0, y0 + rh - (u - 2 * rw - rh)];
+      };
+      const it = ps.map(p => {
+        const f = size / Math.max(p.box[2], p.box[3]);
+        return { p, w: p.box[2] * f, h: p.box[3] * f, u: toU(((p.box[0] + p.box[2] / 2) / W - 0.5) * bw, ((p.box[1] + p.box[3] / 2) / H - 0.5) * bh) };
+      }).sort((a, b) => a.u - b.u);
+      const gap = Math.max(6, size * 0.08);
+      for (let r = 0; r < 300 && n > 1; r++) {  // push pieces apart along the ring until none overlaps another
+        let moved = false;
+        for (let i = 0; i < n; i++) {
+          for (let j = i + 1; j < n; j++) {
+            const a = it[i], b = it[j], [ax, ay] = toXY(a.u), [bx2, by2] = toXY(b.u);
+            const ox = (a.w + b.w) / 2 + gap - Math.abs(ax - bx2), oy = (a.h + b.h) / 2 + gap - Math.abs(ay - by2);
+            if (ox > 0.5 && oy > 0.5) {
+              const dir = ((b.u - a.u) % P + P) % P <= P / 2 ? 1 : -1, m = Math.min(ox, oy, P / n) / 2 + 0.5;
+              a.u -= dir * m;
+              b.u += dir * m;
+              moved = true;
+            }
+          }
+        }
+        if (!moved) break;
+      }
+      it.forEach(({ p, u, w: pw, h: ph }) => { const [x, y] = toXY(u); p.slot = [x - pw / 2, y - ph / 2, pw, ph]; });
+      S.g = { W, H, Ws, Hs, s0, K };
+      draw();
+    }
+    function draw() {
+      const g = S.g;
+      if (!g) return;
+      const t = S.t, k = 1 - (1 - g.K) * t, bw = g.W * g.s0 * k, bh = g.H * g.s0 * k, bx = (g.Ws - bw) / 2, by = (g.Hs - bh) / 2;
+      img.style.width = bw + 'px';
+      img.style.height = bh + 'px';
+      img.style.transform = `translate(${bx}px,${by}px)`;
+      let holes = '', lines = '';
+      const lift = t > 0.04, op = Math.min(1, t * 2);
+      pieces.forEach(p => {
+        const el = els[p.i];
+        el.hidden = p.iiif !== S.back;
+        if (el.hidden) return;
+        const hx = bx + p.box[0] / g.W * bw, hy = by + p.box[1] / g.H * bh;
+        const hw = Math.max(p.box[2] / g.W * bw, 3), hh = Math.max(p.box[3] / g.H * bh, 3);
+        const [sx, sy, sw, sh] = p.slot;
+        const x = hx + (sx - hx) * t, y = hy + (sy - hy) * t, pw = hw + (sw - hw) * t, ph = hh + (sh - hh) * t;
+        el.style.width = pw + 'px';
+        el.style.height = ph + 'px';
+        el.style.transform = `translate(${x}px,${y}px)`;
+        el.classList.toggle('lifted', lift);
+        if (!lift) return;
+        const l = S.event != null ? linkOf(p, S.event) : null;
+        holes += `<rect class="xp-hole" x="${hx.toFixed(1)}" y="${hy.toFixed(1)}" width="${hw.toFixed(1)}" height="${hh.toFixed(1)}" opacity="${op}"/>`;
+        lines += `<line class="xp-line${l ? ' hot w' + l[1] : ''}" x1="${(hx + hw / 2).toFixed(1)}" y1="${(hy + hh / 2).toFixed(1)}" x2="${(x + pw / 2).toFixed(1)}" y2="${(y + ph / 2).toFixed(1)}" opacity="${S.event != null && !l ? op * 0.3 : op}"/>`;
+      });
+      svg.setAttribute('viewBox', `0 0 ${g.Ws} ${g.Hs}`);
+      svg.innerHTML = holes + lines;
+    }
+    function animate(to) {
+      cancelAnimationFrame(S.raf);
+      if (reduced()) { S.t = to; range.value = Math.round(to * 100); draw(); return; }
+      const from = S.t, t0 = performance.now(), ms = 480;
+      const step = now => {
+        const q = Math.min(1, (now - t0) / ms), e = q < 0.5 ? 4 * q * q * q : 1 - Math.pow(-2 * q + 2, 3) / 2;
+        S.t = from + (to - from) * e;
+        range.value = Math.round(S.t * 100);
+        draw();
+        if (q < 1) S.raf = requestAnimationFrame(step);
+      };
+      S.raf = requestAnimationFrame(step);
+    }
+    function setBack(b) {
+      if (!b || b === S.back && img.getAttribute('src')) return;
+      S.back = b;
+      img.src = full(b, 900);
+      root.querySelectorAll('[data-xb]').forEach(x => x.setAttribute('aria-pressed', x.dataset.xb === b));
+      layout();
+    }
+    function marks() {
+      const e = S.event, pc = S.piece == null ? null : pieces[S.piece];
+      pieces.forEach(p => {
+        const el = els[p.i], l = e != null ? linkOf(p, e) : null;
+        el.classList.toggle('hot', !!l);
+        el.classList.toggle('w1', !!l && l[1] === 1);
+        el.classList.toggle('w2', !!l && l[1] === 2);
+        el.classList.toggle('dim', e != null && !l);
+        el.classList.toggle('sel', pc === p);
+        el.setAttribute('aria-pressed', pc === p);
+      });
+      if (tl) {
+        [...tl.children].forEach((li, i) => {
+          const l = pc ? linkOf(pc, i) : null;
+          li.classList.toggle('on', e === i);
+          li.classList.toggle('lk', !!l);
+          li.classList.toggle('w1', !!l && l[1] === 1);
+          li.classList.toggle('w2', !!l && l[1] === 2);
+          li.querySelector('.tl-ev').setAttribute('aria-pressed', e === i);
+          li.querySelector('.tl-why').innerHTML = l ? `${dots(l[1])} ${STRENGTH[l[1]]}: ${esc(basisText(pc, l[2]))}` : '';
+        });
+        tl.classList.toggle('picking', !!pc && pc.links.length > 0);
+        const first = pc ? tl.querySelector('.tl-i.lk') : e != null ? tl.children[e] : null;
+        if (first && tl.scrollHeight > tl.clientHeight + 4) {  // the list scrolls on its own (wide screens): bring it into view
+          const top = first.offsetTop - tl.offsetTop;
+          if (top < tl.scrollTop || top > tl.scrollTop + tl.clientHeight - 40) tl.scrollTop = Math.max(0, top - 30);
+        }
+      }
+      root.querySelectorAll('[data-xb]').forEach((x, i) => {
+        const n = e != null ? sup[e].filter(s => s.p.iiif === x.dataset.xb).length : 0;
+        x.textContent = `Back ${i + 1}${n ? ` · ${n} linked` : ''}`;
+      });
+      detail.innerHTML = describe();
+      draw();
+    }
+    function describe() {
+      if (S.piece != null) {
+        const p = pieces[S.piece], l = p.label, links = p.links.slice().sort((a, b) => a[0] - b[0]);
+        const how = l ? `${SRC[l.src]} · ${howText(l)}${l.ok ? '' : ' · check'}` : `found again from ${p.hits.map(h => `Inv. ${WORK[LAB[h.q].w].inv}`).join(', ')} (${p.hits[0].n} inliers)`;
+        const view = viewer(p.iiif, [p.box], workTitle(w), p.title, l ? COLOUR[l.src] : '30d158', !!l && l.how === 'vision-language model', [p.key]);
+        return `<div class="pd"><img alt="" src="${esc(region(p.iiif, p.box))}"><div><b>${esc(p.title)}</b><div class="hintline">${esc(how)}</div>
+          ${links.length ? `<ul>${links.map(([i, s, b]) => `<li class="w${s}"><button type="button" data-xe="${i}">${dots(s)}<span>${esc(evLine(evView(w, ev[i])))}</span><span></span><span class="why">${STRENGTH[s]}: ${esc(basisText(p, b))}</span></button></li>`).join('')}</ul>`
+            : `<p class="hintline">No event in SKKG's records matches this label${ev.length ? '' : ' (the records hold none for this work)'}. It may document a station or an exhibition that the records lack.</p>`}
+          <div class="links">${l ? `<a href="#label=${l.id}">Label details</a>` : `<a href="#label=${p.hits[0].q}">The label on Inv. ${esc(WORK[LAB[p.hits[0].q].w].inv)}</a>`}<a href="${esc(formUrl(p.key))}">✎ Record in the entry form</a><a href="${esc(view)}" target="_blank" rel="noopener">Whole back, zoomable</a>${feedback(
+            { where: 'Work · exploded back', inv: w.inv, title: w.title, key: p.key, iiif: p.iiif, box: p.box, kind: 'A box is wrong or missing' }, 'Report a problem with this label or its events')}</div></div></div>`;
+      }
+      if (S.event != null) {
+        const v = evView(w, ev[S.event]), list = sup[S.event];
+        return `<b>${esc(v.role)}${v.what ? ' · ' + esc(v.what) : ''}</b><div class="hintline">${esc(v.when)}${v.note ? ' · ' + esc(v.note) : ''}</div>
+          ${list.length ? `<ul>${list.map(({ p, s, b }) => `<li class="w${s}"><button type="button" data-xp="${p.i}"><img alt="" loading="lazy" src="${esc(region(p.iiif, p.box))}"><span>${dots(s)} ${esc(p.title)}${p.iiif !== S.back ? ' (other back)' : ''}</span><span class="why">${STRENGTH[s]}: ${esc(basisText(p, b))}</span></button></li>`).join('')}</ul>`
+            : '<p class="hintline">No label on the back has been linked to this event yet.</p>'}
+          <div class="links">${feedback({ where: 'Work · timeline', inv: w.inv, title: w.title, kind: 'A text or data value is wrong', note: `Timeline event ${S.event + 1}: ${evLine(v)}` }, 'Report a problem with this event or its links')}</div>`;
+      }
+      return `<p class="hintline">Drag <b>Explode</b> to lift the labels off the back. Click an event in the timeline to see the labels that document it,
+        or a label to see its events. Links are only as strong as their basis: <b>strong</b> when two features agree (issuer and lot, date or year; venue and year),
+        <b>medium</b> for one distinctive feature, <b>weak</b> when several events fit or a name was read only approximately.</p>`;
+    }
+    function selectPiece(i) {
+      S.piece = S.piece === i ? null : i;
+      S.event = null;
+      if (S.piece != null && pieces[i].iiif !== S.back) setBack(pieces[i].iiif);
+      marks();
+    }
+    function selectEvent(i) {
+      S.event = S.event === i ? null : i;
+      S.piece = null;
+      if (S.event != null && sup[i].length) {
+        if (!sup[i].some(x => x.p.iiif === S.back)) setBack(sup[i][0].p.iiif);
+        if (S.t < 0.6) animate(1);
+      }
+      marks();
+    }
+    root.addEventListener('click', e => {
+      const p = e.target.closest('[data-xp]'), x = e.target.closest('[data-xe]'), b = e.target.closest('[data-xb]');
+      if (p) selectPiece(+p.dataset.xp);
+      else if (x) selectEvent(+x.dataset.xe);
+      else if (b) { setBack(b.dataset.xb); marks(); }
+    });
+    range.addEventListener('input', () => { cancelAnimationFrame(S.raf); S.t = range.value / 100; draw(); });
+    let pending = 0;
+    const ro = new ResizeObserver(() => { cancelAnimationFrame(pending); pending = requestAnimationFrame(layout); });
+    ro.observe(stage);
+    setBack(S.back);
+    marks();
+    return {
+      destroy() { ro.disconnect(); cancelAnimationFrame(S.raf); cancelAnimationFrame(pending); },
+      feedback() {  // what is selected, for the floating feedback button
+        if (S.piece != null) { const p = pieces[S.piece]; return { where: 'Work · exploded back', key: p.key, iiif: p.iiif, box: p.box }; }
+        if (S.event != null) return { where: 'Work · timeline', note: `Timeline event ${S.event + 1}: ${evLine(evView(w, ev[S.event]))}` };
+        return {};
+      },
+    };
   }
 
   // ---------------------------------------------------------------- Navigation
@@ -392,6 +813,8 @@
       return;
     }
     if (h.startsWith('work=')) { if (document.querySelector('main > section:not([hidden])') === null) tab(current); showWork(h.slice(5)); return; }
+    if (XP) { XP.destroy(); XP = null; }
+    OPEN = null;
     if (dlg.open) dlg.close();
     tab(h || 'labels');
   }
@@ -447,6 +870,7 @@
       [n.labels_found_again, `labels found again on other works, ${n.hits} hits`],
       [n.hits_backed, `hits backed by the records: ${n.hits_exhibition} by a shared exhibition, ${n.hits_seller} by the same seller`],
       [pct(n.r1), `of label photos find their back at rank 1 among ${n.backs} (${pct(n.r1_coarse)} before LightGlue)`],
+      [n.timeline_works ?? '–', `works with a provenance timeline from SKKG's records; ${n.events_linked ?? '–'} of their ${n.events ?? '–'} events are documented by a label on the back (${n.events_linked_strong ?? '–'} strongly)`],
       [n.exhibitions, 'exhibitions the works were lent to (knowledge graph)']]
       .map(([v, t]) => `<div class="stat"><b>${esc(v)}</b><span>${esc(t)}</span></div>`).join('');
     $('#againintro').textContent = `${n.labels_found_again} located labels were found again on the backs of other works (${n.hits} hits). ` +

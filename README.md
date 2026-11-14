@@ -6,7 +6,8 @@ works carry the same label. *Have I seen this label before?*
 
 - **Results site: https://ruedtim.github.io/glamhack26-box-viewer/** – the labels as pictures, the works with
   their boxes, and the labels found again on other works with the evidence from the records (shared exhibitions,
-  the same seller, the provenance).
+  the same seller, the provenance). Each work also shows its back «exploded»: the labels lift off, and a
+  provenance timeline from SKKG's records lights up the labels that document each event (persons by role only).
 - **Workbook: [provenance_pursuit_results.xlsx](https://ruedtim.github.io/glamhack26-box-viewer/provenance_pursuit_results.xlsx)**
   – all results in one Excel file; its first sheet explains the others.
 - **Review page: [review.html](https://ruedtim.github.io/glamhack26-box-viewer/review.html)** – check the boxes the
