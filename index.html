@@ -7,14 +7,14 @@
 <meta name="description" content="Have I seen this label before? Provenance labels, stamps and marks located on the backs of works in the SKKG collection – GLAMhack 2026, challenge 304.">
 <style>
   :root { --bg: #f5f3ef; --panel: #fff; --ink: #1d1d1b; --muted: #6b6860; --line: #e2ded6; --accent: #1f4e8c;
-          --register: #2166ac; --photo: #c0392b; --sheet: #762a83; --model: #a86b00; --again: #1a7f4b;
+          --register: #2166ac; --photo: #c0392b; --sheet: #762a83; --model: #a86b00; --again: #1a7f4b; --detected: #0f7b86;
           --chip: #efece6; --shadow: 0 1px 2px rgba(0,0,0,.06), 0 3px 10px rgba(0,0,0,.05); }
   :root[data-theme="dark"] { --bg: #171716; --panel: #222220; --ink: #ecebe7; --muted: #a8a59d; --line: #36342f;
-          --accent: #9cc2ff; --register: #6aa8e8; --photo: #ff8a7a; --sheet: #cf9be0; --model: #e8b54a;
+          --accent: #9cc2ff; --register: #6aa8e8; --photo: #ff8a7a; --sheet: #cf9be0; --model: #e8b54a; --detected: #5fd1db;
           --again: #52c891; --chip: #2d2b28; --shadow: none; }
   @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg: #171716; --panel: #222220;
           --ink: #ecebe7; --muted: #a8a59d; --line: #36342f; --accent: #9cc2ff; --register: #6aa8e8; --photo: #ff8a7a;
-          --sheet: #cf9be0; --model: #e8b54a; --again: #52c891; --chip: #2d2b28; --shadow: none; } }
+          --sheet: #cf9be0; --model: #e8b54a; --detected: #5fd1db; --again: #52c891; --chip: #2d2b28; --shadow: none; } }
   * { box-sizing: border-box; }
   body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
   a { color: var(--accent); }
@@ -47,6 +47,7 @@
   .badges { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 2px; }
   .b { font-style: normal; font-size: 11px; font-weight: 600; padding: 1px 7px; border-radius: 99px; color: #fff; background: var(--muted); }
   .b.register { background: var(--register); } .b.photo { background: var(--photo); } .b.sheet { background: var(--sheet); }
+  .b.detected { background: var(--detected); } .ov.detected { stroke: var(--detected); } .ov.detected.weak { stroke-dasharray: 6 4; }
   .b.model { background: var(--model); } .b.again { background: var(--again); } .b.warn { background: transparent; color: var(--model); border: 1px solid var(--model); }
   .more { display: block; margin: 18px auto 0; font: inherit; padding: 8px 18px; border-radius: 6px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); cursor: pointer; }
   svg.back { display: block; width: 100%; height: auto; background: var(--chip); border-radius: 4px; }
@@ -115,11 +116,11 @@
     <div class="controls">
       <input type="search" id="lq" placeholder="Search: issuer, text, Inv. no., title …" aria-label="Search labels">
       <div class="seg" id="lsrc" role="group" aria-label="Source">
-        <button data-v="all" aria-pressed="true">All</button><button data-v="register">Label register</button><button data-v="photo">Label photos</button><button data-v="data sheet">Data sheets</button>
+        <button data-v="all" aria-pressed="true">All</button><button data-v="register">Label register</button><button data-v="photo">Label photos</button><button data-v="data sheet">Data sheets</button><button data-v="detected">Detected</button>
       </div>
       <label class="tg"><input type="checkbox" id="lagain"> found on other works</label>
       <label class="tg"><input type="checkbox" id="lok"> only reliable</label>
-      <label class="tg"><input type="checkbox" id="lmodel"> include unverified model boxes</label>
+      <label class="tg"><input type="checkbox" id="lmodel"> include unverified boxes (model proposals, detected labels without text)</label>
       <span class="count" id="lcount"></span>
     </div>
     <div class="grid" id="lgrid"></div>
@@ -127,7 +128,7 @@
   </section>
   <section id="works" hidden>
     <p class="intro">The backs of the works with the labels and marks located on them. Colours: <i class="b register">label register</i>
-      <i class="b photo">label photo</i> <i class="b sheet">data sheet</i> <i class="b model">model (unverified)</i>
+      <i class="b photo">label photo</i> <i class="b sheet">data sheet</i> <i class="b model">model (unverified)</i> <i class="b detected">label detector</i>
       <i class="b again">same label as on another work</i></p>
     <div class="controls">
       <input type="search" id="wq" placeholder="Search: Inv. no., title, actor, exhibition …" aria-label="Search works">
@@ -168,6 +169,11 @@
       <li><b>Templates.</b> Labels whose position is known serve as templates for the same label elsewhere.</li>
       <li><b>A vision-language model</b> (Qwen3-VL, running locally) proposes a box for the remaining marks from the
         data sheet's description. These boxes are leads and marked as unverified.</li>
+      <li><b>A label detector</b> (OWLv2, an open-vocabulary object detector, running locally) searched all backs for
+        anything that looks like a label or stamp, without knowing what to look for. It found
+        <span data-n="detected"></span> that no record documents yet, <span data-n="detected_text"></span> of them with
+        text that OCR could read. Their issuer is only a guess from that text, and finds without text are often not
+        labels at all, so all of them are marked to check.</li>
       <li><b>Found again.</b> Every reliably located label is searched on all other backs. A hit is backed when the
         records of both works explain it: a shared exhibition, the same seller to SKKG, or the provenance.</li>
     </ol>
@@ -176,7 +182,7 @@
       <li>Boxes are in pixels of the original image (x, y, width, height) on the SKKG IIIF server; nothing is copied.
         «Whole back» opens the full photograph with the box in a zoomable viewer.</li>
       <li><i class="b warn">check</i> marks boxes that are not reliable: uncertain matches, text found elsewhere than
-        expected, similar (not identical) labels, and the vision-language model's proposals.</li>
+        expected, similar (not identical) labels, the vision-language model's proposals and the label detector's finds.</li>
       <li>A label found on another work is a lead, not proof: it can be the same design used for many years, or SKKG's
         own loan documentation.</li>
     </ul>
@@ -220,15 +226,17 @@
   const $ = s => document.querySelector(s);
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
   const PAGE = 96;
-  const SRC = { register: 'Label register', photo: 'Label photo', 'data sheet': 'Data sheet' };
-  const COLOUR = { register: '3d9bff', photo: 'ff3b30', 'data sheet': 'bf5af2' };
+  const SRC = { register: 'Label register', photo: 'Label photo', 'data sheet': 'Data sheet', detected: 'Detected label' };
+  const COLOUR = { register: '3d9bff', photo: 'ff3b30', 'data sheet': 'bf5af2', detected: '64d2ff' };
+  const unverified = l => l.how === 'vision-language model' || l.st === 'new label without text';
   let D, LAB = {}, BYKEY = {}, WORK = {}, DIM = {}, HAY = {}, current = 'labels';
   const state = { lq: '', lsrc: 'all', lagain: false, lok: false, lmodel: false, lpage: 1,
                   wq: '', wlab: true, wagain: false, wpage: 1, aev: 'all' };
 
   const region = (iiif, b, s = 320) => `${iiif}/${b.join(',')}/${b[2] > s || b[3] > s ? `!${s},${s}` : 'max'}/0/default.jpg`;
   const full = (iiif, s = 700) => `${iiif}/full/!${s},${s}/0/default.jpg`;
-  const kind = l => l.how === 'vision-language model' ? 'model' : l.src === 'data sheet' ? 'sheet' : l.src;
+  const kind = l => l.how === 'vision-language model' ? 'model' : l.src === 'data sheet' ? 'sheet'
+    : l.src === 'detected' && l.st === 'new label without text' ? 'detected weak' : l.src;
   const formUrl = key => 'form.html?label=' + encodeURIComponent(key);  // entry form, by the label's stable key
   function viewer(iiif, boxes, title, note, colour, dashed, keys) {
     const p = new URLSearchParams({ iiif });
@@ -241,7 +249,9 @@
     return 'viewer.html?' + p;
   }
   const workTitle = w => `Inv. ${w.inv} · ${w.title}`;
-  const howText = l => l.src === 'data sheet' ? l.how : (l.st === 'retrieval only' ? 'most similar window' : `image match, ${l.n} inliers`);
+  const howText = l => l.src === 'data sheet' ? l.how
+    : l.src === 'detected' ? `label detector (OWLv2), score ${l.score}${l.st === 'new label without text' ? ', no text read' : ''}`
+    : (l.st === 'retrieval only' ? 'most similar window' : `image match, ${l.n} inliers`);
 
   function labelCard(l) {
     const w = WORK[l.w], again = (l.hits || []).length;
@@ -265,7 +275,7 @@
   function labelList() {
     const q = state.lq.toLowerCase().trim();
     return D.labels.filter(l => (state.lsrc === 'all' || l.src === state.lsrc)
-      && (state.lmodel || l.how !== 'vision-language model') && (!state.lagain || (l.hits || []).length)
+      && (state.lmodel || !unverified(l)) && (!state.lagain || (l.hits || []).length)
       && (!state.lok || l.ok) && (!q || HAY[l.id].includes(q)));
   }
   function renderLabels() {
@@ -326,9 +336,10 @@
     const facts = [['Work', `<a href="#work=${l.w}">${esc(workTitle(w))}</a> (${esc(w.type)}) · <a href="${esc(w.url)}" target="_blank" rel="noopener">SKKG collection</a>`],
       ['Source', esc(SRC[l.src]) + (l.sub && l.sub !== l.t ? ` · ${esc(l.sub)}` : '')],
       ['Located by', esc(howText(l)) + (l.tpl ? ` (template from Inv. ${esc(l.tpl)})` : '') + (l.ok ? '' : ' · <i class="b warn">check</i>')],
-      l.pos && ['Position', esc(l.pos)], l.type && l.src !== 'photo' && ['Type', esc(l.type)],
-      l.d && ['Description', esc(l.d)]].filter(Boolean);
-    const others = w.labels.filter(o => o.id !== l.id && (state.lmodel || o.how !== 'vision-language model'));
+      l.pos && ['Position', esc(l.pos)], l.type && l.src !== 'photo' && [l.src === 'detected' ? 'Kind (guess)' : 'Type', esc(l.type)],
+      l.src === 'detected' && l.iss && ['Issuer (guess)', esc(l.iss)],
+      l.d && [l.src === 'detected' ? 'Text read (OCR)' : 'Description', esc(l.d)]].filter(Boolean);
+    const others = w.labels.filter(o => o.id !== l.id && (state.lmodel || !unverified(o)));
     const hits = (l.hits || []).map(i => D.hits[i]);
     const view = viewer(l.iiif, [l.box], workTitle(w), `${SRC[l.src]}: ${l.t}`, COLOUR[l.src], l.how === 'vision-language model', [l.key]);
     openDialog(l.t, `<div class="two"><div><div class="big"><a href="${esc(view)}" target="_blank" rel="noopener" title="Whole back, zoomable"><img alt="${esc(l.t)}" src="${esc(region(l.iiif, l.box, 900))}"></a></div>
@@ -345,7 +356,7 @@
     if (!w) return;
     const hitsHere = D.hits.filter(h => h.w === oid);
     const backs = w.backs.map(([iiif]) => {
-      const mine = w.labels.filter(l => l.iiif === iiif && (state.lmodel || l.how !== 'vision-language model'));
+      const mine = w.labels.filter(l => l.iiif === iiif && (state.lmodel || !unverified(l)));
       const boxes = mine.map(l => ({ box: l.box, cls: kind(l), key: l.key, title: `${l.t} — click to open the entry form` }))
         .concat(hitsHere.filter(h => h.iiif === iiif).map(h => ({ box: h.box, cls: 'hit', key: h.key, title: `same label as on Inv. ${WORK[LAB[h.q].w].inv} — click to open the entry form` })));
       const all = viewer(iiif, mine.map(l => l.box), workTitle(w), 'all located labels and marks', '762a83', false, mine.map(l => l.key));
@@ -354,10 +365,10 @@
     const facts = [['Object type', esc(w.type)], ['Collection', `<a href="${esc(w.url)}" target="_blank" rel="noopener">${esc(w.url)}</a>`],
       w.acq && ['Acquired by SKKG', esc(w.acq)], w.actors.length && ['Provenance actors', esc(w.actors.join(', '))],
       w.ex.length && ['Exhibitions', w.ex.map(esc).join('<br>')]].filter(Boolean);
-    const shown = w.labels.filter(l => state.lmodel || l.how !== 'vision-language model');
+    const shown = w.labels.filter(l => state.lmodel || !unverified(l));
     openDialog(workTitle(w), `<div class="two"><div><p class="hintline">Click a box to open the entry form for that label (German, for SKKG's label register).</p>${backs}</div><div><dl>${facts.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join('')}</dl>
       ${hitsHere.length ? `<h4>Labels it shares with other works</h4><div class="row">${hitsHere.map(h => `<button class="card" data-label="${h.q}"><span class="thumb"><img loading="lazy" alt="" src="${esc(region(h.iiif, h.box))}"></span><span class="cap"><b>${esc(LAB[h.q].t)}</b><span class="meta">also on Inv. ${esc(WORK[LAB[h.q].w].inv)}</span></span></button>`).join('')}</div>` : ''}</div></div>
-      <h4>${shown.length} label${shown.length === 1 ? '' : 's'} and marks located${state.lmodel ? '' : ' (without unverified model boxes)'}</h4><div class="grid">${shown.map(labelCard).join('') || '<p class="empty">None located yet.</p>'}</div>`);
+      <h4>${shown.length} label${shown.length === 1 ? '' : 's'} and marks located${state.lmodel ? '' : ' (without unverified boxes)'}</h4><div class="grid">${shown.map(labelCard).join('') || '<p class="empty">None located yet.</p>'}</div>`);
   }
 
   // ---------------------------------------------------------------- Navigation
@@ -432,6 +443,7 @@
     $('#stats').innerHTML = [
       [n.located.toLocaleString('en'), `labels, stamps and marks located on the backs (${n.reliable} reliable), plus ${n.marks_model.toLocaleString('en')} unverified proposals of the model`],
       [n.marks_located.toLocaleString('en'), `of ${n.marks.toLocaleString('en')} marks described in the data sheets placed on the backs (${n.marks_ocr} by their text)`],
+      [n.detected.toLocaleString('en'), `further labels and stamps found by the label detector that no record documents yet (${n.detected_text.toLocaleString('en')} with readable text, ${n.detected_issuer} with an issuer guess)`],
       [n.labels_found_again, `labels found again on other works, ${n.hits} hits`],
       [n.hits_backed, `hits backed by the records: ${n.hits_exhibition} by a shared exhibition, ${n.hits_seller} by the same seller`],
       [pct(n.r1), `of label photos find their back at rank 1 among ${n.backs} (${pct(n.r1_coarse)} before LightGlue)`],

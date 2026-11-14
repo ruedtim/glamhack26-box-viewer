@@ -401,9 +401,11 @@ $('#tagin').addEventListener('keydown', e => { if (e.key === 'Enter' || e.key ==
 $('#tagin').addEventListener('blur', addTag);
 
 // ---------------------------------------------------------------- Was die Daten wissen
-const SRC_DE = { register: 'Etikettenverzeichnis', photo: 'Detailfoto', 'data sheet': 'Provenienzdatenblatt', hit: 'Bildsuche (wiedergefunden)' };
+const SRC_DE = { register: 'Etikettenverzeichnis', photo: 'Detailfoto', 'data sheet': 'Provenienzdatenblatt', hit: 'Bildsuche (wiedergefunden)', detected: 'Etikettendetektor (neu gefunden)' };
 const TYPE_DE = { label: 'Etikett', stamp: 'Stempel', inscription: 'Beschriftung', seal: 'Siegel', other: 'andere Marke' };
-const COLOUR = { register: '3d9bff', photo: 'ff3b30', 'data sheet': 'bf5af2', hit: '1a7f4b' };
+const COLOUR = { register: '3d9bff', photo: 'ff3b30', 'data sheet': 'bf5af2', hit: '1a7f4b', detected: '64d2ff' };
+const weak = l => l.how === 'vision-language model' || l.src === 'hit' || l.st === 'new label without text';  // gestrichelte Box
+const EV_DE = { exhibition: 'Ausstellung', auction: 'Auktion', dealer: 'Ankauf / Verkauf' };  // Art des Etiketts laut Detektor
 const typeDe = t => (t || '').split(', ').map(x => TYPE_DE[x] || x).join(', ');
 const region = (iiif, b, s) => `${iiif}/${b.join(',')}/${b[2] > s || b[3] > s ? `!${s},${s}` : 'max'}/0/default.jpg`;
 const full = (iiif, s) => `${iiif}/full/!${s},${s}/0/default.jpg`;
@@ -415,6 +417,7 @@ function labelTitle(l) {
   if (l.src === 'hit') return `gleiche Etikette wie auf Inv. ${invOf(LAB_ID[l.hit.q].w)}`;
   if (l.src === 'photo' && (!l.t || l.t === l.sub)) return l.sub === 'Mark photo' ? 'Marke (Detailfoto)' : 'Etikett (Detailfoto)';
   if (l.src === 'data sheet' && !l.q) return typeDe(l.type) + (l.pos ? ', ' + l.pos : '');
+  if (l.src === 'detected' && !l.d && !l.iss) return 'Etikett, kein Text gelesen';
   return l.t;
 }
 function howShort(l) {
@@ -422,6 +425,7 @@ function howShort(l) {
     : `Bildabgleich mit dem Bild im Etikettenverzeichnis, ${points(l.n)}`;
   if (l.src === 'photo') return `Bildabgleich mit dem Detailfoto, ${points(l.n)}`;
   if (l.src === 'hit') return `Bildsuche und Bildabgleich, ${points(l.n)}`;
+  if (l.src === 'detected') return `Etikettendetektor (OWLv2), Wert ${l.score}, ` + (l.d ? 'Text gelesen (Texterkennung)' : 'kein Text gelesen');
   return { 'text found (OCR)': 'Text aus dem Datenblatt gelesen (Texterkennung)',
     'text found elsewhere (OCR)': 'Text aus dem Datenblatt gelesen (Texterkennung), aber nicht an der genannten Stelle',
     'template, same issuer': `Vorlage desselben Ausstellers (Inv. ${l.tpl}), ${points(l.n)}`,
@@ -436,6 +440,8 @@ function howSentence(l) {  // Kommentar (Spalte L): wie die Box gefunden wurde
     : `Box: Bild aus dem Etikettenverzeichnis auf dem Rückseitenfoto gefunden (Bildabgleich, ${points(l.n)})${check}.`;
   if (l.src === 'photo') return `Box: Detailfoto der Etikette auf dem Rückseitenfoto gefunden (Bildabgleich, ${points(l.n)})${check}.`;
   if (l.src === 'hit') return `Box: dieselbe Etikette wie auf Inv. ${invOf(LAB_ID[l.hit.q].w)} auf diesem Rückseitenfoto wiedergefunden (Bildsuche, ${points(l.n)}); ein Hinweis, kein Beweis.`;
+  if (l.src === 'detected') return `Box: vom Etikettendetektor (OWLv2, Wert ${l.score}) auf dem Rückseitenfoto gefunden; in keinem Register und keinem Datenblatt verzeichnet`
+    + (l.iss ? `; Aussteller nur aus dem gelesenen Text vermutet (${l.iss})` : '') + ', bitte prüfen.';
   return { 'text found (OCR)': 'Box: Text aus dem Provenienzdatenblatt auf dem Rückseitenfoto gelesen (Texterkennung).',
     'text found elsewhere (OCR)': 'Box: Text aus dem Provenienzdatenblatt auf dem Rückseitenfoto gelesen (Texterkennung), aber nicht an der im Datenblatt genannten Stelle, bitte prüfen.',
     'template, same issuer': `Box: über ein Etikett desselben Ausstellers gefunden (Vorlage auf Inv. ${l.tpl}, Bildabgleich, ${points(l.n)}).`,
@@ -455,7 +461,7 @@ function viewerUrl(l, drawn) {  // mit einer neu gezogenen Box: diese grün, die
     note: `${SRC_DE[l.src]}: ${labelTitle(l)}` + (drawn ? ' · neu gezogene Box (gestrichelt: Box aus den Daten)' : ''),
     colour: drawn ? '30d158' : COLOUR[l.src] || 'ff3b30', zoom: '1', label: l.key });
   if (drawn) p.set('area', l.box.join(','));
-  else if (l.how === 'vision-language model' || l.src === 'hit') p.set('style', 'dashed');
+  else if (weak(l)) p.set('style', 'dashed');
   if (w.url) p.set('page', w.url);
   return 'viewer.html?' + p;
 }
@@ -602,8 +608,11 @@ function prefill(l) {
   } else if (l.src === 'photo' && l.t && l.t !== l.sub) {
     put('trans', l.t.split(' · ').join(' / '), 'sug', 'Texterkennung', `Von der Texterkennung (OCR) gelesen, nur die Zeilen mit den meisten Buchstaben: ${l.t}`);
     notes.F.push(`Texterkennung (OCR) auf dem Rückseitenfoto, unvollständig: ${l.t}. Das Detailfoto oben ist meist besser lesbar.`);
+  } else if (l.src === 'detected' && l.d) {
+    put('trans', l.d.split(' | ').join(' / '), 'sug', 'Texterkennung', `Von der Texterkennung (OCR) auf dem Rückseitenfoto gelesen, ungeprüft: ${l.d}`);
+    notes.F.push(`Texterkennung (OCR) auf dem Rückseitenfoto, ungeprüft und oft unvollständig: ${l.d}`);
   } else if (q) notes.F.push(`Gleiche Etikette auf Inv. ${qinv}: ${labelTitle(q)}${q.d ? ' – ' + q.d : ''}`);
-  const base = q || l, desc = base.d || '', cat = base.src === 'register' ? base.type : '';
+  const base = q || l, desc = base.src === 'detected' ? '' : base.d || '', cat = base.src === 'register' ? base.type : '';  // beim Detektor ist d gelesener Text, keine Beschreibung
   const kind = base.src === 'data sheet' ? (base.type || '').split(', ')[0] : '';
   if (desc || cat) {
     const why = (q ? `Abgeleitet aus der Beschreibung der gleichen Etikette auf Inv. ${qinv}: ` : 'Abgeleitet aus der Beschreibung: ') + (desc || cat);
@@ -640,6 +649,12 @@ function prefill(l) {
     ['evtyp', 'evbez', 'datum', 'od', 'lot'].forEach(n => put(n, e[n], 'data', 'Register', d));
     put('evid', l.evid, 'data', 'Register', `Register, Spalte J: ${l.evid}`);
     notes.HJ.push(`Register, Spalten H bis J: ${[l.iss, l.sub, l.evid].filter(Boolean).join(' · ')}`);
+  }
+  if (l.src === 'detected') {
+    if (l.iss) put('person', l.iss, 'sug', 'Vorschlag', `Aus dem gelesenen Text vermutet (Etikettendetektor): ${l.iss}`);
+    const evs = [...new Set((l.type || '').split('; ').map(x => EV_DE[x]).filter(Boolean))];
+    if (evs.length === 1) put('evtyp', evs[0], 'sug', 'Vorschlag', `Art des Etiketts aus dem gelesenen Text vermutet: ${l.type}`);
+    notes.HJ.push('Etikettendetektor: ' + ([l.iss && `Aussteller vermutet: ${l.iss}`, l.type && `Art vermutet: ${l.type}`].filter(Boolean).join(' · ') || 'nichts aus dem Text abgeleitet') + '. Nur Vermutungen aus dem gelesenen Text.');
   }
   if (q && q.src === 'register' && q.iss) {
     put('person', issuerOf(q.iss), 'sug', 'Vorschlag', `Aussteller der gleichen Etikette auf Inv. ${qinv} laut Register: ${q.iss}`);
@@ -726,7 +741,7 @@ function known() {
   const [W, H] = DIM[L.iiif] || [L.box[0] + L.box[2], L.box[1] + L.box[3]];
   const svg = $('#ksvg');
   svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
-  svg.innerHTML = `<image href="${esc(full(L.iiif, 700))}" width="${W}" height="${H}"/><rect class="kbox" style="stroke:#${COLOUR[L.src]}" x="${L.box[0]}" y="${L.box[1]}" width="${Math.max(L.box[2], W / 150)}" height="${Math.max(L.box[3], H / 150)}"${L.src === 'hit' || L.how === 'vision-language model' ? ' stroke-dasharray="8 5"' : ''}/>`;
+  svg.innerHTML = `<image href="${esc(full(L.iiif, 700))}" width="${W}" height="${H}"/><rect class="kbox" style="stroke:#${COLOUR[L.src]}" x="${L.box[0]}" y="${L.box[1]}" width="${Math.max(L.box[2], W / 150)}" height="${Math.max(L.box[3], H / 150)}"${weak(L) ? ' stroke-dasharray="8 5"' : ''}/>`;
   $('#kback').href = viewerUrl(L, BX.drawn);
   if (L.photo) {
     $('#kpic').hidden = false;
@@ -736,6 +751,8 @@ function known() {
   if (L.src === 'register') rows.push(['Quelle', `Etikettenverzeichnis, Zeile ${esc(L.row)}` + (L.type ? ` · ${esc(L.type)}` : '')]);
   else if (L.src === 'photo') rows.push(['Quelle', 'Detailfoto der Etikette (SKKG), auf dem Rückseitenfoto wiedergefunden']);
   else if (L.src === 'data sheet') rows.push(['Quelle', `Provenienzdatenblatt · ${esc(typeDe(L.type))} · ${esc(L.pos)}`]);
+  else if (L.src === 'detected') rows.push(['Quelle', 'Etikettendetektor: neu gefundenes Etikett, in keinem Register und keinem Datenblatt verzeichnet'
+    + (L.type ? ` · Art vermutet: ${esc(L.type)}` : '') + (L.iss ? ` · Aussteller vermutet: ${esc(L.iss)}` : '')], ...(L.d ? [['Gelesener Text', esc(L.d)]] : []));
   else { const q = LAB_ID[L.hit.q]; rows.push(['Quelle', `Bildsuche: dieselbe Etikette wie auf <a href="${esc(formUrl(q.key))}">Inv. ${esc(invOf(q.w))} · ${esc(labelTitle(q))}</a>`], ['Beleg', esc(evText(L.hit.ev))]); }
   rows.push(['Box', esc(howShort(L)) + (L.ok ? '' : ' <span class="check">prüfen</span>')]);
   const item = (href, text, extra) => `<li><a href="${esc(href)}">${esc(text)}</a> <span>(${esc(extra)})</span></li>`;

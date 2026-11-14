@@ -28,7 +28,10 @@ Photos of the backs were cut into windows and indexed with DINOv2; photos of lab
 label register were placed on the backs with SuperPoint + LightGlue + MAGSAC (the same method as for locating aerial
 photographs). The marks described in SKKG's provenance data sheets were found by reading the text on the backs
 (OCR), by template matching with known labels, and – marked as unverified – by a local vision-language model
-(Qwen3-VL). Every reliably located label was then searched on all other backs.
+(Qwen3-VL). Every reliably located label was then searched on all other backs. Finally, a label detector (OWLv2,
+an open-vocabulary object detector, run locally) searched all backs for anything that looks like a label or stamp;
+the finds that no record documents are shown as «detected labels», with the text OCR read on them. They are leads
+to check: the issuer is only guessed from that text, and finds without text are often not labels at all.
 
 ## Label box viewer
 
