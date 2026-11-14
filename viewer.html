@@ -49,6 +49,15 @@
   footer { padding: 6px 16px; font-size: 12px; color: var(--muted); background: var(--bar);
            border-top: 1px solid var(--line); }
 </style>
+<script src="feedback.js"></script>  <!-- «Feedback» button: prefilled GitHub issue -->
+<script>
+  window.ppFeedbackContext = () => {  // what the «Feedback» button reports: the first box of this view
+    const p = new URLSearchParams(location.search);
+    const b = ((p.getAll('xywh').join(';').split(';')[0]) || '').split(',').map(Number);
+    return { title: p.get('title') || '', key: p.get('label') || '', iiif: (p.get('iiif') || '').replace(/\/info\.json$/, ''),
+             box: b.length === 4 && b.every(Number.isFinite) ? b : null };
+  };
+</script>
 </head>
 <body>
 <header>

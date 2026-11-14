@@ -1,0 +1,35 @@
+name: Feedback
+description: Feedback on the Provenance Pursuit results – a box, a text, a page or an idea.
+title: "[Feedback] "
+labels: ["feedback"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you! This issue is **public**: please don't write names or addresses of private owners.
+        The page has filled in where you were («Where»); edit or delete anything you don't want to share.
+  - type: dropdown
+    id: kind
+    attributes:
+      label: What is it about?
+      options:
+        - A box is wrong or missing
+        - A text or data value is wrong
+        - Something doesn't work
+        - An idea or wish
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: details
+    attributes:
+      label: What did you see, and what did you expect?
+      placeholder: "For example: the box covers the wrong label; the dealer's label is at the top right of the stretcher."
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Where (filled in by the page)
+      description: The page, work, label and box the feedback is about.
+      render: text
