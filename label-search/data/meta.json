@@ -1,5 +1,5 @@
 {
- "windows": 143963,
+ "windows": 143891,
  "backs": 872,
  "dims": 256,
  "input_dims": 1536,
@@ -8,17 +8,17 @@
  "preprocessing": "pad to square with mean colour (int), bicubic to 224 (PIL), ImageNet mean/std; vector = L2(concat(CLS, mean of patch tokens)); q256 = (q - mean) @ matrix",
  "files": {
   "backs.json": 235176,
-  "codes.u8": 4606816,
+  "codes.u8": 4604512,
   "pca_matrix.f32": 1572864,
   "pca_mean.f32": 6144,
-  "windows.u16": 1439630
+  "windows.u16": 1438910
  },
  "recall_eval_photos": {
   "eval_photos": 197,
-  "R@1": 0.36,
+  "R@1": 0.371,
   "R@5": 0.482,
-  "R@10": 0.533,
-  "R@20": 0.579,
-  "MRR": 0.426
+  "R@10": 0.553,
+  "R@20": 0.589,
+  "MRR": 0.431
  }
 }
