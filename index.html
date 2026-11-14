@@ -110,7 +110,7 @@
   <section id="labels" hidden>
     <p class="intro">Every picture is cut out of the original photograph of a work's back by the SKKG image server.
       Click a label to see where it sits on the back, which work it belongs to, and on which other works the same label
-      was found. Clicking a box on a back opens the entry form for SKKG's label register (German), prefilled with what
+      was found. Clicking a box on a back opens the entry form for SKKG's label register, prefilled with what
       we already know. <a href="review.html">Help check the vision-language model's proposals →</a>
       <a href="label-search/">Search by photo: have I seen this label before? →</a></p>
     <div class="controls">
@@ -191,7 +191,7 @@
       <li><a href="provenance_pursuit_results.xlsx">All results as a workbook (Excel)</a>, with a guide on its first sheet.</li>
       <li><a href="review.html">Review page</a>: check the vision-language model's proposals (correct, wrong,
         unsure) and download your decisions for the team.</li>
-      <li><a href="form.html">Entry form</a> for the columns F to L of SKKG's label register (German): opens from
+      <li><a href="form.html">Entry form</a> for the columns F to L of SKKG's label register (the register is German, so its terms stay German, with English glosses): opens from
         every box and label, prefilled with what the data already say (marked), keeps your entries in this browser
         and downloads them as CSV for the team.</li>
       <li><a href="sik_isea.html">What SIK-ISEA adds</a>: exhibitions and sales that SIK-ISEA's research portal records
@@ -345,7 +345,7 @@
     openDialog(l.t, `<div class="two"><div><div class="big"><a href="${esc(view)}" target="_blank" rel="noopener" title="Whole back, zoomable"><img alt="${esc(l.t)}" src="${esc(region(l.iiif, l.box, 900))}"></a></div>
       ${l.photo ? `<h4>SKKG's photograph of this label</h4><div class="big"><img alt="Detail photograph" loading="lazy" src="${esc(full(l.photo, 800))}"></div>` : ''}</div>
       <div><dl>${facts.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join('')}</dl>
-      <p class="formrow"><a class="formbtn" href="${esc(formUrl(l.key))}">✎ Record this label in the entry form</a><span>German form for SKKG's label register, prefilled with what is known</span></p>
+      <p class="formrow"><a class="formbtn" href="${esc(formUrl(l.key))}">✎ Record this label in the entry form</a><span>for SKKG's label register, prefilled with what is known</span></p>
       <h4>Where it sits on the back</h4>${backWithBoxes(l.iiif, [{ box: l.box, cls: kind(l) + ' sel', key: l.key, title: 'Click to open the entry form for this label' }], 700)}
       <div class="links"><a href="${esc(view)}" target="_blank" rel="noopener">Whole back, zoomable</a><a href="${esc(`${l.iiif}/${l.box.join(',')}/max/0/default.jpg`)}" target="_blank" rel="noopener">Label in full resolution (IIIF)</a></div></div></div>
       ${hits.length ? `<h4>The same label on ${hits.length} other work${hits.length > 1 ? 's' : ''}</h4><div class="row">${hits.map(h => hitCard(h)).join('')}</div>` : ''}
@@ -366,7 +366,7 @@
       w.acq && ['Acquired by SKKG', esc(w.acq)], w.actors.length && ['Provenance actors', esc(w.actors.join(', '))],
       w.ex.length && ['Exhibitions', w.ex.map(esc).join('<br>')]].filter(Boolean);
     const shown = w.labels.filter(l => state.lmodel || !unverified(l));
-    openDialog(workTitle(w), `<div class="two"><div><p class="hintline">Click a box to open the entry form for that label (German, for SKKG's label register).</p>${backs}</div><div><dl>${facts.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join('')}</dl>
+    openDialog(workTitle(w), `<div class="two"><div><p class="hintline">Click a box to open the entry form for that label (for SKKG's label register).</p>${backs}</div><div><dl>${facts.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join('')}</dl>
       ${hitsHere.length ? `<h4>Labels it shares with other works</h4><div class="row">${hitsHere.map(h => `<button class="card" data-label="${h.q}"><span class="thumb"><img loading="lazy" alt="" src="${esc(region(h.iiif, h.box))}"></span><span class="cap"><b>${esc(LAB[h.q].t)}</b><span class="meta">also on Inv. ${esc(WORK[LAB[h.q].w].inv)}</span></span></button>`).join('')}</div>` : ''}</div></div>
       <h4>${shown.length} label${shown.length === 1 ? '' : 's'} and marks located${state.lmodel ? '' : ' (without unverified boxes)'}</h4><div class="grid">${shown.map(labelCard).join('') || '<p class="empty">None located yet.</p>'}</div>`);
   }

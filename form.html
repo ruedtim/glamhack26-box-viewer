@@ -1,18 +1,21 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Etikett erfassen – Provenance Pursuit</title>
-<meta name="description" content="Erfassungsformular für die Spalten F bis L des Etikettenverzeichnisses der SKKG, vorausgefüllt mit den Ergebnissen von Provenance Pursuit.">
+<title>Record a label – Provenance Pursuit</title>
+<meta name="description" content="Entry form for columns F to L of SKKG's label register, prefilled with the results of Provenance Pursuit.">
 <!--
-  Etikett erfassen – GLAMhack 2026, Challenge 304 «Provenance Pursuit».
-  Formularentwurf von Amli (Commit 77d0c6a), an die Ergebnis-Website angeschlossen.
+  Record a label – GLAMhack 2026, challenge 304 «Provenance Pursuit».
+  Form draft by Amli (commit 77d0c6a), connected to the results website.
 
-  Adresse:  form.html?label=<Schlüssel>   (Schlüssel aus data.json: register:<Zeile>, photo:<Objekt>:<IIIF-ID>,
-            sheet:<Hash>, box:<IIIF-ID>:<x>,<y>,<w>,<h>; siehe build_site.py)
-  Liest data.json, füllt aus, was die Daten schon wissen (markiert), und speichert die Angaben je Schlüssel in
-  diesem Browser (localStorage). CSV herunterladen / laden für das Zusammenführen im Team.
+  Address:  form.html?label=<key>   (keys from data.json: register:<row>, photo:<object>:<IIIF id>,
+            sheet:<hash>, box:<IIIF id>:<x>,<y>,<w>,<h>; see build_site.py)
+  Reads data.json, fills in what the data already know (marked), and saves the entries per key in
+  this browser (localStorage). Download / load CSV to merge the team's entries.
+  The interface is English. What goes into SKKG's German label register stays German: the values of the
+  selects and buttons (with English glosses on screen), the column headings F–L, and the row's conventions
+  («o. D.», «(Lot …)»).
 -->
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;700&family=Fraunces:opsz,wght@9..144,600&display=swap">
 <style>
@@ -93,7 +96,7 @@ button.link{border:0;background:none;padding:0;font:inherit;color:var(--blue);te
 .kbox{fill:none;stroke-width:3;vector-effect:non-scaling-stroke;filter:drop-shadow(0 0 1.5px #000)}
 .kpic{margin-top:10px}.kpic img{display:block;max-width:100%;max-height:220px}
 .kdrawn{stroke:#30d158!important;stroke-dasharray:none}
-/* Box bestätigen / neu ziehen (wie auf der Review-Seite: neue Box grün, in Pixeln des Originalbilds) */
+/* confirm / redraw the box (as on the review page: new box green, in pixels of the original image) */
 .bx .btns{margin-top:8px;gap:6px}
 .bx button.alt{padding:6px 10px;font-size:13px}
 .bx button.alt[aria-pressed="true"]{background:var(--ok);border-color:var(--ok);color:#fff;font-weight:700}
@@ -131,154 +134,154 @@ dialog#ed::backdrop{background:rgba(0,0,0,.5)}
 </head>
 <body>
 <div class="wrap">
-<div class="crumbs"><a href="./" id="back">← Ergebnisse</a><span>Provenance Pursuit · GLAMhack 2026</span></div>
-<h1>Etikett erfassen</h1>
-<p class="sub">Formular für die Spalten F bis L des Etikettenverzeichnisses. Was die Daten schon wissen, ist vorausgefüllt und markiert: ergänzen oder korrigieren. Die Angaben rechts entsprechen der Zeile, die später in die Tabelle übernommen wird.</p>
+<div class="crumbs"><a href="./" id="back">← Results</a><span>Provenance Pursuit · GLAMhack 2026</span></div>
+<h1>Record a label</h1>
+<p class="sub">Form for columns F to L of SKKG's label register. What the data already know is prefilled and marked: add to it or correct it. The panel on the right shows the row as it will go into the register. The register is German, so the terms you pick (shape, colour, support, event, evidence) and the column headings stay German; the English glosses are for orientation.</p>
 
 <div class="work">
-  <a class="ph" id="ph">Foto Etikette</a>
-  <div class="wtext"><b id="wt">Kein Etikett gewählt</b><span id="ws">Daten werden geladen …</span><span class="wl" id="wl"></span></div>
+  <a class="ph" id="ph">Label photo</a>
+  <div class="wtext"><b id="wt">No label selected</b><span id="ws">Loading the data …</span><span class="wl" id="wl"></span></div>
 </div>
 
 <section class="known" id="known" hidden aria-labelledby="khead">
-  <h2 id="khead">Was die Daten schon sagen</h2>
+  <h2 id="khead">What the data already say</h2>
   <div class="kgrid">
-    <div><a class="kback" id="kback" target="_blank" rel="noopener" title="Ganze Rückseite mit der Box, zoombar"><svg id="ksvg" role="img" aria-label="Rückseite des Werks mit der Box"></svg></a>
-      <div class="hint">Ganze Rückseite; anklicken zum Zoomen.</div>
+    <div><a class="kback" id="kback" target="_blank" rel="noopener" title="Whole back with the box, zoomable"><svg id="ksvg" role="img" aria-label="Back of the work with the box"></svg></a>
+      <div class="hint">Whole back; click to zoom.</div>
       <div class="bx" id="bx" hidden>
-        <div class="btns"><button class="alt" id="bxok" type="button" aria-pressed="false">✓ Box bestätigen</button><button class="alt" id="bxdraw" type="button">✎ Box neu ziehen</button></div>
+        <div class="btns"><button class="alt" id="bxok" type="button" aria-pressed="false">✓ Confirm box</button><button class="alt" id="bxdraw" type="button">✎ Redraw box</button></div>
         <div class="hint" id="bxstate" role="status"></div>
-        <button class="link hint" id="bxorig" type="button" hidden>Box aus den Daten wiederherstellen</button>
+        <button class="link hint" id="bxorig" type="button" hidden>Restore the box from the data</button>
       </div>
       <div class="kpic" id="kpic" hidden></div></div>
     <dl id="kdl"></dl>
   </div>
 </section>
 
-<p class="legend" id="legend" hidden>Vorausgefüllte Felder sind markiert: <span class="pf">Register</span> oder <span class="pf">Datenblatt</span> = aus den Daten übernommen,
-  <span class="pf sug">Vorschlag</span> = abgeleitet oder von der Bildsuche gefunden, bitte prüfen, <span class="pf ed">geändert ↺</span> = von Hand geändert (↺ stellt den Wert aus den Daten wieder her).
-  Woher die Werte kommen, steht unter jedem Abschnitt.</p>
+<p class="legend" id="legend" hidden>Prefilled fields are marked: <span class="pf">Register</span> or <span class="pf">Data sheet</span> = taken from the data,
+  <span class="pf sug">Suggestion</span> = derived, or found by the image search: please check, <span class="pf ed">edited ↺</span> = changed by hand (↺ restores the value from the data).
+  Where the values come from is shown below each section.</p>
 
 <div class="grid">
 <div id="fields">
-  <fieldset><legend>Etikett <small>Spalte F</small></legend>
+  <fieldset><legend>Label <small>column F</small></legend>
     <div class="row">
-      <div><label for="form" data-f="form">Form</label>
-        <select id="form"><option value="">–</option><option>Klebeetikett, viereckig</option><option>Klebeetikett, viereckig mit abgerundeten Ecken</option><option>Klebeetikett, langrechteckig</option><option>Klebeetikett, rund</option><option>Etikett mit gezacktem Rand</option><option>Klebstreifen (Malerband)</option><option>Zettel, angeheftet</option><option>Stempel</option><option>Beschriftung direkt auf dem Objekt</option></select></div>
-      <div><label for="farbe" data-f="farbe">Farbe</label>
-        <select id="farbe"><option value="">–</option><option>weiss</option><option>beige</option><option>weiss mit blauer Umrandung</option><option>weiss mit roter Umrandung</option><option>rot / orange</option><option>blau</option><option>andere</option></select></div>
+      <div><label for="form" data-f="form">Shape</label>
+        <select id="form"><option value="">–</option><option value="Klebeetikett, viereckig">Klebeetikett, viereckig · adhesive label, rectangular</option><option value="Klebeetikett, viereckig mit abgerundeten Ecken">Klebeetikett, viereckig mit abgerundeten Ecken · adhesive label, rectangular with rounded corners</option><option value="Klebeetikett, langrechteckig">Klebeetikett, langrechteckig · adhesive label, oblong</option><option value="Klebeetikett, rund">Klebeetikett, rund · adhesive label, round</option><option value="Etikett mit gezacktem Rand">Etikett mit gezacktem Rand · label with a serrated edge</option><option value="Klebstreifen (Malerband)">Klebstreifen (Malerband) · adhesive tape (masking tape)</option><option value="Zettel, angeheftet">Zettel, angeheftet · slip, pinned or tacked on</option><option value="Stempel">Stempel · stamp</option><option value="Beschriftung direkt auf dem Objekt">Beschriftung direkt auf dem Objekt · inscription directly on the object</option></select></div>
+      <div><label for="farbe" data-f="farbe">Colour</label>
+        <select id="farbe"><option value="">–</option><option value="weiss">weiss · white</option><option value="beige">beige · beige</option><option value="weiss mit blauer Umrandung">weiss mit blauer Umrandung · white with a blue border</option><option value="weiss mit roter Umrandung">weiss mit roter Umrandung · white with a red border</option><option value="rot / orange">rot / orange · red / orange</option><option value="blau">blau · blue</option><option value="andere">andere · other</option></select></div>
     </div>
-    <label data-f="tech">Aufschrift ist</label>
+    <label data-f="tech">Lettering is</label>
     <div class="seg" id="tech">
-      <label><input type="checkbox" value="gedruckt"><span>gedruckt</span></label>
-      <label><input type="checkbox" value="gestempelt"><span>gestempelt</span></label>
-      <label><input type="checkbox" value="handschriftlich"><span>handschriftlich</span></label>
-      <label><input type="checkbox" value="maschinengeschrieben"><span>Schreibmaschine</span></label>
+      <label><input type="checkbox" value="gedruckt"><span>gedruckt · printed</span></label>
+      <label><input type="checkbox" value="gestempelt"><span>gestempelt · stamped</span></label>
+      <label><input type="checkbox" value="handschriftlich"><span>handschriftlich · handwritten</span></label>
+      <label><input type="checkbox" value="maschinengeschrieben"><span>Schreibmaschine · typewritten</span></label>
     </div>
-    <label for="trans" data-f="trans">Transkription</label>
-    <textarea id="trans" placeholder="Wortlaut so übernehmen, wie er auf dem Etikett steht. Unleserliches als […] markieren."></textarea>
+    <label for="trans" data-f="trans">Transcription</label>
+    <textarea id="trans" placeholder="Copy the wording exactly as it is on the label. Mark illegible parts as […]."></textarea>
     <div class="src" id="srcF" hidden></div>
   </fieldset>
 
-  <fieldset><legend>Position <small>Spalte G</small></legend>
+  <fieldset><legend>Position <small>column G</small></legend>
     <div class="posbox">
-      <div><label style="margin-top:0" data-f="pos">Lage auf dem Träger (von vorn gesehen)</label>
+      <div><label style="margin-top:0" data-f="pos">Position on the support (seen from the front)</label>
         <div class="pos" id="pos">
-          <label><input type="radio" name="p" value="o. l."><span>o. l.</span></label>
-          <label><input type="radio" name="p" value="o. m."><span>o. m.</span></label>
-          <label><input type="radio" name="p" value="o. r."><span>o. r.</span></label>
-          <label><input type="radio" name="p" value="m. l."><span>m. l.</span></label>
-          <label><input type="radio" name="p" value="m."><span>m.</span></label>
-          <label><input type="radio" name="p" value="m. r."><span>m. r.</span></label>
-          <label><input type="radio" name="p" value="u. l."><span>u. l.</span></label>
-          <label><input type="radio" name="p" value="u. m."><span>u. m.</span></label>
-          <label><input type="radio" name="p" value="u. r."><span>u. r.</span></label>
-        </div></div>
+          <label title="oben links · top left"><input type="radio" name="p" value="o. l."><span>o. l.</span></label>
+          <label title="oben Mitte · top centre"><input type="radio" name="p" value="o. m."><span>o. m.</span></label>
+          <label title="oben rechts · top right"><input type="radio" name="p" value="o. r."><span>o. r.</span></label>
+          <label title="Mitte links · middle left"><input type="radio" name="p" value="m. l."><span>m. l.</span></label>
+          <label title="Mitte · middle"><input type="radio" name="p" value="m."><span>m.</span></label>
+          <label title="Mitte rechts · middle right"><input type="radio" name="p" value="m. r."><span>m. r.</span></label>
+          <label title="unten links · bottom left"><input type="radio" name="p" value="u. l."><span>u. l.</span></label>
+          <label title="unten Mitte · bottom centre"><input type="radio" name="p" value="u. m."><span>u. m.</span></label>
+          <label title="unten rechts · bottom right"><input type="radio" name="p" value="u. r."><span>u. r.</span></label>
+        </div><div class="hint" style="max-width:140px">o. top · m. middle · u. bottom · l. left · r. right</div></div>
       <div style="flex:1;min-width:200px">
-        <label for="traeger" style="margin-top:0" data-f="traeger">Träger</label>
-        <select id="traeger"><option value="">–</option><option>Zierrahmen</option><option>Keilrahmen</option><option>Schutzkarton</option><option>Leinwand</option><option>Holztafel</option><option>Malkarton</option><option>Mittelleiste Keilrahmen</option><option>Verstrebung Keilrahmen</option></select>
-        <label data-f="seite">Seite</label>
+        <label for="traeger" style="margin-top:0" data-f="traeger">Support</label>
+        <select id="traeger"><option value="">–</option><option value="Zierrahmen">Zierrahmen · frame</option><option value="Keilrahmen">Keilrahmen · stretcher</option><option value="Schutzkarton">Schutzkarton · protective board</option><option value="Leinwand">Leinwand · canvas</option><option value="Holztafel">Holztafel · wooden panel</option><option value="Malkarton">Malkarton · painting board</option><option value="Mittelleiste Keilrahmen">Mittelleiste Keilrahmen · stretcher, centre bar</option><option value="Verstrebung Keilrahmen">Verstrebung Keilrahmen · stretcher, cross-bar</option></select>
+        <label data-f="seite">Side</label>
         <div class="seg" id="seite">
-          <label><input type="radio" name="s" value="recto"><span>recto</span></label>
-          <label><input type="radio" name="s" value="verso"><span>verso</span></label>
+          <label><input type="radio" name="s" value="recto"><span>recto · front</span></label>
+          <label><input type="radio" name="s" value="verso"><span>verso · back</span></label>
         </div>
       </div>
     </div>
     <div class="src" id="srcG" hidden></div>
   </fieldset>
 
-  <fieldset><legend>Zuordnung <small>Spalten H bis J</small></legend>
-    <label for="person" data-f="person">Person / Körperschaft</label>
-    <input type="text" id="person" placeholder="z. B. Galerie Bruno Meissner, Zürich">
-    <div class="hint">Später mit einem Normdatensatz (GND, SIKART) verknüpfbar.</div>
+  <fieldset><legend>Attribution <small>columns H to J</small></legend>
+    <label for="person" data-f="person">Person / organisation</label>
+    <input type="text" id="person" placeholder="e.g. Galerie Bruno Meissner, Zürich">
+    <div class="hint">Can later be linked to an authority record (GND, SIKART).</div>
     <div class="row">
-      <div><label for="evtyp" data-f="evtyp">Ereignis</label>
-        <select id="evtyp"><option value="">–</option><option>Auktion</option><option>Ausstellung</option><option>Ankauf / Verkauf</option><option>Nachlass</option><option>Leihgabe</option><option>Unbekannt</option></select></div>
-      <div><label for="lot" data-f="lot">Lot- / Katalognummer</label>
-        <input type="text" id="lot" placeholder="z. B. 157"></div>
+      <div><label for="evtyp" data-f="evtyp">Event</label>
+        <select id="evtyp"><option value="">–</option><option value="Auktion">Auktion · auction</option><option value="Ausstellung">Ausstellung · exhibition</option><option value="Ankauf / Verkauf">Ankauf / Verkauf · purchase / sale</option><option value="Nachlass">Nachlass · estate</option><option value="Leihgabe">Leihgabe · loan</option><option value="Unbekannt">Unbekannt · unknown</option></select></div>
+      <div><label for="lot" data-f="lot">Lot / catalogue number</label>
+        <input type="text" id="lot" placeholder="e.g. 157"></div>
     </div>
-    <label for="evbez" data-f="evbez">Bezeichnung des Ereignisses</label>
-    <input type="text" id="evbez" placeholder="z. B. Auktion 69, Koller Zürich">
+    <label for="evbez" data-f="evbez">Name of the event</label>
+    <input type="text" id="evbez" placeholder="e.g. Auktion 69, Koller Zürich">
     <div class="row">
-      <div><label for="datum" data-f="datum od">Datum / Zeitraum</label>
-        <input type="text" id="datum" placeholder="z. B. 24.–27. Oktober 1984"></div>
-      <div><label>&nbsp;</label><div class="chk"><input type="checkbox" id="od"><label for="od" style="margin:0;color:var(--ink)">ohne Datum (o. D.)</label></div></div>
+      <div><label for="datum" data-f="datum od">Date / period</label>
+        <input type="text" id="datum" placeholder="e.g. 24.–27. Oktober 1984"></div>
+      <div><label>&nbsp;</label><div class="chk"><input type="checkbox" id="od"><label for="od" style="margin:0;color:var(--ink)">no date (o. D.)</label></div></div>
     </div>
-    <label data-f="evid">Evidenz der Zuordnung</label>
+    <label data-f="evid">Evidence for the attribution</label>
     <div class="seg" id="evid">
-      <label><input type="radio" name="e" value="gesichert"><span>gesichert</span></label>
-      <label><input type="radio" name="e" value="vermutlich"><span>vermutlich</span></label>
-      <label><input type="radio" name="e" value="unklar"><span>unklar</span></label>
+      <label><input type="radio" name="e" value="gesichert"><span>gesichert · certain</span></label>
+      <label><input type="radio" name="e" value="vermutlich"><span>vermutlich · probable</span></label>
+      <label><input type="radio" name="e" value="unklar"><span>unklar · unclear</span></label>
     </div>
     <div class="src" id="srcHJ" hidden></div>
   </fieldset>
 
-  <fieldset><legend>Weitere Angaben <small>Spalten K und L</small></legend>
-    <label for="tagin" data-f="tags">Weitere Werke SKKG mit dieser Etikette</label>
-    <div class="tags" id="tags"><input type="text" id="tagin" placeholder="Inv.-Nr. eingeben, Enter drücken"></div>
-    <div class="hint">Jede Nummer wird zu einem Eintrag. Später könnte hier geprüft werden, ob die Nummer existiert.</div>
-    <label for="komm" data-f="komm">Kommentar</label>
-    <textarea id="komm" placeholder="Begründung, Vergleiche mit anderen Werken, offene Fragen"></textarea>
+  <fieldset><legend>Further details <small>columns K and L</small></legend>
+    <label for="tagin" data-f="tags">Other SKKG works with this label</label>
+    <div class="tags" id="tags"><input type="text" id="tagin" placeholder="Type an inventory no., press Enter"></div>
+    <div class="hint">Each number becomes an entry. Later the form could check here whether the number exists.</div>
+    <label for="komm" data-f="komm">Comment</label>
+    <textarea id="komm" placeholder="Reasoning, comparisons with other works, open questions"></textarea>
     <div class="src" id="srcKL" hidden></div>
   </fieldset>
 </div>
 
 <div class="side">
   <div class="prev">
-    <h2>Vorschau der Tabellenzeile</h2>
+    <h2>Preview of the register row</h2>
     <dl id="out"></dl>
     <div class="btns">
-      <button class="main" id="copy" type="button">Zeile kopieren</button>
-      <button class="alt" id="save" type="button">Speichern</button>
-      <button class="alt" id="reset" type="button">Zurücksetzen</button>
+      <button class="main" id="copy" type="button">Copy row</button>
+      <button class="alt" id="save" type="button">Save</button>
+      <button class="alt" id="reset" type="button">Reset</button>
     </div>
     <div class="msg" id="msg" role="status"></div>
     <div class="saved" id="saved" role="status"></div>
   </div>
-  <p class="note">Die Zeile wird mit Tabulatoren getrennt kopiert und lässt sich direkt in Spalte F der Excel-Tabelle einfügen. Die Angaben werden in diesem Browser gespeichert (bei jeder Änderung); «Zurücksetzen» stellt die Werte aus den Daten wieder her.</p>
+  <p class="note">The row is copied tab-separated and can be pasted straight into column F of the Excel register. The entries are saved in this browser on every change; «Reset» restores the values from the data.</p>
 </div>
 </div>
 
 <section class="store" aria-labelledby="shead">
-  <h2 id="shead">Gespeicherte Einträge</h2>
-  <p class="note" id="scount" style="margin-top:0">Noch keine Einträge in diesem Browser.</p>
+  <h2 id="shead">Saved entries</h2>
+  <p class="note" id="scount" style="margin-top:0">No entries in this browser yet.</p>
   <div class="srow">
-    <div><label for="who" style="margin-top:0">Kürzel (steht in der CSV)</label><input type="text" id="who" maxlength="12" autocomplete="off" placeholder="z. B. AM"></div>
-    <div class="btns"><button class="main" id="export" type="button">CSV herunterladen</button><label class="alt" for="import">CSV laden …</label><input type="file" id="import" accept=".csv,text/csv,text/plain" hidden></div>
+    <div><label for="who" style="margin-top:0">Initials (go into the CSV)</label><input type="text" id="who" maxlength="12" autocomplete="off" placeholder="e.g. AM"></div>
+    <div class="btns"><button class="main" id="export" type="button">Download CSV</button><label class="alt" for="import">Load CSV …</label><input type="file" id="import" accept=".csv,text/csv,text/plain" hidden></div>
   </div>
   <div class="msg" id="smsg" role="status"></div>
   <ol class="slist" id="slist"></ol>
-  <p class="note">Die Einträge bleiben nur in diesem Browser. Für das Team als CSV herunterladen (eine Zeile pro Etikett: Schlüssel, Werk, Box, Spalten F bis L und die einzelnen Felder) und in den Teamordner legen; dort werden sie mit dem Arbeitsbuch zusammengeführt. «CSV laden» übernimmt die Einträge einer solchen Datei; beim selben Etikett gilt der neuere Eintrag.</p>
+  <p class="note">The entries stay in this browser only. For the team, download them as CSV (one row per label: key, work, box, columns F to L and the single fields) and put the file into the team folder, where the entries are merged into the workbook. «Load CSV» takes over the entries of such a file; for the same label the newer entry wins.</p>
 </section>
 </div>
 
 <dialog id="ed" aria-labelledby="edtitle">
-  <b id="edtitle">Box um das Etikett ziehen</b>
-  <div class="hint">Auf dem Bild ziehen. Rot: die Box aus den Daten · grün: die neue Box. Gespeichert wird in Pixeln des Originalbilds.</div>
-  <div><div id="edwrap"><img id="edimg" alt="Die ganze Rückseite" draggable="false"><div class="edbox old" id="edold"></div><div class="edbox new" id="ednew" hidden></div></div></div>
+  <b id="edtitle">Draw a box around the label</b>
+  <div class="hint">Drag on the image. Red: the box from the data · green: the new box. It is saved in pixels of the original image.</div>
+  <div><div id="edwrap"><img id="edimg" alt="The whole back" draggable="false"><div class="edbox old" id="edold"></div><div class="edbox new" id="ednew" hidden></div></div></div>
   <div class="btns" style="margin-top:0">
-    <button class="main" id="edsave" type="button" disabled>Box speichern</button>
-    <button class="alt" id="edcancel" type="button">Abbrechen</button>
+    <button class="main" id="edsave" type="button" disabled>Save box</button>
+    <button class="alt" id="edcancel" type="button">Cancel</button>
     <span class="hint" id="edinfo"></span>
   </div>
 </dialog>
@@ -289,21 +292,24 @@ dialog#ed::backdrop{background:rgba(0,0,0,.5)}
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
-const heads = ['Beschreibung Etikette / Beschriftung','Position','Zugeordnete Person/Körperschaft','Zugeordnetes Ereignis','Evidenz der Zuordnung','Weitere Werke SKKG mit dieser Etikette','Kommentar'];
+const heads = ['Beschreibung Etikette / Beschriftung','Position','Zugeordnete Person/Körperschaft','Zugeordnetes Ereignis','Evidenz der Zuordnung','Weitere Werke SKKG mit dieser Etikette','Kommentar'];  // the register's own headings
+const HEADS_EN = ['label description / inscription', 'position', 'assigned person / organisation', 'assigned event', 'evidence for the attribution', 'other SKKG works with this label', 'comment'];
+const GLOSS = { Spannrahmen: 'strainer', Karton: 'cardboard', Rahmen: 'frame', 'Rückseitenschutz': 'backing board', 'Rückwand': 'back board',
+  Holzplatte: 'wooden board', Papier: 'paper', Passepartout: 'mount' };  // English glosses for supports that come from the data
 const STORE = 'pp-label-form-v1', WHO = 'pp-label-form-who';
 const store = {
   get(k, fallback) { try { const v = localStorage.getItem(k); return v === null ? fallback : JSON.parse(v); } catch { return fallback; } },
   set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch { return false; } },
 };
 const loadEntries = () => { const e = store.get(STORE, {}); return e && typeof e === 'object' ? e : {}; };
-let entries = loadEntries();  // Schlüssel -> {v: Felder, t: Zeit, r: Kürzel, m: Werk/Etikett, d: aus den Daten, e: geändert}
+let entries = loadEntries();  // key -> {v: fields, t: time, r: initials, m: work/label, d: from the data, e: edited}
 const key = (new URLSearchParams(location.search).get('label') || '').trim();
 let D = null, L = null, P = { v: {}, s: {}, notes: {} }, tags = [], undo = null;
-let BX = { ok: false, drawn: null };  // die Box: bestätigt? neu gezogen ([x, y, w, h] in Pixeln des Originalbilds)?
+let BX = { ok: false, drawn: null };  // the box: confirmed? redrawn ([x, y, w, h] in pixels of the original image)?
 const curBox = () => BX.drawn || (L && L.box);
 const WORK = {}, DIM = {}, LAB_ID = {}, LAB_KEY = {};
 
-// ---------------------------------------------------------------- Felder
+// ---------------------------------------------------------------- Fields
 const FIELDS = { form: 'select', farbe: 'select', tech: 'checks', trans: 'text', pos: 'radio', traeger: 'select', seite: 'radio',
   person: 'text', evtyp: 'select', lot: 'text', evbez: 'text', datum: 'text', od: 'check', evid: 'radio', tags: 'tags', komm: 'text' };
 const GROUP = { tech: '#tech', pos: '#pos', seite: '#seite', evid: '#evid' };
@@ -334,13 +340,13 @@ function write(n, v) {
     case 'tags': tags = (v || []).slice(); renderTags(); break;
   }
 }
-function option(sel, v) {  // ein Wert aus den Daten, den die Liste nicht hat (z. B. «Spannrahmen»), kommt dazu
-  if (v && ![...sel.options].some(o => o.value === v)) sel.add(new Option(v, v));
+function option(sel, v) {  // a value from the data that the list lacks (e.g. «Spannrahmen») is added
+  if (v && ![...sel.options].some(o => o.value === v)) sel.add(new Option(GLOSS[v] ? v + ' · ' + GLOSS[v] : v, v));
 }
 const state = () => Object.fromEntries(NAMES.map(n => [n, read(n)]));
 const apply = v => NAMES.forEach(n => write(n, v && n in v ? v[n] : empty()[n]));
 
-function compute(v) {  // die Zeile F bis L, wie im Entwurf zusammengesetzt
+function compute(v) {  // the row F to L, composed as in the draft (German register conventions)
   const f = [v.form, v.farbe, (v.tech || []).join(' / ')].filter(Boolean).join(', ');
   const t = v.trans;
   const F = [f, t ? '«' + t + '»' : ''].filter(Boolean).join(', ');
@@ -351,11 +357,11 @@ function compute(v) {  // die Zeile F bis L, wie im Entwurf zusammengesetzt
 }
 function render() {
   const v = state(), c = compute(v);
-  $('#out').innerHTML = heads.map((h, i) => '<dt>' + 'FGHIJKL'[i] + ' · ' + h + '</dt><dd>' + (c[i] ? esc(c[i]) : '<span class="empty">noch leer</span>') + '</dd>').join('');
+  $('#out').innerHTML = heads.map((h, i) => '<dt>' + 'FGHIJKL'[i] + ' · ' + h + ' (' + HEADS_EN[i] + ')</dt><dd>' + (c[i] ? esc(c[i]) : '<span class="empty">empty</span>') + '</dd>').join('');
   marks(v);
   return v;
 }
-function marks(v) {  // Markierung je Feld: aus den Daten, Vorschlag, von Hand geändert
+function marks(v) {  // marker per field: from the data, suggestion, changed by hand
   $$('[data-f]').forEach(cap => {
     const names = cap.dataset.f.split(' '), pre = names.filter(n => P.s[n]);
     const edited = pre.filter(n => !same(v[n], P.v[n]));
@@ -364,8 +370,8 @@ function marks(v) {  // Markierung je Feld: aus den Daten, Vorschlag, von Hand g
     if (!pill) { pill = document.createElement('span'); cap.append(pill); }
     if (edited.length) {
       pill.className = 'pf ed';
-      pill.title = 'Von Hand geändert. Aus den Daten: ' + pre.map(n => P.s[n].d).join(' · ');
-      pill.innerHTML = 'geändert<button type="button" data-restore="' + pre.join(' ') + '" title="Wert aus den Daten wiederherstellen" aria-label="Wert aus den Daten wiederherstellen">↺</button>';
+      pill.title = 'Changed by hand. From the data: ' + pre.map(n => P.s[n].d).join(' · ');
+      pill.innerHTML = 'edited<button type="button" data-restore="' + pre.join(' ') + '" title="Restore the value from the data" aria-label="Restore the value from the data">↺</button>';
     } else {
       pill.className = pre.some(n => P.s[n].k === 'sug') ? 'pf sug' : 'pf';
       pill.title = pre.map(n => P.s[n].d).join(' · ');
@@ -381,13 +387,13 @@ function marks(v) {  // Markierung je Feld: aus den Daten, Vorschlag, von Hand g
   });
 }
 
-// ---------------------------------------------------------------- Weitere Werke (Einträge)
+// ---------------------------------------------------------------- Other works (entries)
 function renderTags() {
   document.querySelectorAll('.tag').forEach(n => n.remove());
   const box = $('#tags'), inp = $('#tagin');
   tags.forEach((t, i) => {
     const d = document.createElement('span'); d.className = 'tag'; d.textContent = t;
-    const b = document.createElement('button'); b.type = 'button'; b.textContent = '×'; b.setAttribute('aria-label', t + ' entfernen');
+    const b = document.createElement('button'); b.type = 'button'; b.textContent = '×'; b.setAttribute('aria-label', 'Remove ' + t);
     b.onclick = () => { tags.splice(i, 1); renderTags(); changed(); };
     d.appendChild(b); box.insertBefore(d, inp);
   });
@@ -400,65 +406,66 @@ function addTag() {
 $('#tagin').addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ',') { e.preventDefault(); addTag(); } });
 $('#tagin').addEventListener('blur', addTag);
 
-// ---------------------------------------------------------------- Was die Daten wissen
-const SRC_DE = { register: 'Etikettenverzeichnis', photo: 'Detailfoto', 'data sheet': 'Provenienzdatenblatt', hit: 'Bildsuche (wiedergefunden)', detected: 'Etikettendetektor (neu gefunden)' };
-const TYPE_DE = { label: 'Etikett', stamp: 'Stempel', inscription: 'Beschriftung', seal: 'Siegel', other: 'andere Marke' };
+// ---------------------------------------------------------------- What the data know
+const SRC_DE = { register: 'Label register', photo: 'Detail photo', 'data sheet': 'Provenance data sheet', hit: 'Image search (found again)', detected: 'Label detector (newly found)' };  // display names of the sources
+const TYPE_DE = { label: 'label', stamp: 'stamp', inscription: 'inscription', seal: 'seal', other: 'other mark' };  // display names of the mark types
 const COLOUR = { register: '3d9bff', photo: 'ff3b30', 'data sheet': 'bf5af2', hit: '1a7f4b', detected: '64d2ff' };
-const weak = l => l.how === 'vision-language model' || l.src === 'hit' || l.st === 'new label without text';  // gestrichelte Box
-const EV_DE = { exhibition: 'Ausstellung', auction: 'Auktion', dealer: 'Ankauf / Verkauf' };  // Art des Etiketts laut Detektor
+const weak = l => l.how === 'vision-language model' || l.src === 'hit' || l.st === 'new label without text';  // dashed box
+const EV_DE = { exhibition: 'Ausstellung', auction: 'Auktion', dealer: 'Ankauf / Verkauf' };  // kind of label according to the detector -> the register's event (German vocabulary)
 const typeDe = t => (t || '').split(', ').map(x => TYPE_DE[x] || x).join(', ');
+const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
 const region = (iiif, b, s) => `${iiif}/${b.join(',')}/${b[2] > s || b[3] > s ? `!${s},${s}` : 'max'}/0/default.jpg`;
 const full = (iiif, s) => `${iiif}/full/!${s},${s}/0/default.jpg`;
 const formUrl = k => 'form.html?label=' + encodeURIComponent(k);
-const points = n => `${n} übereinstimmende Bildpunkte`;
+const points = n => `${n} matching points`;
 const invOf = w => (WORK[w] || {}).inv || '?';
 
 function labelTitle(l) {
-  if (l.src === 'hit') return `gleiche Etikette wie auf Inv. ${invOf(LAB_ID[l.hit.q].w)}`;
-  if (l.src === 'photo' && (!l.t || l.t === l.sub)) return l.sub === 'Mark photo' ? 'Marke (Detailfoto)' : 'Etikett (Detailfoto)';
-  if (l.src === 'data sheet' && !l.q) return typeDe(l.type) + (l.pos ? ', ' + l.pos : '');
-  if (l.src === 'detected' && !l.d && !l.iss) return 'Etikett, kein Text gelesen';
+  if (l.src === 'hit') return `Same label as on Inv. ${invOf(LAB_ID[l.hit.q].w)}`;
+  if (l.src === 'photo' && (!l.t || l.t === l.sub)) return l.sub === 'Mark photo' ? 'Mark (detail photo)' : 'Label (detail photo)';
+  if (l.src === 'data sheet' && !l.q) return cap(typeDe(l.type)) + (l.pos ? ', ' + l.pos : '');
+  if (l.src === 'detected' && !l.d && !l.iss) return 'Label, no text read';
   return l.t;
 }
 function howShort(l) {
-  if (l.src === 'register') return l.st === 'retrieval only' ? 'nur ungefähr: ähnlichster Ausschnitt zum Bild im Etikettenverzeichnis'
-    : `Bildabgleich mit dem Bild im Etikettenverzeichnis, ${points(l.n)}`;
-  if (l.src === 'photo') return `Bildabgleich mit dem Detailfoto, ${points(l.n)}`;
-  if (l.src === 'hit') return `Bildsuche und Bildabgleich, ${points(l.n)}`;
-  if (l.src === 'detected') return `Etikettendetektor (OWLv2), Wert ${l.score}, ` + (l.d ? 'Text gelesen (Texterkennung)' : 'kein Text gelesen');
-  return { 'text found (OCR)': 'Text aus dem Datenblatt gelesen (Texterkennung)',
-    'text found elsewhere (OCR)': 'Text aus dem Datenblatt gelesen (Texterkennung), aber nicht an der genannten Stelle',
-    'template, same issuer': `Vorlage desselben Ausstellers (Inv. ${l.tpl}), ${points(l.n)}`,
-    'template, similar label': `ähnliches Etikett als Vorlage (Inv. ${l.tpl}), ${points(l.n)}`,
-    'vision-language model': 'Vorschlag eines Bild-Sprach-Modells (Qwen3-VL), ungeprüft',
-    'vision-language model, confirmed': 'Vorschlag eines Bild-Sprach-Modells (Qwen3-VL), vom Team bestätigt' }[l.how] || l.how;
+  if (l.src === 'register') return l.st === 'retrieval only' ? 'only approximate: the window most similar to the picture in the label register'
+    : `image matching with the picture in the label register, ${points(l.n)}`;
+  if (l.src === 'photo') return `image matching with the detail photo, ${points(l.n)}`;
+  if (l.src === 'hit') return `image search and image matching, ${points(l.n)}`;
+  if (l.src === 'detected') return `label detector (OWLv2), score ${l.score}, ` + (l.d ? 'text read (OCR)' : 'no text read');
+  return { 'text found (OCR)': 'text from the data sheet read on the back (OCR)',
+    'text found elsewhere (OCR)': 'text from the data sheet read on the back (OCR), but not at the place the data sheet names',
+    'template, same issuer': `template of the same issuer (Inv. ${l.tpl}), ${points(l.n)}`,
+    'template, similar label': `a similar label as template (Inv. ${l.tpl}), ${points(l.n)}`,
+    'vision-language model': 'proposed by a vision-language model (Qwen3-VL), unverified',
+    'vision-language model, confirmed': 'proposed by a vision-language model (Qwen3-VL), confirmed by the team' }[l.how] || l.how;
 }
-function howSentence(l) {  // Kommentar (Spalte L): wie die Box gefunden wurde
-  const check = l.ok ? '' : ', unsicher, bitte prüfen';
+function howSentence(l) {  // comment (column L): how the box was found
+  const check = l.ok ? '' : ', uncertain, please check';
   if (l.src === 'register') return l.st === 'retrieval only'
-    ? 'Box nur ungefähr: ähnlichster Ausschnitt des Rückseitenfotos zum Bild im Etikettenverzeichnis, bitte prüfen.'
-    : `Box: Bild aus dem Etikettenverzeichnis auf dem Rückseitenfoto gefunden (Bildabgleich, ${points(l.n)})${check}.`;
-  if (l.src === 'photo') return `Box: Detailfoto der Etikette auf dem Rückseitenfoto gefunden (Bildabgleich, ${points(l.n)})${check}.`;
-  if (l.src === 'hit') return `Box: dieselbe Etikette wie auf Inv. ${invOf(LAB_ID[l.hit.q].w)} auf diesem Rückseitenfoto wiedergefunden (Bildsuche, ${points(l.n)}); ein Hinweis, kein Beweis.`;
-  if (l.src === 'detected') return `Box: vom Etikettendetektor (OWLv2, Wert ${l.score}) auf dem Rückseitenfoto gefunden; in keinem Register und keinem Datenblatt verzeichnet`
-    + (l.iss ? `; Aussteller nur aus dem gelesenen Text vermutet (${l.iss})` : '') + ', bitte prüfen.';
-  return { 'text found (OCR)': 'Box: Text aus dem Provenienzdatenblatt auf dem Rückseitenfoto gelesen (Texterkennung).',
-    'text found elsewhere (OCR)': 'Box: Text aus dem Provenienzdatenblatt auf dem Rückseitenfoto gelesen (Texterkennung), aber nicht an der im Datenblatt genannten Stelle, bitte prüfen.',
-    'template, same issuer': `Box: über ein Etikett desselben Ausstellers gefunden (Vorlage auf Inv. ${l.tpl}, Bildabgleich, ${points(l.n)}).`,
-    'template, similar label': `Box: über ein ähnliches Etikett gefunden (Vorlage auf Inv. ${l.tpl}, ${points(l.n)}), bitte prüfen.`,
-    'vision-language model': 'Box: Vorschlag eines Bild-Sprach-Modells (Qwen3-VL) nach der Beschreibung im Datenblatt, ungeprüft.',
-    'vision-language model, confirmed': 'Box: Vorschlag eines Bild-Sprach-Modells (Qwen3-VL) nach der Beschreibung im Datenblatt, vom Team bestätigt.' }[l.how] || '';
+    ? 'Box only approximate: the window of the back photo most similar to the picture in the label register, please check.'
+    : `Box: picture from the label register found on the back photo (image matching, ${points(l.n)})${check}.`;
+  if (l.src === 'photo') return `Box: detail photo of the label found on the back photo (image matching, ${points(l.n)})${check}.`;
+  if (l.src === 'hit') return `Box: the same label as on Inv. ${invOf(LAB_ID[l.hit.q].w)} found again on this back photo (image search, ${points(l.n)}); a lead, not proof.`;
+  if (l.src === 'detected') return `Box: found on the back photo by the label detector (OWLv2, score ${l.score}); not recorded in the register or in any data sheet`
+    + (l.iss ? `; issuer only guessed from the text read (${l.iss})` : '') + ', please check.';
+  return { 'text found (OCR)': 'Box: text from the provenance data sheet read on the back photo (OCR).',
+    'text found elsewhere (OCR)': 'Box: text from the provenance data sheet read on the back photo (OCR), but not at the place the data sheet names, please check.',
+    'template, same issuer': `Box: found with a label of the same issuer (template on Inv. ${l.tpl}, image matching, ${points(l.n)}).`,
+    'template, similar label': `Box: found with a similar label (template on Inv. ${l.tpl}, ${points(l.n)}), please check.`,
+    'vision-language model': 'Box: proposed by a vision-language model (Qwen3-VL) from the description in the data sheet, unverified.',
+    'vision-language model, confirmed': 'Box: proposed by a vision-language model (Qwen3-VL) from the description in the data sheet, confirmed by the team.' }[l.how] || '';
 }
 function evText(ev) {
   const out = [];
-  if (ev.exhibition) out.push('gemeinsame Ausstellung: ' + ev.exhibition.split(' | ').join('; '));
-  if (ev.seller) out.push('gleicher Verkäufer an SKKG: ' + ev.seller);
-  if (ev.provenance) out.push('Provenienz: ' + (ev.provenance === 'issuer named in the provenance' ? 'Aussteller in der Provenienz genannt' : ev.provenance));
-  return out.join(' · ') || 'noch kein Beleg in den Akten';
+  if (ev.exhibition) out.push('shared exhibition: ' + ev.exhibition.split(' | ').join('; '));
+  if (ev.seller) out.push('same seller to SKKG: ' + ev.seller);
+  if (ev.provenance) out.push('provenance: ' + ev.provenance);
+  return out.join(' · ') || 'no evidence in the records yet';
 }
-function viewerUrl(l, drawn) {  // mit einer neu gezogenen Box: diese grün, die Box aus den Daten gestrichelt
+function viewerUrl(l, drawn) {  // with a redrawn box: that one green, the box from the data dashed
   const w = WORK[l.w], p = new URLSearchParams({ iiif: l.iiif, xywh: (drawn || l.box).join(','), title: `Inv. ${w.inv} · ${w.title}`,
-    note: `${SRC_DE[l.src]}: ${labelTitle(l)}` + (drawn ? ' · neu gezogene Box (gestrichelt: Box aus den Daten)' : ''),
+    note: `${SRC_DE[l.src]}: ${labelTitle(l)}` + (drawn ? ' · redrawn box (dashed: the box from the data)' : ''),
     colour: drawn ? '30d158' : COLOUR[l.src] || 'ff3b30', zoom: '1', label: l.key });
   if (drawn) p.set('area', l.box.join(','));
   else if (weak(l)) p.set('style', 'dashed');
@@ -467,7 +474,7 @@ function viewerUrl(l, drawn) {  // mit einer neu gezogenen Box: diese grün, die
 }
 const siteUrl = l => l.src === 'hit' ? './#work=' + encodeURIComponent(l.w) : './#label=' + encodeURIComponent(l.key);
 
-// ---------------------------------------------------------------- Vorausfüllen
+// ---------------------------------------------------------------- Prefill
 const gridOf = (v, h) => v === 'm' && h === 'm' ? 'm.' : v === 'm' ? `m. ${h}.` : `${v}. ${h}.`;
 const NOT_POS = /(?<![a-zäöüß])o\.\s?[ad]\./gi;  // «o. A.», «o. D.»
 function positionsIn(text) {  // «o. m., r. m. und l. m. Zierrahmen» -> ['o. m.', 'm. r.', 'm. l.']
@@ -479,19 +486,19 @@ function positionsIn(text) {  // «o. m., r. m. und l. m. Zierrahmen» -> ['o. m
   }
   return out;
 }
-function lageGrid(s) {  // «oben links», «Mitte» (Register)
+function lageGrid(s) {  // grid cell from the register's position words («oben links», «Mitte»)
   s = (s || '').toLowerCase();
   if (!/oben|unten|links|rechts|mitte/.test(s)) return '';
   return gridOf(/oben/.test(s) ? 'o' : /unten/.test(s) ? 'u' : 'm', /links/.test(s) ? 'l' : /rechts/.test(s) ? 'r' : 'm');
 }
-function boxGrid(l) {  // Drittel des Rückseitenfotos, in dem die Mitte der Box liegt
+function boxGrid(l) {  // the third of the back photo in which the centre of the box lies
   const d = DIM[l.iiif];
   if (!d) return '';
   const cx = (l.box[0] + l.box[2] / 2) / d[0], cy = (l.box[1] + l.box[3] / 2) / d[1];
   return gridOf(cy < 1 / 3 ? 'o' : cy > 2 / 3 ? 'u' : 'm', cx < 1 / 3 ? 'l' : cx > 2 / 3 ? 'r' : 'm');
 }
 const TRAEGER = () => [...$('#traeger').options].map(o => o.value).filter(Boolean);
-function traegerOf(text) {  // der Träger aus «o. m., r. m. und l. m. Zierrahmen»; ein Wort der Daten, das die Liste nicht hat, wird übernommen
+function traegerOf(text) {  // the support from «o. m., r. m. und l. m. Zierrahmen»; a word from the data that the list lacks is taken over
   const s = (text || '').replace(NOT_POS, ' ')
     .replace(/(?:(?<![a-zäöüß])[oumlr]\.\s*(?:[oumlr]\.)?[\s,]*(?:(?:und|sowie)\s+)?)+/gi, ' ')
     .replace(/\s+/g, ' ').trim().replace(/^(?:(?:und|sowie)\s+)?(?:(?:auf|am|an|im|in)\s+)?(?:(?:dem|der|den|des)\s+)?/i, '')
@@ -505,7 +512,7 @@ function quotesIn(text) {
   for (const m of (text || '').matchAll(/[«“„"]([^«»“”„"]+)[»”“"]/g)) { const q = m[1].trim(); if (q && !out.includes(q)) out.push(q); }
   return out;
 }
-function formOf(desc, kind, cat) {  // Form aus der Beschreibung (Vorschlag)
+function formOf(desc, kind, cat) {  // shape from the description (suggestion)
   const s = (desc || '').toLowerCase(), first = s.split(/[\s,:;]+/).slice(0, 3).join(' '), c = (cat || '').toLowerCase();
   if (/siegel/.test(first) || kind === 'seal') return '';
   if (/malerband|klebstreifen/.test(s) || /klebstreifen/.test(c)) return 'Klebstreifen (Malerband)';
@@ -523,7 +530,7 @@ function formOf(desc, kind, cat) {  // Form aus der Beschreibung (Vorschlag)
   if (/viereckig|rechteckig/.test(s) || /viereckig/.test(c)) return 'Klebeetikett, viereckig';
   return '';
 }
-function colourOf(text) {  // Farbe des Etiketts aus der Beschreibung (Vorschlag)
+function colourOf(text) {  // colour of the label from the description (suggestion)
   const s = (text || '').toLowerCase(), weiss = /weiss|weiß/.test(s);
   if (/blau\w*\s+(umrandung|rand|bordüre)|blau umrandet|weiss-blau/.test(s) && weiss) return 'weiss mit blauer Umrandung';
   if (/rot\w*\s+(umrandung|rand|bordüre)|rot umrandet/.test(s) && weiss) return 'weiss mit roter Umrandung';
@@ -533,7 +540,7 @@ function colourOf(text) {  // Farbe des Etiketts aus der Beschreibung (Vorschlag
   if (/(?<![a-zäöü])blaue[sn]?\s+(klebe)?etikett|(^|,\s*)blau(\s*,|\s*$)/.test(s)) return 'blau';
   return weiss ? 'weiss' : '';
 }
-function techOf(text, kind) {  // Aufschrift ist … (Vorschlag)
+function techOf(text, kind) {  // how the lettering was made (suggestion)
   const s = (text || '').toLowerCase(), out = [];
   if (/gedruckt|bedruckt|druckschrift|aufdruck/.test(s)) out.push('gedruckt');
   if (/gestempelt|stempel/.test(s) || kind === 'stamp') out.push('gestempelt');
@@ -546,7 +553,7 @@ const QUAL = '(?:(?<![a-zäöüß])(?:wohl|vermutlich|verm\\.|frühestens|späte
 const DATE = new RegExp(QUAL + '(?:(?<!\\d)\\d{1,2}\\.?\\s*(?:[–-]\\s*\\d{1,2}\\.?\\s*)?' + MONTH + '|(?<![a-zäöü])' + MONTH +
   '(?![a-zäöü])|(?<!\\d)\\d{1,2}\\.\\d{1,2}\\.|(?<!\\d)(?:1[5-9]|20)\\d\\d(?!\\d))', 'i');
 const YEARS = /(?<!\d)(?:1[5-9]|20)\d\d(?!\d)/g;
-function parseEvent(text, issuerType) {  // «Auktion 69 10.-19. November 1988 (Lot 6613)» -> Typ, Bezeichnung, Datum, Lot
+function parseEvent(text, issuerType) {  // «Auktion 69 10.-19. November 1988 (Lot 6613)» -> type, name, date, lot
   const out = { evtyp: '', evbez: '', datum: '', od: false, lot: '' };
   let s = (text || '').replace(/\s+/g, ' ').trim();
   const lot = s.match(/[,;]?\s*\(?(?<![a-zäöü])Lot(?:nummer|-Nr\.?)?\s*:?\s*(\d+\s?[A-Za-z]?)(?![a-zäöü\d])\)?\.?/i);
@@ -569,21 +576,21 @@ function parseEvent(text, issuerType) {  // «Auktion 69 10.-19. November 1988 (
   return out;
 }
 const issuerOf = s => (s || '').replace(/^(?:Etikett(?:e|en)?|Ausstellungsetikett)\s+(?:(?:der|des)\s+)?/i, '').replace(/[\s,;:]+$/, '');  // «Etiketten der Galerie X,» -> «Galerie X»
-function exhibitionParts(s) {  // «Titel (Ort, Stadt, 2014)»
+function exhibitionParts(s) {  // «Title (venue, city, 2014)»
   const m = s.match(/^(.*)\s\(([^()]*)\)\s*$/);
   if (!m) return { title: s, venue: '', year: '' };
   const parts = m[2].split(', '), last = parts[parts.length - 1];
   const year = /^\d{4}$/.test(last) ? parts.pop() : (last === '?' ? (parts.pop(), '') : '');
   return { title: m[1].trim(), venue: parts.join(', ').replace(/^\?$/, ''), year };
 }
-function top(list, text, name = x => x) {  // häufigster Wert; zuerst einer, dessen Name auf dem Etikett steht
+function top(list, text, name = x => x) {  // most frequent value; first one whose name is written on the label
   const c = new Map(); list.forEach(x => c.set(x, (c.get(x) || 0) + 1));
   const named = x => ((name(x) || '').toLowerCase().match(/[a-zäöüéèàç]{5,}/g) || []).some(w => (text || '').includes(w)) ? 1 : 0;
   let best = ['', 0, -1];
   c.forEach((n, x) => { const m = named(x); if (m > best[2] || (m === best[2] && n > best[1])) best = [x, n, m]; });
   return best;
 }
-function hitsOf(l) {  // vorwärts: diese Etikette auf anderen Werken; rückwärts: diese Box ist ein Treffer einer anderen Etikette
+function hitsOf(l) {  // forward: this label on other works; backward: this box is a hit of another label
   return { fwd: (l.hits || []).map(i => D.hits[i]), rev: D.hits.filter(h => h.key === l.key) };
 }
 
@@ -591,98 +598,98 @@ function prefill(l) {
   const v = {}, s = {}, notes = { F: [], G: [], HJ: [], KL: [] };
   const put = (n, val, k, t, d) => {
     if (!filled(val) || n in v) return;
-    if (FIELDS[n] === 'radio' && !$$(GROUP[n] + ' input').some(i => i.value === val)) return;  // nur Werte, die es zur Auswahl gibt
+    if (FIELDS[n] === 'radio' && !$$(GROUP[n] + ' input').some(i => i.value === val)) return;  // only values the choice offers
     v[n] = val; s[n] = { k, t, d };
   };
   const w = WORK[l.w], { fwd, rev } = hitsOf(l), q = l.src === 'hit' ? LAB_ID[l.hit.q] : null;
   const qinv = q ? invOf(q.w) : '';
 
-  // F: Transkription; Form, Farbe und Aufschrift aus der Beschreibung (Vorschläge)
+  // F: transcription; shape, colour and lettering from the description (suggestions)
   if (l.src === 'data sheet') {
-    if (l.q) put('trans', l.q.split(' | ').join(' / '), 'data', 'Datenblatt', `Datenblatt: «${l.q.split(' | ').join('», «')}»`);
-    notes.F.push(`Datenblatt (${typeDe(l.type)}): ${l.d}`);
+    if (l.q) put('trans', l.q.split(' | ').join(' / '), 'data', 'Data sheet', `Data sheet: «${l.q.split(' | ').join('», «')}»`);
+    notes.F.push(`Data sheet (${typeDe(l.type)}): ${l.d}`);
   } else if (l.src === 'register') {
     const qs = quotesIn(l.d);
-    if (qs.length) put('trans', qs.join(' / '), 'data', 'Register', `Register, Spalte F: ${l.d}`);
-    notes.F.push(`Register, Spalte F: ${l.d}` + (l.type ? ` (Kategorie: ${l.type})` : ''));
+    if (qs.length) put('trans', qs.join(' / '), 'data', 'Register', `Register, column F: ${l.d}`);
+    notes.F.push(`Register, column F: ${l.d}` + (l.type ? ` (category: ${l.type})` : ''));
   } else if (l.src === 'photo' && l.t && l.t !== l.sub) {
-    put('trans', l.t.split(' · ').join(' / '), 'sug', 'Texterkennung', `Von der Texterkennung (OCR) gelesen, nur die Zeilen mit den meisten Buchstaben: ${l.t}`);
-    notes.F.push(`Texterkennung (OCR) auf dem Rückseitenfoto, unvollständig: ${l.t}. Das Detailfoto oben ist meist besser lesbar.`);
+    put('trans', l.t.split(' · ').join(' / '), 'sug', 'OCR', `Read by text recognition (OCR), only the lines with the most letters: ${l.t}`);
+    notes.F.push(`Text recognition (OCR) on the back photo, incomplete: ${l.t}. The detail photo above is usually easier to read.`);
   } else if (l.src === 'detected' && l.d) {
-    put('trans', l.d.split(' | ').join(' / '), 'sug', 'Texterkennung', `Von der Texterkennung (OCR) auf dem Rückseitenfoto gelesen, ungeprüft: ${l.d}`);
-    notes.F.push(`Texterkennung (OCR) auf dem Rückseitenfoto, ungeprüft und oft unvollständig: ${l.d}`);
-  } else if (q) notes.F.push(`Gleiche Etikette auf Inv. ${qinv}: ${labelTitle(q)}${q.d ? ' – ' + q.d : ''}`);
-  const base = q || l, desc = base.src === 'detected' ? '' : base.d || '', cat = base.src === 'register' ? base.type : '';  // beim Detektor ist d gelesener Text, keine Beschreibung
+    put('trans', l.d.split(' | ').join(' / '), 'sug', 'OCR', `Read by text recognition (OCR) on the back photo, unverified: ${l.d}`);
+    notes.F.push(`Text recognition (OCR) on the back photo, unverified and often incomplete: ${l.d}`);
+  } else if (q) notes.F.push(`Same label on Inv. ${qinv}: ${labelTitle(q)}${q.d ? ' – ' + q.d : ''}`);
+  const base = q || l, desc = base.src === 'detected' ? '' : base.d || '', cat = base.src === 'register' ? base.type : '';  // for the detector, d is text read on the back, not a description
   const kind = base.src === 'data sheet' ? (base.type || '').split(', ')[0] : '';
   if (desc || cat) {
-    const why = (q ? `Abgeleitet aus der Beschreibung der gleichen Etikette auf Inv. ${qinv}: ` : 'Abgeleitet aus der Beschreibung: ') + (desc || cat);
+    const why = (q ? `Derived from the description of the same label on Inv. ${qinv}: ` : 'Derived from the description: ') + (desc || cat);
     const form = formOf(desc, kind, cat);
-    put('form', form, 'sug', 'Vorschlag', why);
-    if (!/^(Stempel|Beschriftung)/.test(form) && (!kind || kind === 'label')) put('farbe', colourOf(desc) || colourOf(cat), 'sug', 'Vorschlag', why);
-    put('tech', techOf(desc, kind), 'sug', 'Vorschlag', why);
+    put('form', form, 'sug', 'Suggestion', why);
+    if (!/^(Stempel|Beschriftung)/.test(form) && (!kind || kind === 'label')) put('farbe', colourOf(desc) || colourOf(cat), 'sug', 'Suggestion', why);
+    put('tech', techOf(desc, kind), 'sug', 'Suggestion', why);
   }
 
-  // G: Lage, Träger, Seite
-  const fromBox = boxGrid(l), look = ' Lage so angegeben, wie man auf die Rückseite schaut (wie in Register und Datenblättern).';
+  // G: position, support, side
+  const fromBox = boxGrid(l), look = ' Position given as seen when looking at the back (as in the register and the data sheets).';
   if (l.src === 'data sheet') {
     const named = positionsIn(l.pos), g = named.includes(fromBox) ? fromBox : named[0];
-    if (g) put('pos', g, 'data', 'Datenblatt', `Datenblatt: ${l.pos}` + (named.length > 1 ? ` (mehrere Stellen; gewählt: ${g}${g === fromBox ? ', dort liegt die Box' : ''})` : ''));
-    put('traeger', traegerOf(l.pos), 'data', 'Datenblatt', `Datenblatt: ${l.pos}`);
-    notes.G.push(`Datenblatt: ${l.pos}.` + (named.length > 1 ? ' Mehrere Stellen genannt; gewählt ist die, wo die Box liegt, sonst die erste.' : ''));
+    if (g) put('pos', g, 'data', 'Data sheet', `Data sheet: ${l.pos}` + (named.length > 1 ? ` (several places; chosen: ${g}${g === fromBox ? ', where the box is' : ''})` : ''));
+    put('traeger', traegerOf(l.pos), 'data', 'Data sheet', `Data sheet: ${l.pos}`);
+    notes.G.push(`Data sheet: ${l.pos}.` + (named.length > 1 ? ' Several places named; chosen is the one where the box is, otherwise the first.' : ''));
   } else if (l.src === 'register') {
     const g = lageGrid(l.lage) || positionsIn(l.pos)[0];
-    if (g) put('pos', g, 'data', 'Register', `Register, Spalte G: ${l.pos}` + (l.lage ? ` (Lage: ${l.lage})` : ''));
-    put('traeger', traegerOf(l.tr), 'data', 'Register', `Register, Spalte G: ${l.pos}` + (l.tr ? ` (Träger: ${l.tr})` : ''));
-    notes.G.push(`Register, Spalte G: ${l.pos}` + (l.lage ? ` · Lage: ${l.lage}` : '') + (l.tr ? ` · Träger: ${l.tr}` : '') + '.');
+    if (g) put('pos', g, 'data', 'Register', `Register, column G: ${l.pos}` + (l.lage ? ` (position: ${l.lage})` : ''));
+    put('traeger', traegerOf(l.tr), 'data', 'Register', `Register, column G: ${l.pos}` + (l.tr ? ` (support: ${l.tr})` : ''));
+    notes.G.push(`Register, column G: ${l.pos}` + (l.lage ? ` · position: ${l.lage}` : '') + (l.tr ? ` · support: ${l.tr}` : '') + '.');
   }
   if (!v.pos && fromBox) {
-    put('pos', fromBox, 'sug', 'Lage der Box', 'Aus der Lage der Box auf dem Rückseitenfoto berechnet (Drittel des Bildes)');
-    notes.G.push('Lage aus der Box auf dem Rückseitenfoto berechnet (Drittel des Bildes)' + (v.traeger ? '.' : '; den Träger bitte ergänzen.'));
+    put('pos', fromBox, 'sug', 'Box position', 'Computed from where the box sits on the back photo (thirds of the image)');
+    notes.G.push('Position computed from the box on the back photo (thirds of the image)' + (v.traeger ? '.' : '; please add the support.'));
   }
   if (v.pos) notes.G.push(look.trim());
-  put('seite', 'verso', 'data', 'Rückseite', 'Die Box liegt auf einem Foto der Rückseite');
+  put('seite', 'verso', 'data', 'Back', 'The box is on a photo of the back');
 
-  // H bis J: Person / Körperschaft, Ereignis, Evidenz
+  // H to J: person / organisation, event, evidence
   if (l.src === 'register') {
-    put('person', issuerOf(l.iss), 'data', 'Register', `Register, Spalte H: ${l.iss}`);
-    const e = parseEvent(l.sub, l.at), d = `Register, Spalte I: ${l.sub}` + (l.at ? ` (Art des Ausstellers: ${l.at})` : '');
+    put('person', issuerOf(l.iss), 'data', 'Register', `Register, column H: ${l.iss}`);
+    const e = parseEvent(l.sub, l.at), d = `Register, column I: ${l.sub}` + (l.at ? ` (type of issuer: ${l.at})` : '');
     ['evtyp', 'evbez', 'datum', 'od', 'lot'].forEach(n => put(n, e[n], 'data', 'Register', d));
-    put('evid', l.evid, 'data', 'Register', `Register, Spalte J: ${l.evid}`);
-    notes.HJ.push(`Register, Spalten H bis J: ${[l.iss, l.sub, l.evid].filter(Boolean).join(' · ')}`);
+    put('evid', l.evid, 'data', 'Register', `Register, column J: ${l.evid}`);
+    notes.HJ.push(`Register, columns H to J: ${[l.iss, l.sub, l.evid].filter(Boolean).join(' · ')}`);
   }
   if (l.src === 'detected') {
-    if (l.iss) put('person', l.iss, 'sug', 'Vorschlag', `Aus dem gelesenen Text vermutet (Etikettendetektor): ${l.iss}`);
+    if (l.iss) put('person', l.iss, 'sug', 'Suggestion', `Guessed from the text read (label detector): ${l.iss}`);
     const evs = [...new Set((l.type || '').split('; ').map(x => EV_DE[x]).filter(Boolean))];
-    if (evs.length === 1) put('evtyp', evs[0], 'sug', 'Vorschlag', `Art des Etiketts aus dem gelesenen Text vermutet: ${l.type}`);
-    notes.HJ.push('Etikettendetektor: ' + ([l.iss && `Aussteller vermutet: ${l.iss}`, l.type && `Art vermutet: ${l.type}`].filter(Boolean).join(' · ') || 'nichts aus dem Text abgeleitet') + '. Nur Vermutungen aus dem gelesenen Text.');
+    if (evs.length === 1) put('evtyp', evs[0], 'sug', 'Suggestion', `Kind of label guessed from the text read: ${l.type}`);
+    notes.HJ.push('Label detector: ' + ([l.iss && `issuer guessed: ${l.iss}`, l.type && `kind guessed: ${l.type}`].filter(Boolean).join(' · ') || 'nothing derived from the text') + '. Only guesses from the text read.');
   }
   if (q && q.src === 'register' && q.iss) {
-    put('person', issuerOf(q.iss), 'sug', 'Vorschlag', `Aussteller der gleichen Etikette auf Inv. ${qinv} laut Register: ${q.iss}`);
-    notes.HJ.push(`Gleiche Etikette auf Inv. ${qinv}, laut Register: ${[q.iss, q.sub].filter(Boolean).join(' · ')}`);
+    put('person', issuerOf(q.iss), 'sug', 'Suggestion', `Issuer of the same label on Inv. ${qinv} according to the register: ${q.iss}`);
+    notes.HJ.push(`Same label on Inv. ${qinv}, according to the register: ${[q.iss, q.sub].filter(Boolean).join(' · ')}`);
   }
-  // wiedergefundene Etiketten: die gemeinsame Ausstellung oder der gleiche Verkäufer an SKKG als Vorschlag. Vorrang hat,
-  // was auf der Etikette steht (Ort der Ausstellung, Name des Verkäufers); steht keines darauf, die Ausstellung
-  const pairs = [...fwd, ...rev];  // Paare von Werken mit der gleichen Etikette und ihre Belege in den Akten
-  const said = [l.t, l.q, l.d, q && q.t, q && q.q, q && q.d].filter(Boolean).join(' ').toLowerCase();  // was auf der Etikette steht
+  // labels found again: the shared exhibition or the same seller to SKKG as a suggestion. What is written on the label
+  // comes first (venue of the exhibition, name of the seller); if neither is, the exhibition
+  const pairs = [...fwd, ...rev];  // pairs of works with the same label and their evidence in the records
+  const said = [l.t, l.q, l.d, q && q.t, q && q.q, q && q.d].filter(Boolean).join(' ').toLowerCase();  // what is written on the label
   const [seller, ns, sellerSaid] = top(pairs.map(h => h.ev.seller).filter(Boolean), said);
   const [ex, ne, exSaid] = top(pairs.flatMap(h => (h.ev.exhibition || '').split(' | ')).filter(Boolean), said, x => exhibitionParts(x).venue);
   const useSeller = !!seller && ((sellerSaid > 0 && exSaid <= 0) || !ex);
   const skipped = [];
   if (ex && !useSeller && !v.evtyp && !v.evbez) {
-    const e = exhibitionParts(ex), d = `Gemeinsame Ausstellung mit ${ne} Werk(en) mit der gleichen Etikette: ${ex}`;
-    put('evtyp', 'Ausstellung', 'sug', 'Vorschlag', d);
-    put('evbez', [e.title, e.venue].filter(Boolean).join(', '), 'sug', 'Vorschlag', d);
-    put('datum', e.year, 'sug', 'Vorschlag', d);
-    if (exSaid > 0 && e.venue) put('person', e.venue, 'sug', 'Vorschlag', `Ort der Ausstellung; er steht auch auf der Etikette: ${e.venue}`);
-    notes.HJ.push(`Vorschlag aus der Bildsuche: ${ne === 1 ? 'ein Werk mit der gleichen Etikette war' : ne + ' Werke mit der gleichen Etikette waren'} mit diesem Werk an der Ausstellung «${ex}»` + (exSaid > 0 ? '; ihr Ort steht auch auf der Etikette.' : '.'));
-  } else if (ex) skipped.push(`gemeinsame Ausstellung «${ex}»`);
+    const e = exhibitionParts(ex), d = `Shared exhibition with ${ne} work(s) with the same label: ${ex}`;
+    put('evtyp', 'Ausstellung', 'sug', 'Suggestion', d);
+    put('evbez', [e.title, e.venue].filter(Boolean).join(', '), 'sug', 'Suggestion', d);
+    put('datum', e.year, 'sug', 'Suggestion', d);
+    if (exSaid > 0 && e.venue) put('person', e.venue, 'sug', 'Suggestion', `Venue of the exhibition; it is also written on the label: ${e.venue}`);
+    notes.HJ.push(`Suggestion from the image search: ${ne === 1 ? 'a work with the same label was' : ne + ' works with the same label were'} in the exhibition «${ex}» with this work` + (exSaid > 0 ? '; its venue is also written on the label.' : '.'));
+  } else if (ex) skipped.push(`shared exhibition «${ex}»`);
   if (useSeller && !v.person) {
-    put('person', seller.replace(/\s*\([^()]*\d{4}[^()]*\)$/, ''), 'sug', 'Vorschlag', `Gleicher Verkäufer an SKKG wie bei ${ns} Werk(en) mit der gleichen Etikette: ${seller}`);
-    notes.HJ.push(`Vorschlag aus der Bildsuche: SKKG kaufte ${ns === 1 ? 'das Werk' : ns + ' Werke'} mit der gleichen Etikette beim gleichen Verkäufer (${seller}).`);
-  } else if (seller) skipped.push(`gleicher Verkäufer an SKKG (${seller})`);
-  if (skipped.length) notes.HJ.push(`Ebenfalls in den Akten, aber nicht vorgeschlagen: ${skipped.join('; ')}.`);
+    put('person', seller.replace(/\s*\([^()]*\d{4}[^()]*\)$/, ''), 'sug', 'Suggestion', `Same seller to SKKG as for ${ns} work(s) with the same label: ${seller}`);
+    notes.HJ.push(`Suggestion from the image search: SKKG bought ${ns === 1 ? 'the work' : ns + ' works'} with the same label from the same seller (${seller}).`);
+  } else if (seller) skipped.push(`same seller to SKKG (${seller})`);
+  if (skipped.length) notes.HJ.push(`Also in the records, but not suggested: ${skipped.join('; ')}.`);
 
-  // K: weitere Werke mit dieser Etikette; L: wie die Box gefunden wurde
+  // K: other works with this label; L: how the box was found
   const others = new Map();
   (l.kw || []).forEach(x => others.set(x, 'Register'));
   fwd.forEach(h => others.set(invOf(h.w), 'Bildsuche'));
@@ -691,19 +698,19 @@ function prefill(l) {
   if (others.size) {
     const list = [...others.keys()].sort((a, b) => a.localeCompare(b, 'de', { numeric: true }));
     const reg = [...others.values()].every(x => x === 'Register');
-    put('tags', list, reg ? 'data' : 'sug', reg ? 'Register' : 'Bildsuche', reg ? `Register, Spalte K: ${l.kw.join(', ')}`
-      : 'Die Bildsuche fand dieselbe Etikette auf diesen Werken (Hinweise, keine Beweise)' + (l.kw ? `; Register, Spalte K: ${l.kw.join(', ')}` : ''));
-    notes.KL.push((reg ? 'Register, Spalte K' : 'Bildsuche (wiedergefunden)') + `: Inv. ${list.join(', ')}`);
+    put('tags', list, reg ? 'data' : 'sug', reg ? 'Register' : 'Image search', reg ? `Register, column K: ${l.kw.join(', ')}`
+      : 'The image search found the same label on these works (leads, not proof)' + (l.kw ? `; Register, column K: ${l.kw.join(', ')}` : ''));
+    notes.KL.push((reg ? 'Register, column K' : 'Image search (found again)') + `: Inv. ${list.join(', ')}`);
   }
   const parts = [howSentence(l)];
-  if (l.src === 'hit') parts.push(Object.keys(l.hit.ev).length ? `Beleg in den Akten: ${evText(l.hit.ev)}.` : 'Noch kein Beleg in den Akten.');
-  else if (rev.length) parts.push(`Dieselbe Etikette wie auf Inv. ${[...new Set(rev.map(h => invOf(LAB_ID[h.q].w)))].join(', ')} (Bildsuche).`);
-  put('komm', parts.join(' '), 'data', 'Box', 'Wie die Box gefunden wurde (Provenance Pursuit, GLAMhack 2026)');
-  if (l.lc) notes.KL.push('Im Register steht in Spalte L schon ein Kommentar; er wird hier nicht gezeigt, weil er Personennamen enthalten kann. Beim Einfügen den bestehenden Kommentar behalten und ergänzen.');
+  if (l.src === 'hit') parts.push(Object.keys(l.hit.ev).length ? `Evidence in the records: ${evText(l.hit.ev)}.` : 'No evidence in the records yet.');
+  else if (rev.length) parts.push(`The same label as on Inv. ${[...new Set(rev.map(h => invOf(LAB_ID[h.q].w)))].join(', ')} (image search).`);
+  put('komm', parts.join(' '), 'data', 'Box', 'How the box was found (Provenance Pursuit, GLAMhack 2026)');
+  if (l.lc) notes.KL.push('The register already has a comment in column L; it is not shown here because it can contain names of persons. When pasting, keep the existing comment and add to it.');
   return { v, s, notes };
 }
 
-// ---------------------------------------------------------------- Anzeige
+// ---------------------------------------------------------------- Display
 function find(k) {
   if (!k) return null;
   if (LAB_KEY[k]) return LAB_KEY[k];
@@ -712,28 +719,28 @@ function find(k) {
 }
 function header() {
   if (!key) {
-    $('#wt').textContent = 'Kein Etikett gewählt';
-    $('#ws').textContent = 'Auf der Ergebnis-Website ein Etikett öffnen oder eine Box anklicken: dann ist das Formular vorausgefüllt und die Angaben werden gespeichert.';
+    $('#wt').textContent = 'No label selected';
+    $('#ws').textContent = 'Open a label on the results website or click a box: the form is then prefilled and your entries are saved.';
     return;
   }
   if (!L) {
     const m = (entries[key] || {}).m;
-    $('#wt').textContent = m ? `Inv. ${m.inv} · ${m.t || ''}` : 'Etikett nicht gefunden';
-    $('#ws').textContent = `Das Etikett «${key}» ist in den aktuellen Daten nicht enthalten.` + (m ? ' Die gespeicherten Angaben werden gezeigt.' : '');
+    $('#wt').textContent = m ? `Inv. ${m.inv} · ${m.t || ''}` : 'Label not found';
+    $('#ws').textContent = `The label «${key}» is not in the current data.` + (m ? ' The saved entries are shown.' : '');
     return;
   }
   const w = WORK[L.w], view = viewerUrl(L, BX.drawn), b = curBox();
-  document.title = `Etikett erfassen · Inv. ${w.inv} – Provenance Pursuit`;
+  document.title = `Record a label · Inv. ${w.inv} – Provenance Pursuit`;
   $('#wt').textContent = `Inv. ${w.inv} · ${w.title}`;
-  $('#ws').textContent = `${w.type} · Werk (Spalten A–E), nur lesbar · ${SRC_DE[L.src]}: ${labelTitle(L)}`;
+  $('#ws').textContent = `${w.type} · work (columns A–E), read-only · ${SRC_DE[L.src]}: ${labelTitle(L)}`;
   const ph = $('#ph');
-  Object.assign(ph, { href: view, target: '_blank', rel: 'noopener', title: 'Ganze Rückseite mit der Box, zoombar' });
+  Object.assign(ph, { href: view, target: '_blank', rel: 'noopener', title: 'Whole back with the box, zoomable' });
   ph.className = 'ph img';
-  ph.innerHTML = `<img alt="Ausschnitt aus dem Rückseitenfoto: ${esc(labelTitle(L))}" src="${esc(region(L.iiif, b, 900))}">`;
-  $('#wl').innerHTML = [`<a href="${esc(view)}" target="_blank" rel="noopener">Ganze Rückseite (zoombar)</a>`,
-    `<a href="${esc(`${L.iiif}/${b.join(',')}/max/0/default.jpg`)}" target="_blank" rel="noopener">Etikett in voller Auflösung (IIIF)</a>`,
-    w.url && `<a href="${esc(w.url)}" target="_blank" rel="noopener">SKKG Sammlung</a>`,
-    `<a href="${esc(siteUrl(L))}">Auf der Website</a>`].filter(Boolean).join(' · ');
+  ph.innerHTML = `<img alt="Detail of the back photo: ${esc(labelTitle(L))}" src="${esc(region(L.iiif, b, 900))}">`;
+  $('#wl').innerHTML = [`<a href="${esc(view)}" target="_blank" rel="noopener">Whole back (zoomable)</a>`,
+    `<a href="${esc(`${L.iiif}/${b.join(',')}/max/0/default.jpg`)}" target="_blank" rel="noopener">Label in full resolution (IIIF)</a>`,
+    w.url && `<a href="${esc(w.url)}" target="_blank" rel="noopener">SKKG collection</a>`,
+    `<a href="${esc(siteUrl(L))}">On the website</a>`].filter(Boolean).join(' · ');
 }
 function known() {
   if (!L) return;
@@ -745,33 +752,33 @@ function known() {
   $('#kback').href = viewerUrl(L, BX.drawn);
   if (L.photo) {
     $('#kpic').hidden = false;
-    $('#kpic').innerHTML = `<a href="${esc(full(L.photo, 2400))}" target="_blank" rel="noopener" title="Detailfoto der SKKG, gross"><img loading="lazy" alt="Detailfoto der Etikette (SKKG)" src="${esc(full(L.photo, 800))}"></a><div class="hint">Detailfoto der SKKG; anklicken für die grosse Ansicht.</div>`;
+    $('#kpic').innerHTML = `<a href="${esc(full(L.photo, 2400))}" target="_blank" rel="noopener" title="SKKG's detail photo, large"><img loading="lazy" alt="Detail photo of the label (SKKG)" src="${esc(full(L.photo, 800))}"></a><div class="hint">SKKG's detail photo; click for the large view.</div>`;
   }
   const rows = [], { fwd, rev } = hitsOf(L);
-  if (L.src === 'register') rows.push(['Quelle', `Etikettenverzeichnis, Zeile ${esc(L.row)}` + (L.type ? ` · ${esc(L.type)}` : '')]);
-  else if (L.src === 'photo') rows.push(['Quelle', 'Detailfoto der Etikette (SKKG), auf dem Rückseitenfoto wiedergefunden']);
-  else if (L.src === 'data sheet') rows.push(['Quelle', `Provenienzdatenblatt · ${esc(typeDe(L.type))} · ${esc(L.pos)}`]);
-  else if (L.src === 'detected') rows.push(['Quelle', 'Etikettendetektor: neu gefundenes Etikett, in keinem Register und keinem Datenblatt verzeichnet'
-    + (L.type ? ` · Art vermutet: ${esc(L.type)}` : '') + (L.iss ? ` · Aussteller vermutet: ${esc(L.iss)}` : '')], ...(L.d ? [['Gelesener Text', esc(L.d)]] : []));
-  else { const q = LAB_ID[L.hit.q]; rows.push(['Quelle', `Bildsuche: dieselbe Etikette wie auf <a href="${esc(formUrl(q.key))}">Inv. ${esc(invOf(q.w))} · ${esc(labelTitle(q))}</a>`], ['Beleg', esc(evText(L.hit.ev))]); }
-  rows.push(['Box', esc(howShort(L)) + (L.ok ? '' : ' <span class="check">prüfen</span>')]);
+  if (L.src === 'register') rows.push(['Source', `Label register, row ${esc(L.row)}` + (L.type ? ` · ${esc(L.type)}` : '')]);
+  else if (L.src === 'photo') rows.push(['Source', 'Detail photo of the label (SKKG), found again on the back photo']);
+  else if (L.src === 'data sheet') rows.push(['Source', `Provenance data sheet · ${esc(typeDe(L.type))} · ${esc(L.pos)}`]);
+  else if (L.src === 'detected') rows.push(['Source', 'Label detector: newly found label, not recorded in the register or in any data sheet'
+    + (L.type ? ` · kind guessed: ${esc(L.type)}` : '') + (L.iss ? ` · issuer guessed: ${esc(L.iss)}` : '')], ...(L.d ? [['Text read', esc(L.d)]] : []));
+  else { const q = LAB_ID[L.hit.q]; rows.push(['Source', `Image search: the same label as on <a href="${esc(formUrl(q.key))}">Inv. ${esc(invOf(q.w))} · ${esc(labelTitle(q))}</a>`], ['Evidence', esc(evText(L.hit.ev))]); }
+  rows.push(['Box', esc(howShort(L)) + (L.ok ? '' : ' <span class="check">check</span>')]);
   const item = (href, text, extra) => `<li><a href="${esc(href)}">${esc(text)}</a> <span>(${esc(extra)})</span></li>`;
-  const list = (items, max = 12) => `<ul>${items.slice(0, max).join('')}${items.length > max ? `<li><span>… und ${items.length - max} weitere</span></li>` : ''}</ul>`;
-  if (fwd.length) rows.push(['Wiedergefunden auf', list(fwd.map(h => item(formUrl(h.key), `Inv. ${invOf(h.w)} · ${WORK[h.w].title}`, `${points(h.n)}; ${evText(h.ev)}`)))]);
-  if (rev.length) rows.push(['Gleiche Etikette wie', list(rev.map(h => { const q = LAB_ID[h.q]; return item(formUrl(q.key), `Inv. ${invOf(q.w)} · ${labelTitle(q)}`, `${points(h.n)}; ${evText(h.ev)}`); }))]);
+  const list = (items, max = 12) => `<ul>${items.slice(0, max).join('')}${items.length > max ? `<li><span>… and ${items.length - max} more</span></li>` : ''}</ul>`;
+  if (fwd.length) rows.push(['Found again on', list(fwd.map(h => item(formUrl(h.key), `Inv. ${invOf(h.w)} · ${WORK[h.w].title}`, `${points(h.n)}; ${evText(h.ev)}`)))]);
+  if (rev.length) rows.push(['Same label as', list(rev.map(h => { const q = LAB_ID[h.q]; return item(formUrl(q.key), `Inv. ${invOf(q.w)} · ${labelTitle(q)}`, `${points(h.n)}; ${evText(h.ev)}`); }))]);
   $('#kdl').innerHTML = rows.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join('');
 }
-// ---------------------------------------------------------------- Box bestätigen / neu ziehen
+// ---------------------------------------------------------------- Confirm / redraw the box
 function renderBox() {
   $('#bx').hidden = !L;
   if (!L) return;
   const b = curBox();
   $('#bxok').setAttribute('aria-pressed', String(!!BX.ok));
-  $('#bxok').textContent = BX.ok ? '✓ Box bestätigt' : '✓ Box bestätigen';
-  $('#bxok').title = BX.ok ? 'Bestätigung zurücknehmen' : 'Die Box liegt richtig auf dem Etikett';
+  $('#bxok').textContent = BX.ok ? '✓ Box confirmed' : '✓ Confirm box';
+  $('#bxok').title = BX.ok ? 'Withdraw the confirmation' : 'The box sits correctly on the label';
   $('#bxorig').hidden = !BX.drawn;
-  $('#bxstate').textContent = BX.drawn ? `Neu gezogene Box${BX.ok ? ', bestätigt' : ''}: x ${b[0]}, y ${b[1]}, w ${b[2]}, h ${b[3]} (Pixel des Originalbilds).`
-    : BX.ok ? 'Die Box aus den Daten ist bestätigt.' : 'Box aus den Daten, noch nicht bestätigt: liegt sie richtig auf dem Etikett?';
+  $('#bxstate').textContent = BX.drawn ? `Redrawn box${BX.ok ? ', confirmed' : ''}: x ${b[0]}, y ${b[1]}, w ${b[2]}, h ${b[3]} (pixels of the original image).`
+    : BX.ok ? 'The box from the data is confirmed.' : 'Box from the data, not confirmed yet: does it sit correctly on the label?';
   const svg = $('#ksvg');
   let r = svg.querySelector('.kdrawn');
   if (BX.drawn) {
@@ -779,7 +786,7 @@ function renderBox() {
     [['x', b[0]], ['y', b[1]], ['width', b[2]], ['height', b[3]]].forEach(([k, v]) => r.setAttribute(k, v));
   } else if (r) r.remove();
   $('#kback').href = viewerUrl(L, BX.drawn);
-  header();  // Ausschnitt und Links folgen der aktuellen Box
+  header();  // the cut-out and the links follow the current box
 }
 function boxChanged(text) {
   undo = null;
@@ -787,9 +794,9 @@ function boxChanged(text) {
   if (key && D) save();
   if (text) $('#msg').textContent = text;
 }
-$('#bxok').addEventListener('click', () => { BX = { ...BX, ok: !BX.ok }; boxChanged(BX.ok ? 'Box bestätigt.' : 'Bestätigung zurückgenommen.'); });
-$('#bxorig').addEventListener('click', () => { BX = { ok: false, drawn: null }; boxChanged('Box aus den Daten wiederhergestellt.'); });
-// Zeichnen: die ganze Rückseite als eine IIIF-Ansicht (1000 px), neue Box ziehen, gespeichert in Pixeln des Originalbilds
+$('#bxok').addEventListener('click', () => { BX = { ...BX, ok: !BX.ok }; boxChanged(BX.ok ? 'Box confirmed.' : 'Confirmation withdrawn.'); });
+$('#bxorig').addEventListener('click', () => { BX = { ok: false, drawn: null }; boxChanged('Box from the data restored.'); });
+// Drawing: the whole back as one IIIF rendering (1000 px); drag a new box, saved in pixels of the original image
 const ed = $('#ed'), edimg = $('#edimg'), edwrap = $('#edwrap');
 let drag = null, drawnNew = null, edW = 1, edH = 1;
 const place = (el, b) => { el.style.left = b[0] / edW * 100 + '%'; el.style.top = b[1] / edH * 100 + '%';
@@ -823,9 +830,9 @@ edwrap.addEventListener('pointerup', () => {
   drag = null;
   const ok = drawnNew && drawnNew[2] > edW / 200 && drawnNew[3] > edH / 200;
   $('#edsave').disabled = !ok;
-  $('#edinfo').textContent = ok ? `x ${drawnNew[0]}, y ${drawnNew[1]}, w ${drawnNew[2]}, h ${drawnNew[3]} (Pixel des Originalbilds)` : 'Eine grössere Box ziehen.';
+  $('#edinfo').textContent = ok ? `x ${drawnNew[0]}, y ${drawnNew[1]}, w ${drawnNew[2]}, h ${drawnNew[3]} (pixels of the original image)` : 'Draw a larger box.';
 });
-$('#edsave').addEventListener('click', () => { ed.close(); BX = { ok: true, drawn: drawnNew }; boxChanged('Neue Box gespeichert und bestätigt.'); });
+$('#edsave').addEventListener('click', () => { ed.close(); BX = { ok: true, drawn: drawnNew }; boxChanged('New box saved and confirmed.'); });
 $('#edcancel').addEventListener('click', () => ed.close());
 $('#bxdraw').addEventListener('click', openEditor);
 
@@ -833,12 +840,12 @@ function notes() {
   [['F', '#srcF'], ['G', '#srcG'], ['HJ', '#srcHJ'], ['KL', '#srcKL']].forEach(([k, id]) => {
     const n = P.notes[k] || [];
     $(id).hidden = !n.length;
-    $(id).innerHTML = n.length ? 'Aus den Daten: ' + n.map(esc).join('<br>') : '';
+    $(id).innerHTML = n.length ? 'From the data: ' + n.map(esc).join('<br>') : '';
   });
   $('#legend').hidden = !Object.keys(P.s).length;
 }
 
-// ---------------------------------------------------------------- Speichern
+// ---------------------------------------------------------------- Saving
 const when = iso => { const d = new Date(iso); return isNaN(d) ? '' : d.toLocaleString('de-CH', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }); };
 function meta() {
   if (!L) return (entries[key] || {}).m || {};
@@ -848,7 +855,7 @@ function meta() {
 let timer = 0, touched = false;
 function changed() {
   render(); undo = null;
-  if (!D) { touched = true; return; }  // vor dem Laden der Daten Getipptes bleibt stehen
+  if (!D) { touched = true; return; }  // what was typed before the data loaded stays
   if (key) { clearTimeout(timer); timer = setTimeout(save, 400); }
 }
 function save() {
@@ -864,20 +871,20 @@ function save() {
 function savedLine(st) {
   const el = $('#saved'), en = entries[key];
   el.classList.remove('warn');
-  if (st === false) { el.innerHTML = '<span style="color:var(--red)">Dieser Browser speichert nicht (privates Fenster?): vor dem Verlassen der Seite als CSV herunterladen.</span>'; return; }
-  if (!key) { el.textContent = 'Ohne gewähltes Etikett wird nichts gespeichert.'; return; }
-  if (st === true) { el.textContent = `Gespeichert in diesem Browser, ${when(en.t)}.`; return; }
-  if (st === 'loaded' && en) { el.textContent = `Gespeicherte Angaben vom ${when(en.t)} geladen${en.r ? ' (' + en.r + ')' : ''}.`; return; }
-  el.textContent = 'Noch nicht gespeichert; jede Änderung wird gespeichert.';
+  if (st === false) { el.innerHTML = '<span style="color:var(--red)">This browser does not save (private window?): download the CSV before leaving the page.</span>'; return; }
+  if (!key) { el.textContent = 'Nothing is saved without a selected label.'; return; }
+  if (st === true) { el.textContent = `Saved in this browser, ${when(en.t)}.`; return; }
+  if (st === 'loaded' && en) { el.textContent = `Loaded the entries saved on ${when(en.t)}${en.r ? ' (' + en.r + ')' : ''}.`; return; }
+  el.textContent = 'Not saved yet; every change is saved.';
 }
 function renderList() {
   entries = loadEntries();
   const keys = Object.keys(entries).sort((a, b) => (entries[b].t || '').localeCompare(entries[a].t || ''));
-  $('#scount').textContent = keys.length ? `${keys.length} ${keys.length === 1 ? 'Etikett' : 'Etiketten'} in diesem Browser gespeichert (neueste zuerst).` : 'Noch keine Einträge in diesem Browser.';
+  $('#scount').textContent = keys.length ? `${keys.length} ${keys.length === 1 ? 'label' : 'labels'} saved in this browser (newest first).` : 'No entries in this browser yet.';
   $('#slist').innerHTML = keys.slice(0, 60).map(k => {
     const en = entries[k], m = en.m || {};
     return `<li${k === key ? ' class="here"' : ''}><a href="${esc(formUrl(k))}">Inv. ${esc(m.inv || '?')} · ${esc(m.t || k)}</a> <span>${esc(when(en.t))}${en.r ? ' · ' + esc(en.r) : ''}</span></li>`;
-  }).join('') + (keys.length > 60 ? `<li><span>… und ${keys.length - 60} weitere (alle in der CSV)</span></li>` : '');
+  }).join('') + (keys.length > 60 ? `<li><span>… and ${keys.length - 60} more (all in the CSV)</span></li>` : '');
   $('#export').disabled = !keys.length;
 }
 
@@ -890,7 +897,7 @@ const COLS = ['key', 'quelle', 'inv_nr', 'objekt_id', 'etikett', 'iiif_region', 
   'F_beschreibung', 'G_position', 'H_person_koerperschaft', 'I_ereignis', 'J_evidenz', 'K_weitere_werke', 'L_kommentar',
   ...NAMES.map(n => MAP[n]), 'aus_daten', 'geaendert', 'erfasst_von', 'zeit'];
 const boxOf = s => { const b = String(s || '').split(',').map(Number); return b.length === 4 && b.every(Number.isFinite) && b[2] > 0 && b[3] > 0 ? b : null; };
-const iiifOf = m => m.iiif || (m.region || '').replace(/\/[^/]+\/[^/]+\/[^/]+\/[^/]+$/, '');  // aus «…/x,y,w,h/max/0/default.jpg»
+const iiifOf = m => m.iiif || (m.region || '').replace(/\/[^/]+\/[^/]+\/[^/]+\/[^/]+$/, '');  // from «…/x,y,w,h/max/0/default.jpg»
 const origBox = m => m.box || boxOf(((m.region || '').match(/\/(\d+,\d+,\d+,\d+)\/[^/]+\/[^/]+\/[^/]+$/) || [])[1]);
 const toCell = (n, v) => FIELDS[n] === 'checks' ? (v || []).join(' / ') : FIELDS[n] === 'tags' ? (v || []).join(', ') : FIELDS[n] === 'check' ? (v ? 'ja' : '') : (v || '');
 const fromCell = (n, c) => FIELDS[n] === 'checks' ? c.split('/').map(x => x.trim()).filter(Boolean)
@@ -900,7 +907,7 @@ const smsg = (text, warn) => { $('#smsg').textContent = text; $('#smsg').classLi
 function exportCsv() {
   entries = loadEntries();
   const keys = Object.keys(entries).sort((a, b) => ((entries[a].m || {}).inv || '').localeCompare((entries[b].m || {}).inv || '', 'de', { numeric: true }) || a.localeCompare(b));
-  if (!keys.length) { smsg('Noch keine Einträge zum Herunterladen.'); return; }
+  if (!keys.length) { smsg('No entries to download yet.'); return; }
   const rows = [COLS];
   for (const k of keys) {
     const en = entries[k], v = { ...empty(), ...en.v }, m = en.m || {}, c = compute(v), bs = en.b || {};
@@ -921,7 +928,7 @@ function exportCsv() {
   a.download = `etiketten_erfassung_${who}_${new Date().toISOString().slice(0, 10)}.csv`;
   document.body.append(a); a.click(); a.remove();
   setTimeout(() => URL.revokeObjectURL(a.href), 2000);
-  smsg(`${keys.length} ${keys.length === 1 ? 'Eintrag' : 'Einträge'} als CSV heruntergeladen.`);
+  smsg(`${keys.length} ${keys.length === 1 ? 'entry' : 'entries'} downloaded as CSV.`);
 }
 function parseCsv(text, sep) {
   const rows = [];
@@ -939,12 +946,12 @@ function parseCsv(text, sep) {
 async function importCsv(f) {
   const buf = await f.arrayBuffer();
   let text = new TextDecoder('utf-8').decode(buf);
-  if (text.includes('�')) text = new TextDecoder('windows-1252').decode(buf);  // von Excel ohne UTF-8 gespeichert
+  if (text.includes('�')) text = new TextDecoder('windows-1252').decode(buf);  // saved by Excel without UTF-8
   text = text.replace(/^﻿/, '');
   const first = text.split(/\r?\n/, 1)[0];
   const sep = [';', '\t', ','].sort((a, b) => first.split(b).length - first.split(a).length)[0];
   const rows = parseCsv(text, sep), head = (rows.shift() || []).map(h => h.trim()), ix = n => head.indexOf(n);
-  if (ix('key') < 0 || !NAMES.some(n => ix(MAP[n]) >= 0)) { smsg(`${f.name}: keine Erfassungsdatei dieses Formulars (Spalten «key» und Feldspalten fehlen).`, true); return; }
+  if (ix('key') < 0 || !NAMES.some(n => ix(MAP[n]) >= 0)) { smsg(`${f.name}: not an entry file of this form (the column «key» and the field columns are missing).`, true); return; }
   const cell = (r, n) => (ix(n) >= 0 ? r[ix(n)] || '' : '').trim();
   const fields = s => s.split(',').map(x => BACK[x.trim()]).filter(Boolean);
   entries = loadEntries();
@@ -959,7 +966,7 @@ async function importCsv(f) {
     const xywh = boxOf(['x', 'y', 'w', 'h'].map(n => cell(r, n)).join(',')), drawn = cell(r, 'box_source') === 'drawn' ? xywh : null;
     const region = cell(r, 'iiif_region'), m = { inv: cell(r, 'inv_nr'), w: cell(r, 'objekt_id'), t: cell(r, 'etikett'), src: cell(r, 'quelle'), region };
     m.iiif = iiifOf(m);
-    if (drawn) {  // die Box aus den Daten kennt nur data.json; die Region der Zeile ist die neu gezogene
+    if (drawn) {  // only data.json knows the box from the data; the row's region is the redrawn one
       const known = LAB_KEY[k] || (old && old.m) || null;
       if (known && known.box) { m.box = known.box; m.region = `${m.iiif}/${known.box.join(',')}/max/0/default.jpg`; }
     } else if (xywh) m.box = xywh;
@@ -971,11 +978,11 @@ async function importCsv(f) {
   const ok = store.set(STORE, entries);
   if (current) { apply(entries[key].v); BX = { ok: false, drawn: null, ...entries[key].b }; render(); renderBox(); savedLine('loaded'); }
   renderList();
-  smsg(`${f.name}: ${added} neue und ${newer} neuere Einträge übernommen` + (older ? `, ${older} ältere oder gleiche übersprungen` : '') + '.'
-    + (ok ? '' : ' Achtung: dieser Browser speichert nicht.'), !ok);
+  smsg(`${f.name}: took over ${added} new and ${newer} newer entries` + (older ? `, skipped ${older} older or identical ones` : '') + '.'
+    + (ok ? '' : ' Note: this browser does not save.'), !ok);
 }
 
-// ---------------------------------------------------------------- Bedienung
+// ---------------------------------------------------------------- Controls
 $('#fields').addEventListener('input', changed);
 $('#fields').addEventListener('change', changed);
 $('#fields').addEventListener('click', e => {
@@ -987,14 +994,14 @@ $('#fields').addEventListener('click', e => {
 });
 $('#copy').onclick = async () => {
   const text = compute(state()).map(x => x.replace(/[\t\n]/g, ' ')).join('\t');
-  try { await navigator.clipboard.writeText(text); $('#msg').textContent = 'Zeile kopiert.'; }
+  try { await navigator.clipboard.writeText(text); $('#msg').textContent = 'Row copied.'; }
   catch (e) {
     const ta = document.createElement('textarea'); ta.value = text; document.body.appendChild(ta); ta.select();
-    try { document.execCommand('copy'); $('#msg').textContent = 'Zeile kopiert.'; } catch (_) { $('#msg').textContent = 'Kopieren nicht möglich. Bitte manuell markieren.'; }
+    try { document.execCommand('copy'); $('#msg').textContent = 'Row copied.'; } catch (_) { $('#msg').textContent = 'Copying is not possible. Please select the row by hand.'; }
     ta.remove();
   }
 };
-$('#save').onclick = () => { save(); if (key) $('#msg').textContent = 'Gespeichert.'; };
+$('#save').onclick = () => { save(); if (key) $('#msg').textContent = 'Saved.'; };
 $('#reset').onclick = () => {
   clearTimeout(timer);
   entries = loadEntries();
@@ -1002,9 +1009,9 @@ $('#reset').onclick = () => {
   if (undo) { delete entries[key]; store.set(STORE, entries); }
   $('#tagin').value = '';
   apply(P.v); BX = { ok: false, drawn: null }; $('#msg').textContent = ''; render(); renderBox(); renderList();
-  $('#saved').innerHTML = !key ? 'Zurückgesetzt.' : undo
-    ? 'Auf die Werte aus den Daten zurückgesetzt; die gespeicherten Angaben sind gelöscht. <button type="button" class="link" id="undo">Rückgängig</button>'
-    : 'Auf die Werte aus den Daten zurückgesetzt.';
+  $('#saved').innerHTML = !key ? 'Reset.' : undo
+    ? 'Reset to the values from the data; the saved entries are deleted. <button type="button" class="link" id="undo">Undo</button>'
+    : 'Reset to the values from the data.';
 };
 document.addEventListener('click', e => {
   if (e.target.id !== 'undo' || !undo) return;
@@ -1014,18 +1021,18 @@ document.addEventListener('click', e => {
 $('#export').addEventListener('click', exportCsv);
 $('#import').addEventListener('change', async e => {
   const f = e.target.files[0];
-  if (f) { try { await importCsv(f); } catch (err) { smsg(`${f.name} konnte nicht gelesen werden.`, true); } }
+  if (f) { try { await importCsv(f); } catch (err) { smsg(`${f.name} could not be read.`, true); } }
   e.target.value = '';
 });
 $('#who').value = store.get(WHO, '') || '';
 $('#who').addEventListener('input', e => store.set(WHO, e.target.value.trim()));
 window.addEventListener('storage', e => { if (e.key === STORE) renderList(); });
-(() => {  // «← Ergebnisse»: zurück zur Website, wenn sie die vorige Seite war; sonst zum Etikett auf der Website
+(() => {  // «← Results»: back to the website if it was the previous page; otherwise to the label on the website
   try {
     const ref = new URL(document.referrer), dir = location.pathname.replace(/[^/]*$/, '');
     if (ref.origin === location.origin && (ref.pathname === dir || ref.pathname === dir + 'index.html') && history.length > 1)
       $('#back').addEventListener('click', e => { e.preventDefault(); history.back(); });
-  } catch (_) { /* keine vorige Seite */ }
+  } catch (_) { /* no previous page */ }
 })();
 
 render(); renderList(); savedLine(null);
@@ -1041,7 +1048,7 @@ fetch('data.json', { cache: 'no-cache' }).then(r => { if (!r.ok) throw new Error
   if (saved && saved.b) BX = { ok: false, drawn: null, ...saved.b };
   render(); renderBox(); renderList(); savedLine(saved ? 'loaded' : null);
 }).catch(() => {
-  $('#ws').textContent = 'Die Daten (data.json) konnten nicht geladen werden; das Formular funktioniert ohne Vorausfüllung.';
+  $('#ws').textContent = 'The data (data.json) could not be loaded; the form works without prefilling.';
   if (key && entries[key]) { apply(entries[key].v); render(); }
 });
 })();
