@@ -26,12 +26,12 @@ function doPost(e) {
     const props = PropertiesService.getScriptProperties();
     if (paused(props)) return reply({ ok: false, error: 'Feedback through this form is paused; please open the issue on GitHub.' });
     const d = JSON.parse((e && e.postData && e.postData.contents) || '{}');
-    if (d.website || Number(d.elapsed) < 2000) return reply({ ok: true });  // a bot: say yes, keep nothing
+    if (d.website || !(Number(d.elapsed) >= 2000)) return reply({ ok: true });  // a bot (or no time given): say yes, keep nothing
     const item = {
       id: Utilities.getUuid().replace(/-/g, '').slice(0, 16), t: Date.now(),
       kind: KINDS.indexOf(d.kind) >= 0 ? d.kind : 'Other',
-      where: clean(d.where, 80).replace(/[^\w\s·.,:()'\/-]/g, ''),
-      inv: clean(d.inv, 40).replace(/[^\w\s.\/-]/g, ''),
+      where: clean(d.where, 80).replace(/[^\w\u00C0-\u024F\s·.,:()'\/-]/g, ''),  // \w alone is ASCII: keep ä, é …
+      inv: clean(d.inv, 40).replace(/[^\w\u00C0-\u024F\s.\/-]/g, ''),
       details: clean(d.details, 4000), context: clean(d.context, 2000)
     };
     if (item.details.length < 5) return reply({ ok: false, error: 'Please describe the problem or idea.' });

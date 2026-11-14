@@ -23,6 +23,8 @@
 (() => {
   if (window.ppFeedback) return;
   const REPO = 'https://github.com/ruedtim/glamhack26-box-viewer';
+  const SITE = 'https://ruedtim.github.io/glamhack26-box-viewer/';
+  const ROOT = (document.currentScript && document.currentScript.src || '').replace(/[^/]*$/, '');  // folder of feedback.js
   const RELAY_DEFAULT = 'https://script.google.com/macros/s/AKfycbwq5h4eYLosUKT5GRU-6PGGK5sowW_voGYxxn3DRq9g4Ngua-r4scgbuTz5NuladMGS5g/exec';  // web app address of feedback-relay/Code.gs (https://script.google.com/macros/s/…/exec)
   const RELAY = typeof window.ppFeedbackRelay === 'string' ? window.ppFeedbackRelay : RELAY_DEFAULT;
   const KINDS = ['A box is wrong or missing', 'A text or data value is wrong', "Something doesn't work",
@@ -44,6 +46,11 @@
       : /Windows/.test(ua) ? 'Windows' : /Linux/.test(ua) ? 'Linux' : 'another system';
     return `${name} on ${os}, window ${innerWidth} × ${innerHeight}`;
   }
+  function address() {  // opened from disk, the address would show a local path (with the user name): use the online one
+    if (location.protocol !== 'file:') return location.href;
+    const rel = ROOT && location.href.startsWith(ROOT) ? location.href.slice(ROOT.length) : location.pathname.split('/').pop();
+    return SITE + rel + ' (offline copy)';
+  }
   function pageContext() {
     try { return typeof window.ppFeedbackContext === 'function' ? window.ppFeedbackContext() || {} : {}; }
     catch { return {}; }
@@ -54,7 +61,7 @@
     const c = ctx || {}, p = page();
     const where = c.where && !p.toLowerCase().startsWith(String(c.where).toLowerCase()) ? `${p} · ${cut(c.where, 40)}` : p;
     const box = Array.isArray(c.box) && c.box.length === 4 && c.box.every(v => Number.isFinite(+v)) ? c.box.map(v => Math.round(v)) : null;
-    const lines = [`Where: ${where}`, `Page: ${cut(location.href, 600)}`];
+    const lines = [`Where: ${where}`, `Page: ${cut(address(), 600)}`];
     if (c.inv) lines.push(`Work: Inv. ${cut(c.inv, 40)}` + (c.title ? ` · ${cut(c.title, 120)}` : ''));
     else if (c.title) lines.push(`About: ${cut(c.title, 160)}`);
     if (c.key) lines.push(`Label key: ${cut(c.key, 160)}`);
