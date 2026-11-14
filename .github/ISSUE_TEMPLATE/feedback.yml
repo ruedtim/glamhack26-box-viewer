@@ -6,7 +6,7 @@ body:
   - type: markdown
     attributes:
       value: |
-        Thank you! This issue is **public**: please don't write names or addresses of private owners.
+        Thank you! This issue is **public**: names from the records are fine, but please don't write addresses or your own contact details.
         The page has filled in where you were («Where»); edit or delete anything you don't want to share.
   - type: dropdown
     id: kind

@@ -7,7 +7,7 @@
  * - With a GitHub account, or when no relay is set: GitHub's «new issue» page with the issue form
  *   .github/ISSUE_TEMPLATE/feedback.yml, prefilled.
  * Both carry where the feedback comes from (page, work, label key, box). Issues are public, so the form asks not to write
- * names or addresses of private owners.
+ * addresses or contact details (names from the records are fine: they come from public sources).
  *
  * Include once per page, in <head>:  <script src="feedback.js"></script>   (label-search: ../feedback.js)
  * - A floating «Feedback» button appears on every page. While a modal <dialog> is open it moves into it, so it stays
@@ -162,7 +162,7 @@
     dlg.innerHTML = `<form method="dialog">
   <h2 id="ppfb-h">Feedback</h2>
   <p class="ppfb-note">It becomes a <b>public</b> issue on GitHub within about 10 to 20 minutes; you need no GitHub account.
-    Please don't write names or addresses of private owners, or your own contact details.</p>
+    Names from the records are fine; please don't write addresses or your own contact details.</p>
   <label>What is it about?<select name="kind" required><option value="">Choose…</option>${KINDS.map(k => `<option>${esc(k)}</option>`).join('')}</select></label>
   <label>What did you see, and what did you expect?<textarea name="details" rows="5" required minlength="5" maxlength="4000"
     placeholder="For example: the box covers the wrong label; the dealer's label is at the top right of the stretcher."></textarea></label>

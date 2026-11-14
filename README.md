@@ -23,8 +23,8 @@ works carry the same label. *Have I seen this label before?*
 - **Label box viewer: `viewer.html`** – any image straight from a IIIF server with one or more boxes drawn on it.
 - **Feedback** – the «Feedback» button and the «Report a problem» links open a small form; no GitHub account is
   needed. Page, work, label key and box are filled in. The message becomes a public issue in this repository within
-  about 10 to 20 minutes (`feedback-relay/`, `.github/workflows/feedback.yml`), so don't write names or addresses
-  of private owners. With an account you can also open the prefilled issue on GitHub directly.
+  about 10 to 20 minutes (`feedback-relay/`, `.github/workflows/feedback.yml`). Names from the records are fine;
+  please don't write addresses or contact details. With an account you can also open the prefilled issue on GitHub directly.
 - **Entry form «Ways of seeing»** – filters for the label picture (local contrast, flat field, colour channels,
   decorrelation stretch and more), computed in the browser, to read faint pencil, blue crayon and stamps.
 
@@ -68,5 +68,5 @@ Data and images: SKKG Stiftung für Kunst, Kultur und Geschichte, Winterthur ([S
 knowledge graph and IIIF image server). Object metadata and photographs of backs CC0; provenance data sheets
 CC BY 4.0, SKKG provenance research team; label register and object list provided for the challenge. Exhibitions
 and acquisitions were read from the knowledge graph following [skkg-mcp](https://github.com/kintopp/skkg-mcp)
-(RISE, University of Basel). Names and addresses of private owners transcribed from labels are masked; SIK-ISEA's
+(RISE, University of Basel). Names from these public sources are shown, owners included; addresses are masked. SIK-ISEA's
 research portal is only linked and counted, as its content may not be republished without SIK-ISEA's consent.
