@@ -18,6 +18,8 @@ works carry the same label. *Have I seen this label before?*
   team to add or correct the details for SKKG's label register (confirm or redraw the box, copy the row, CSV).
 - **What SIK-ISEA adds: [sik_isea.html](https://ruedtim.github.io/glamhack26-box-viewer/sik_isea.html)** – links to
   SIK-ISEA's records and counts only.
+- **How we got here: [how-we-got-here.html](https://ruedtim.github.io/glamhack26-box-viewer/how-we-got-here.html)** –
+  the steps from the challenge's raw material to these results, with the numbers, the decisions and the dead ends.
 - **Label box viewer: `viewer.html`** – any image straight from a IIIF server with one or more boxes drawn on it.
 - **Feedback** – the «Feedback» button and the «Report a problem» links open a small form; no GitHub account is
   needed. Page, work, label key and box are filled in. The message becomes a public issue in this repository within

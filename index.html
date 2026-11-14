@@ -94,6 +94,43 @@
   .stat b { display: block; font-size: 26px; line-height: 1.1; }
   .stat span { color: var(--muted); font-size: 13px; }
   .prose { max-width: 860px; } .prose h2 { font-size: 18px; margin: 26px 0 6px; } .prose li { margin: 4px 0; }
+  /* About: every part has an anchor (#about-…) that clears the sticky header (--head is set from its height) */
+  .about { padding-top: 14px; }
+  .about [id] { scroll-margin-top: calc(var(--head, 110px) + 12px); }
+  main > section[id] { scroll-margin-top: var(--head, 110px); }  /* a tab link (#labels …) must not scroll the tab's intro under the header */
+  .ab-cta { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 18px; margin: 0 0 20px; padding: 14px 16px;
+            background: var(--panel); border: 1px solid var(--line); border-left: 4px solid var(--accent); border-radius: 8px; box-shadow: var(--shadow); }
+  .ab-cta b { display: block; font-size: 16px; }
+  .ab-cta span { color: var(--muted); font-size: 14px; }
+  .ab-cta .formbtn { font-size: 15px; }
+  .ab-toc { list-style: none; display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0 0; padding: 0; }
+  .prose .ab-toc li { margin: 0; }
+  .ab-toc a { display: inline-block; padding: 3px 10px; border: 1px solid var(--line); border-radius: 99px; background: var(--panel); font-size: 13px; text-decoration: none; }
+  .ab-toc a:hover, .ab-toc a:focus-visible { border-color: var(--accent); }
+  .ab-part { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px 16px; margin: 12px 0; box-shadow: var(--shadow); }
+  .ab-part h3 { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 14px; margin: 0 0 4px; font-size: 16px; }
+  .ab-part h3 a { font-size: 13px; font-weight: 600; }
+  .ab-part > p { margin: 6px 0 0; } .ab-part > ul, .ab-part > ol { margin: 6px 0 0; padding-left: 20px; }
+  dl.ab-sw { grid-template-columns: 96px minmax(0, 1fr); gap: 10px 14px; margin-top: 10px; }
+  dl.ab-sw > dt { font-weight: 600; }
+  dl.ab-sw ul { margin: 0; padding-left: 18px; }
+  dl.ab-params { grid-template-columns: max-content minmax(0, 1fr); gap: 4px 12px; margin: 8px 0 0; font-size: 13px; }
+  dl.ab-params dt { color: var(--ink); }
+  dl.ab-key { grid-template-columns: max-content minmax(0, 1fr); gap: 8px 12px; align-items: center; }
+  @media (max-width: 560px) { dl.ab-sw { grid-template-columns: minmax(0, 1fr); gap: 2px; } dl.ab-sw > dd { margin-bottom: 10px; } }
+  @media (max-width: 420px) { dl.ab-key, dl.ab-params { grid-template-columns: minmax(0, 1fr); gap: 2px; } dl.ab-key dd, dl.ab-params dd { margin-bottom: 8px; } }
+  .about code { font-size: 13px; background: var(--chip); padding: 0 4px; border-radius: 3px; overflow-wrap: anywhere; }
+  .about kbd { font: 12px/1.4 ui-monospace, "SF Mono", Menlo, monospace; padding: 0 4px; border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 4px; background: var(--panel); }
+  .ab-box { display: inline-block; width: 30px; height: 16px; border: 2.5px solid var(--c, var(--sheet)); border-radius: 2px; vertical-align: middle; margin: 2px 4px 2px 0; }
+  .ab-box.dash { border-style: dashed; }
+  .ab-dot { display: inline-block; width: 12px; height: 12px; border-radius: 50%; background: var(--k, var(--tl-own)); border: 2px solid var(--k, var(--tl-own)); vertical-align: middle; }
+  .ab-dot.k-x { --k: var(--tl-ex); } .ab-dot.k-a { --k: var(--tl-acq); } .ab-dot.hollow { background: var(--panel); }
+  .ab-line { display: inline-block; width: 22px; border-top: 3px solid var(--accent); vertical-align: middle; margin-left: 6px; }
+  .ab-line.w2 { border-top-width: 2px; } .ab-line.w1 { border-top: 2px dashed var(--accent); }
+  .ab-num { display: inline-block; min-width: 18px; height: 18px; padding: 0 4px; border-radius: 9px; font: 600 11px/18px system-ui, sans-serif; background: var(--accent); color: var(--bg); text-align: center; }
+  .ab-fb { display: inline-block; padding: 3px 12px; border: 1px solid var(--line); border-radius: 99px; background: var(--chip); font-size: 13px; font-weight: 600; text-decoration: none; }
+  .ab-fb:hover, .ab-fb:focus-visible { border-color: var(--accent); }
+  .ab-team { border-left: 4px solid var(--again); }
   footer { border-top: 1px solid var(--line); color: var(--muted); font-size: 13px; padding: 16px 0 28px; }
   .empty { color: var(--muted); padding: 30px 0; }
   .mute { color: var(--muted); }
@@ -195,7 +232,8 @@
       Click a label to see where it sits on the back, which work it belongs to, and on which other works the same label
       was found. Clicking a box on a back opens the entry form for SKKG's label register, prefilled with what
       we already know. <a href="review.html">Help check the vision-language model's proposals →</a>
-      <a href="label-search/">Search by photo: have I seen this label before? →</a></p>
+      <a href="label-search/">Search by photo: have I seen this label before? →</a>
+      <a href="#about-labels">What the filters and badges mean →</a></p>
     <div class="controls">
       <input type="search" id="lq" placeholder="Search: issuer, text, Inv. no., title …" aria-label="Search labels">
       <div class="seg" id="lsrc" role="group" aria-label="Source">
@@ -212,7 +250,7 @@
   <section id="works" hidden>
     <p class="intro">The backs of the works with the labels and marks located on them. Colours: <i class="b register">label register</i>
       <i class="b photo">label photo</i> <i class="b sheet">data sheet</i> <i class="b model">model (unverified)</i> <i class="b detected">label detector</i>
-      <i class="b again">same label as on another work</i></p>
+      <i class="b again">same label as on another work</i> <a href="#about-works">How to read a work: exploded back and timeline →</a></p>
     <div class="controls">
       <input type="search" id="wq" placeholder="Search: Inv. no., title, actor, exhibition …" aria-label="Search works">
       <label class="tg"><input type="checkbox" id="wlab" checked> only works with located labels</label>
@@ -223,7 +261,7 @@
     <button class="more" id="wmore" hidden>Show more</button>
   </section>
   <section id="again" hidden>
-    <p class="intro" id="againintro"></p>
+    <p class="intro"><span id="againintro"></span> <a href="#about-again">How to read the hits →</a></p>
     <div class="controls">
       <div class="seg" id="aev" role="group" aria-label="Evidence">
         <button data-v="all" aria-pressed="true">All hits</button><button data-v="exhibition">Shared exhibition</button><button data-v="seller">Same seller</button><button data-v="provenance">Provenance</button><button data-v="none">No evidence yet</button>
@@ -232,81 +270,500 @@
     </div>
     <div id="alist"></div>
   </section>
-  <section id="about" hidden class="prose">
+  <section id="about" hidden class="prose about">
+    <div class="ab-cta">
+      <div><b>How we got here</b><span>The full story behind this site: the steps that led from the challenge's question to what you see here.</span></div>
+      <a class="formbtn" href="how-we-got-here.html">Read «How we got here» →</a>
+    </div>
     <h2 style="margin-top:0">What this is</h2>
     <p>Labels of dealers, auction houses, exhibitions and transport firms on the backs of artworks are traces of their
       history. This site shows where such labels, stamps and marks sit on the backs of works in the collection of the
       Stiftung für Kunst, Kultur und Geschichte (SKKG), Winterthur, and which works carry the same label. It was made
       at GLAMhack 2026 for challenge 304 «Provenance Pursuit».</p>
+    <p>For visitors it is a way to browse the backs and the histories they document. For the team it is also a workbench:
+      boxes are checked and corrected here, and labels are recorded for SKKG's label register. Every picture is cut from
+      SKKG's photographs by SKKG's IIIF image server at the moment you look at it; the site itself holds only boxes
+      (x, y, width and height in pixels of the original image) and text.</p>
     <div class="stats" id="stats"></div>
-    <h2>How it was found</h2>
+    <div role="navigation" aria-label="Parts of the About tab">
+      <ul class="ab-toc">
+        <li><a href="#about-labels">Labels</a></li>
+        <li><a href="#about-works">Works</a></li>
+        <li><a href="#about-again">Found again</a></li>
+        <li><a href="#about-label">Label dialog</a></li>
+        <li><a href="#about-form">Entry form</a></li>
+        <li><a href="#about-review">Review page</a></li>
+        <li><a href="#about-search">Search by photo</a></li>
+        <li><a href="#about-viewer">Box viewer</a></li>
+        <li><a href="#about-sik">What SIK-ISEA adds</a></li>
+        <li><a href="#about-workbook">Workbook</a></li>
+        <li><a href="#about-feedback">Feedback</a></li>
+        <li><a href="#about-team">For the team</a></li>
+        <li><a href="#about-colours">Colours and badges</a></li>
+        <li><a href="#about-method">Method</a></li>
+        <li><a href="#about-privacy">Privacy</a></li>
+        <li><a href="#about-data">Data and licences</a></li>
+        <li><a href="how-we-got-here.html">How we got here</a></li>
+      </ul>
+    </div>
+
+    <h2 id="about-tabs">The tabs</h2>
+    <div class="ab-part" id="about-labels">
+      <h3>Labels <a href="#labels">Open the tab →</a></h3>
+      <dl class="ab-sw">
+        <dt>Shows</dt>
+        <dd>Every label, stamp and mark placed on a back (<span data-n="labels"></span> in all), each as a picture cut from
+          the photograph of the back, with its work and its <a href="#about-colours">badges</a>. They come from four sources:
+          <b>Label register</b>: <span data-n="register"></span> entries of SKKG's label register, placed by matching the
+          register's picture with the back; <b>Label photos</b>: <span data-n="photos"></span> detail photographs SKKG took of
+          labels, placed the same way; <b>Data sheets</b>: <span data-n="marks_located"></span> of the
+          <span data-n="marks"></span> marks described in SKKG's provenance data sheets, placed by their text, by a template or
+          by a model's proposal; <b>Detected</b>: <span data-n="detected"></span> labels and stamps that the label detector
+          found and no record documents.</dd>
+        <dt>How to use</dt>
+        <dd><ul>
+          <li><b>Search</b> looks in the label's title (for register entries, the issuer), its text or description, event,
+            position and type, and in the work's inventory number, title, object type and provenance actors.</li>
+          <li><b>Source</b> buttons: All, Label register, Label photos, Data sheets, Detected.</li>
+          <li><b>found on other works</b>: only labels that were found again on another back.</li>
+          <li><b>only reliable</b>: only the <span data-n="reliable"></span> reliable boxes: matches with the register's picture
+            or SKKG's detail photo, data sheet text read where the data sheet places it (also after an image filter), and
+            templates of the same issuer.</li>
+          <li><b>include unverified boxes</b> (off by default) adds <span data-n="unverified"></span> boxes: the
+            <span data-n="model"></span> proposals of the vision-language model and the <span data-n="notext"></span> detector
+            finds without readable text. The «unverified boxes» checkbox in a work's dialog is the same switch.</li>
+          <li>The filters combine; the count says how many labels match, and «Show more» loads the next 96. Labels found on the
+            most works come first, then the reliable ones. Click a card for the <a href="#about-label">label dialog</a>.</li>
+        </ul></dd>
+        <dt>Watch for</dt>
+        <dd>By default <span data-n="shown"></span> of the <span data-n="labels"></span> labels are shown. Every box that is
+          not reliable carries <i class="b warn">check</i>. An amber «Data sheet» badge is a box the model proposed:
+          unverified. For detected labels, issuer and kind are guesses from the text read by OCR, and OCR misspells names.</dd>
+      </dl>
+    </div>
+
+    <div class="ab-part" id="about-works">
+      <h3>Works <a href="#works">Open the tab →</a></h3>
+      <dl class="ab-sw">
+        <dt>Shows</dt>
+        <dd>The backs of the <span data-n="works"></span> works with their boxes drawn on them (the back with the most labels
+          when a work has several photos of its back), the number of labels located and, in green, «shares a label with another
+          work».</dd>
+        <dt>How to use</dt>
+        <dd><ul>
+          <li>Search by inventory number, title, object type, provenance actor, exhibition, acquisition or the text of a label.
+            «only works with located labels» (on by default: <span data-n="works_labels"></span> works) and «only works that
+            share a label» (<span data-n="works_shared"></span>) narrow the list. Works with the most labels come first.</li>
+          <li>Click a work, for example <a href="#work=5545">Inv. 4954</a>. At the top of its dialog: <b>The back, exploded</b>
+            beside the <b>Provenance timeline</b>. A work without located labels shows the timeline only.</li>
+          <li><b>Explode</b>: drag the slider. The back shrinks to half its size and every label lifts onto a ring around it,
+            without overlapping the others; dashed holes and thin lines show where each one sat. Each label is a button with
+            its own cut-out. When there are several photos of the back, «Back 1», «Back 2» … switch between them.</li>
+          <li><b>Provenance timeline</b>: the stations of the work's provenance as SKKG's records give them, in order (the
+            artist, owners, estates, dealers, auction houses, museums), its exhibitions and its acquisition by SKKG. Under an
+            event, «<span class="dots" role="img" aria-label="medium link">●●○</span> 2 labels» says how many labels document it
+            and how strong the best link is.</li>
+          <li>Click an <b>event</b>: its labels light up and the others fade, the back explodes and switches to the photo that
+            holds them, and the panel under the back lists them with the basis of each link. Click a <b>label</b>: its events
+            light up in the timeline, each with its basis, and the panel offers «Label details», «✎ Record in the entry form»,
+            «Whole back, zoomable» and «Report a problem with this label or its events». A second click deselects.</li>
+          <li><b>Strong, medium, weak.</b> A link is <b>strong</b> (<span class="dots" role="img" aria-label="strong link">●●●</span>)
+            when two features agree: the issuer and the lot, date or year of a sale, or the venue and year of an exhibition. It is
+            <b>medium</b> (<span class="dots" role="img" aria-label="medium link">●●○</span>) for one distinctive feature: the issuer
+            or venue alone, a city and a year next to an exhibition word, an owner's full name in the register or a data sheet, or
+            the same label on another work that shares one exhibition, seller or actor. It is <b>weak</b>
+            (<span class="dots" role="img" aria-label="weak link">●○○</span>) when it is ambiguous: several events fit, the issuer
+            appears with another year, a name was read only approximately, or a city and a year stand alone. The basis also says
+            where the text was read: register, data sheet, OCR of the label photo or OCR of the detected label.</li>
+          <li><b>The boxes</b>: below the exploded back come the facts (object type, collection page, acquisition,
+            provenance actors, exhibitions) and «Labels it shares with other works». Under them, folded, «Boxes on the back»
+            shows every photo of the back with all its boxes: click a box to open the entry form for that label, or «Open
+            zoomable with all boxes». At the end, every located label as a card.</li>
+        </ul></dd>
+        <dt>Watch for</dt>
+        <dd><span data-n="timeline_works"></span> works have a timeline, with <span data-n="events"></span> events in all;
+          <span data-n="events_linked"></span> of them are documented by a label (<span data-n="events_linked_strong"></span>
+          strongly). The timeline holds only what SKKG's records hold, so a label without an event may document a station or an
+          exhibition the records lack. The order is reconstructed: an undated station stays after the dated one before it, and
+          exhibitions are placed by their year. «+1 with an unverified box» under an event means that a hidden box documents it
+          too. A link is evidence to weigh, not proof. Private owners, heirs and private sellers appear only by their role.</dd>
+      </dl>
+    </div>
+
+    <div class="ab-part" id="about-again">
+      <h3>Found again <a href="#again">Open the tab →</a></h3>
+      <dl class="ab-sw">
+        <dt>Shows</dt>
+        <dd><span data-n="labels_found_again"></span> located labels that were found again on the backs of other works, with
+          <span data-n="hits"></span> hits. Each row starts with the label and its work; after the arrow come the backs where the
+          same label was found: the cut-out there, the number of points that agree between the two pictures (inliers), and the
+          evidence from the records of both works:
+          <ul>
+            <li>«Exhibition: …»: both works were lent to this exhibition;</li>
+            <li>«Same seller: …»: SKKG bought both from the same seller;</li>
+            <li>«Provenance: …»: the other work's provenance names the label's issuer or shares a dealer or auction house;</li>
+            <li>«no evidence in the records yet».</li>
+          </ul>
+          <span data-n="hits_backed"></span> hits are backed by the records: <span data-n="hits_exhibition"></span> by a shared
+          exhibition, <span data-n="hits_seller"></span> by the same seller.</dd>
+        <dt>How to use</dt>
+        <dd>The buttons filter by evidence: All hits, Shared exhibition, Same seller, Provenance, No evidence yet. Labels with
+          the most hits come first. Click the label for its dialog, or a hit for the other work's dialog, where the hit appears as
+          a green dashed piece. Each hit has «Report a problem with this match».</dd>
+        <dt>Watch for</dt>
+        <dd>A hit is the same label design, confirmed by image matching: a lead, not proof. It can be an identical label on
+          related works, one issuer's standard label used for decades, or one of SKKG's own loan strips with a crate number,
+          which a shared exhibition «backs» although it documents the loan rather than an earlier owner. One exhibition,
+          «Sesam öffne dich!» (Bern and Martigny, 2014/15), showed about 70 of the works, so many hits share it. Only the
+          labels from the register and from SKKG's detail photos that were located reliably were searched.</dd>
+      </dl>
+    </div>
+
+    <div class="ab-part" id="about-label">
+      <h3>The label dialog <a href="#label=register:52">Open an example →</a></h3>
+      <dl class="ab-sw">
+        <dt>Shows</dt>
+        <dd>One label: its cut-out and, where there is one, SKKG's own detail photo; the facts: work (with links to the work
+          and to SKKG's collection), source, «Located by» (image match with the number of agreeing points, the most similar
+          window, text read by OCR, a template from another work, the vision-language model, or the detector's score), position,
+          type, description or text read, issuer guess, and the provenance events it is linked to. Below: where it sits on the
+          back, the same label on other works, and the other marks on the same work.</dd>
+        <dt>How to use</dt>
+        <dd>Click any card. «✎ Record this label in the entry form» opens the <a href="#about-form">entry form</a>, and so does
+          a click on the box on the back. The cut-out and «Whole back, zoomable» open the <a href="#about-viewer">box viewer</a>;
+          «Label in full resolution (IIIF)» opens the cut-out itself; «Report a problem with this box» opens the
+          <a href="#about-feedback">feedback form</a>. Close with ✕, <kbd>Esc</kbd> or a click beside the dialog. Every dialog
+          has its own address: <code>#label=</code> and the label's key (for example
+          <a href="#label=register:52"><code>#label=register:52</code></a>), or <code>#work=</code> and SKKG's object ID, the
+          number in the work's collection address.</dd>
+        <dt>Watch for</dt>
+        <dd><i class="b warn">check</i> after «Located by» marks a box that is not reliable. «Kind (guess)», «Issuer (guess)»
+          and «Text read (OCR)» of a detected label are machine readings: expect misspellings and masked names
+          («[private owner]»).</dd>
+      </dl>
+    </div>
+
+    <h2 id="about-tools">The other pages</h2>
+    <div class="ab-part" id="about-form">
+      <h3>Entry form <a href="form.html?label=register%3A52">Open an example →</a></h3>
+      <dl class="ab-sw">
+        <dt>Shows</dt>
+        <dd>A form for columns F to L of SKKG's label register, one label at a time: the label's picture with «Ways of seeing»;
+          «What the data already say» (the whole back with the box, the source, how the box was found, the same label on other
+          works); the fields Label (F), Position (G), Attribution (H to J) and Further details (K, L); and a preview of the
+          register row.</dd>
+        <dt>How to use</dt>
+        <dd><ul>
+          <li><b>Open</b> it from a box (click it), from «✎ Record this label in the entry form», or from a box in the box viewer.
+            Its address is <code>form.html?label=</code> and the label's key; without a key it is an empty form.</li>
+          <li><b>Prefill</b>: what the data hold is filled in and tagged. A pale blue field tagged «Register», «Data sheet» or
+            «Box» comes from the data. A pale amber field tagged «Suggestion», «OCR» or «Image search» is derived: shape, colour
+            and lettering from the description, the position from where the box sits, the exhibition or seller shared with the
+            same label on other works, an issuer guessed from the text read. Check these. Once you change a value the tag reads
+            «edited ↺»; ↺ restores the value from the data. «From the data» under each section quotes the source.</li>
+          <li><b>Ways of seeing</b>: filters that help to read faint pencil, blue crayon and stamps, computed in your browser.
+            Enhance: Photo, Local contrast, Flat field, High-pass, Decorrelation stretch, Threshold. One colour channel: Red,
+            Green, Blue, Blue ink, Red ink. «Invert» combines with any of them. Filters with a parameter get a slider
+            (double-click resets it); ⤢ enlarges the picture; each way explains itself in one line. Where SKKG has a detail
+            photo of the label, «Picture» switches between the back photo and that photo.</li>
+          <li><b>Confirm or redraw the box</b>: «✓ Confirm box» when it sits on the label. «✎ Redraw box» opens the whole back:
+            drag a new box (red: the box from the data, green: yours). It is kept in pixels of the original image and counts as
+            confirmed; «Restore the box from the data» undoes it. The picture, the back and the viewer link follow the new box.</li>
+          <li><b>Copy row</b> copies the register row, tab-separated, to paste into column F of the Excel register. «Reset»
+            restores the values from the data.</li>
+          <li><b>CSV</b>: every change is saved in this browser, per label. Enter your initials, then «Download CSV»
+            (<code>etiketten_erfassung_&lt;initials&gt;_&lt;date&gt;.csv</code>: label key, inventory number, the box and whether
+            it was confirmed or redrawn, columns F to L and the single fields, initials, time) and put the file into the team
+            folder, where the entries are merged into the workbook. «Load CSV …» takes over the entries of such a file; for the
+            same label the newer entry wins.</li>
+        </ul></dd>
+        <dt>Why German</dt>
+        <dd>SKKG's label register is German, so what the form writes into it stays German: the values of its lists and buttons
+          (shown with English glosses, such as «Zierrahmen · frame»), the column headings F to L, the register's conventions
+          («o. D.» = no date, «(Lot …)») and the comment it prefills in column L on how the box was found. A copied row can go
+          into the register as it is. Everything around it is English.</dd>
+        <dt>Watch for</dt>
+        <dd>Entries stay in this browser only, and a private window may not keep them (the form warns): download the CSV
+          before you switch browser or computer. Suggestions are guesses. The position grid is captioned «seen from the front»,
+          but the positions prefilled from the data and from the box are as seen on the back photo. The filters store and
+          upload nothing, and the chosen way is not remembered. Comments already in the register's column L are not
+          published; the form only says that there is one, so keep it when you paste.</dd>
+      </dl>
+    </div>
+
+    <div class="ab-part" id="about-review">
+      <h3>Review page <a href="review.html">Open it →</a></h3>
+      <dl class="ab-sw">
+        <dt>Shows</dt>
+        <dd>The vision-language model's box proposals for data sheet marks that text recognition could not find, one at a
+          time: the proposed box (purple) with its surroundings, the whole back with the box and the area the data sheet names
+          (white, dashed), and the data sheet's description.</dd>
+        <dt>How to use</dt>
+        <dd>Decide with ✓ Correct (<kbd>Y</kbd>), ✗ Wrong (<kbd>N</kbd>) or ? Unsure (<kbd>U</kbd>). If the mark is visible
+          but the box is wrong or too loose, ✎ Redraw box (<kbd>R</kbd>) and drag the right one (green). <kbd>←</kbd>
+          <kbd>→</kbd> move between proposals; after a decision the next open one follows. Filter by status (not yet reviewed,
+          all, correct, redrawn, wrong, unsure), by type (labels, stamps, inscriptions, other) or with the search. Enter your
+          initials, then «Download my decisions (CSV)» (<code>model_box_review_&lt;initials&gt;_&lt;date&gt;.csv</code>) and
+          put the file into the team folder; «Load decisions …» reads such a file back.</dd>
+        <dt>Watch for</dt>
+        <dd>The model answers with a box even when the mark is not visible, so a neat box can still be wrong. Decisions stay
+          in this browser until you download them. When the files are merged, the latest decision per mark counts: confirmed
+          boxes count as located, rejected ones fall back to the area the data sheet names. Confirmed boxes merged so far:
+          <span data-n="marks_confirmed"></span>.</dd>
+      </dl>
+    </div>
+
+    <div class="ab-part" id="about-search">
+      <h3>Search by photo <a href="label-search/">Open it →</a></h3>
+      <dl class="ab-sw">
+        <dt>Shows</dt>
+        <dd>«Have I seen this label before?»: the 20 backs, out of <span data-n="backs"></span>, that look most like your photo
+          of a label, stamp or inscription. Each comes with its best-matching window, cut out by the IIIF server, its rank and
+          score, «Show on the back» (box viewer) and «SKKG record».</dd>
+        <dt>How to use</dt>
+        <dd>«📷 Take photo» or «Choose image…», drag a box around the label if you want to search only that part, then
+          «Search». The first search downloads the image model (about 174&nbsp;MB, then cached) and the search index (about
+          8&nbsp;MB); after that a search takes a few seconds. To help check the hits: ✓ Same, ✗ Not it, ?, and «Redraw box» to
+          draw the exact box on that back (also when the label sits elsewhere on it). With your initials and a note on what you
+          photographed, «Download my decisions (CSV)» (<code>label_search_review_&lt;initials&gt;_&lt;date&gt;.csv</code>)
+          for the team folder.</dd>
+        <dt>Watch for</dt>
+        <dd>Your photo never leaves your browser: the model runs on your device. Only the coarse search runs there: for
+          <span data-n="queries"></span> test photos it puts the right back first in <span data-n="r1cp"></span> of the searches,
+          while the full pipeline, which re-checks the candidates by image matching, reaches <span data-n="r1p"></span>. Treat
+          the hits as candidates to look at, not as identifications. On a phone, make the first search on Wi-Fi.</dd>
+      </dl>
+    </div>
+
+    <div class="ab-part" id="about-viewer">
+      <h3>Box viewer <a href="viewer.html?iiif=https://iiif.digital.skkg.ch/iiif/3/fb3a6054-d82e-419f-a48c-fedf910d4ab8&amp;xywh=1477,631,713,334&amp;colour=3d9bff&amp;zoom=1&amp;label=register:52">Open an example →</a></h3>
+      <dl class="ab-sw">
+        <dt>Shows</dt>
+        <dd>A whole image from an IIIF image server, zoomable, with one or more boxes on it: «Whole image» and «Zoom to box»,
+          and links to the whole image and to each box as IIIF requests, to the collection page and to the entry form.</dd>
+        <dt>How to use</dt>
+        <dd>Every «Whole back, zoomable» link on this site and every «view» link in the workbook opens it. Scroll or pinch to
+          zoom, drag to move. Its address takes these parameters:
+          <dl class="ab-params">
+            <dt><code>iiif</code></dt><dd>the IIIF image service (required); its <code>info.json</code> or any image address of
+              it works too</dd>
+            <dt><code>xywh=x,y,w,h</code></dt><dd>a box in pixels of the original image; for several boxes, repeat it or
+              separate them with <code>;</code></dd>
+            <dt><code>area=x,y,w,h</code></dt><dd>an approximate area, always dashed</dd>
+            <dt><code>colour=ff3b30</code></dt><dd>the colour of the boxes, as hex without <code>#</code> (<code>color</code>
+              works too)</dd>
+            <dt><code>style=dashed</code></dt><dd>dashed boxes, for an approximate position</dd>
+            <dt><code>title</code>, <code>note</code></dt><dd>a heading and a line of text above the image</dd>
+            <dt><code>zoom=1</code></dt><dd>open zoomed in on the boxes</dd>
+            <dt><code>static=1</code></dt><dd>one plain picture instead of deep zoom</dd>
+            <dt><code>label=key</code></dt><dd>one per box, in the same order: a click on the box opens the entry form for
+              that label</dd>
+            <dt><code>page=address</code></dt><dd>adds a «Collection page» link</dd>
+          </dl>
+          <p style="margin:8px 0 0">Example: <a href="viewer.html?iiif=https://iiif.digital.skkg.ch/iiif/3/fb3a6054-d82e-419f-a48c-fedf910d4ab8&amp;xywh=1477,631,713,334&amp;colour=3d9bff&amp;zoom=1&amp;label=register:52"><code>viewer.html?iiif=https://iiif.digital.skkg.ch/iiif/3/fb3a6054-d82e-419f-a48c-fedf910d4ab8&amp;xywh=1477,631,713,334&amp;colour=3d9bff&amp;zoom=1&amp;label=register:52</code></a></p></dd>
+        <dt>Watch for</dt>
+        <dd>Boxes are in pixels of the original image, not of the picture on your screen; the image service's
+          <code>info.json</code> gives the full size. The image comes straight from the IIIF server; if deep zoom cannot start,
+          the viewer shows one plain picture instead.</dd>
+      </dl>
+    </div>
+
+    <div class="ab-part" id="about-sik">
+      <h3>What SIK-ISEA adds <a href="sik_isea.html">Open it →</a></h3>
+      <dl class="ab-sw">
+        <dt>Shows</dt>
+        <dd>The records of SKKG works in <a href="https://recherche.sik-isea.ch/">SIK-ISEA's research portal</a>, compared
+          with SKKG's knowledge graph, as counts and links only: how many SIK-ISEA records were linked to an SKKG object, how
+          many exhibition venues and institutional ownership stations SIK-ISEA records that the knowledge graph lacks, how many
+          of these a label on the back supports, and the works with such a label, each with links to the SIK-ISEA record, to
+          SKKG's collection and to the label's box in the box viewer.</dd>
+        <dt>How to use</dt>
+        <dd>Start with the counts, then follow a work's links. The evidence column says how a label supports a record:
+          strong (issuer or town and year, or a lot or catalogue number, on the label), issuer only, the same touring show at
+          another venue, or place only.</dd>
+        <dt>Watch for</dt>
+        <dd>SIK-ISEA's content may not be republished without SIK-ISEA's consent, so the page shows only counts, links and our
+          own reading of the labels; the details are in SIK-ISEA's records. «Place only» is a weak lead. Private owners are
+          never named.</dd>
+      </dl>
+    </div>
+
+    <div class="ab-part" id="about-workbook">
+      <h3>Workbook <a href="provenance_pursuit_results.xlsx">Download (Excel) →</a></h3>
+      <dl class="ab-sw">
+        <dt>Shows</dt>
+        <dd>All results in one Excel file: a guide and the key numbers on «Overview», then the sheets Register labels, Label
+          photos, Discovery (labels found again), What SIK-ISEA adds, SIK-ISEA links, Search evaluation, Data sheet marks,
+          Detected labels, Works, Provenance candidates, and Issuers and actors.</dd>
+        <dt>How to use</dt>
+        <dd>Every box has two links: «region» opens the cut-out on the IIIF server, «view» the whole image with the box in the
+          box viewer. Sort and filter as in any spreadsheet.</dd>
+        <dt>Watch for</dt>
+        <dd>This is the public copy: names and addresses of private owners are masked, and SIK-ISEA appears only as links and
+          counts. Apart from the label register's own pictures it holds no images. It is a snapshot from the build date in the
+          footer.</dd>
+      </dl>
+    </div>
+
+    <div class="ab-part" id="about-feedback">
+      <h3>Feedback <a class="ab-fb ppfb-link" href="https://github.com/ruedtim/glamhack26-box-viewer/issues/new?template=feedback.yml" data-ppfb='{"where":"About"}' target="_blank" rel="noopener">Send feedback</a></h3>
+      <dl class="ab-sw">
+        <dt>Shows</dt>
+        <dd>A «Feedback» button at the bottom right of every page (in an open dialog it moves into the dialog), and «Report a
+          problem …» links next to boxes, labels, timeline events and matches.</dd>
+        <dt>How to use</dt>
+        <dd>Choose what it is about (a box is wrong or missing, a text or data value is wrong, something doesn't work, an idea
+          or wish, other), say what you saw and what you expected, look over the lines sent along (page, work, label key, box;
+          edit or delete them) and press «Send». You need no GitHub account. If you have one, «Open on GitHub instead» opens
+          the same issue, prefilled.</dd>
+        <dt>Watch for</dt>
+        <dd>Your message becomes a <b>public</b> issue in the <a href="https://github.com/ruedtim/glamhack26-box-viewer/issues">site's
+          GitHub repository</a>, usually 10 to 20 minutes after you send it. Don't write names or addresses of private owners,
+          or your own contact details. Your text goes in as plain text, together with the lines under «Sent along» (page,
+          the work's SKKG title, label key, box, browser), never a label's text.</dd>
+      </dl>
+    </div>
+
+    <div class="ab-part ab-team" id="about-team">
+      <h3>For the team: from your browser to the workbook</h3>
+      <p>Three pages keep your work in your browser: the entry form, the review page and the search by photo. Nobody else
+        sees it until you download your file:</p>
+      <ol>
+        <li>Use the same initials on all three pages.</li>
+        <li>When you are done, and before you switch browser or computer, download the CSV.</li>
+        <li>Put the file into the team folder. The files are merged into the workbook and this site when they are next
+          rebuilt; for the same label the newest entry or decision counts.</li>
+      </ol>
+      <p>Every label has a stable key, used in the addresses, the CSV files and the feedback: <code>register:&lt;row&gt;</code>,
+        <code>photo:&lt;object ID&gt;:&lt;IIIF ID&gt;</code>, <code>sheet:&lt;hash&gt;</code>,
+        <code>detected:&lt;IIIF ID&gt;:&lt;x,y,w,h&gt;</code>, and for a box found by the search
+        <code>box:&lt;IIIF ID&gt;:&lt;x,y,w,h&gt;</code>.</p>
+    </div>
+
+    <h2 id="about-colours">Colours, badges and «check»</h2>
+    <div class="ab-part">
+      <h3>Badges on the cards</h3>
+      <dl class="ab-key">
+        <dt><i class="b register">Label register</i></dt><dd>placed from a picture in SKKG's label register</dd>
+        <dt><i class="b photo">Label photo</i></dt><dd>placed from SKKG's detail photo of the label</dd>
+        <dt><i class="b sheet">Data sheet</i></dt><dd>a mark described in a provenance data sheet, placed by its text or by a
+          template</dd>
+        <dt><i class="b model">Data sheet</i></dt><dd>the same, but the box was proposed by the vision-language model:
+          unverified</dd>
+        <dt><i class="b detected">Detected label</i></dt><dd>found by the label detector; no record documents it</dd>
+        <dt><i class="b again">on 2 other works</i></dt><dd>found again on the backs of other works (on a work's card: «shares a
+          label with another work»)</dd>
+        <dt><i class="b warn">check</i></dt><dd>not reliable: an uncertain image match, a register picture placed only roughly
+          (the most similar window), data sheet text that matched weakly or was found elsewhere than the data sheet says, a
+          similar label used as a template, a model proposal, or a detector find</dd>
+      </dl>
+    </div>
+    <div class="ab-part">
+      <h3>Boxes on a back and pieces of the exploded back</h3>
+      <dl class="ab-key">
+        <dt><span class="ab-box" style="--c:var(--register)" aria-hidden="true"></span> <span class="ab-box" style="--c:var(--photo)" aria-hidden="true"></span>
+          <span class="ab-box" style="--c:var(--sheet)" aria-hidden="true"></span> <span class="ab-box" style="--c:var(--detected)" aria-hidden="true"></span></dt>
+        <dd>solid, in the colour of the badge: label register, label photo, data sheet, detected label with text</dd>
+        <dt><span class="ab-box dash" style="--c:var(--model)" aria-hidden="true"></span> <span class="ab-box dash" style="--c:var(--detected)" aria-hidden="true"></span></dt>
+        <dd>dashed: unverified, a model proposal or a detected label without text; the Labels tab and the dialogs show
+          them only with «include unverified boxes», the cards of the Works tab always draw them</dd>
+        <dt><span class="ab-box dash" style="--c:var(--again)" aria-hidden="true"></span></dt>
+        <dd>dashed green: the same label as on another work, found here by the search</dd>
+        <dt><span class="ab-num" aria-hidden="true">2</span></dt>
+        <dd>on a lifted piece: the number of timeline events the label is linked to</dd>
+      </dl>
+    </div>
+    <div class="ab-part">
+      <h3>Timeline and links</h3>
+      <dl class="ab-key">
+        <dt><span class="ab-dot" aria-hidden="true"></span></dt><dd>a station of the provenance: the artist, an owner, an
+          estate, a dealer, an auction house, a museum, SKKG</dd>
+        <dt><span class="ab-dot k-x" aria-hidden="true"></span></dt><dd>an exhibition the work was lent to</dd>
+        <dt><span class="ab-dot k-a" aria-hidden="true"></span></dt><dd>the acquisition by SKKG</dd>
+        <dt><span class="ab-dot hollow" aria-hidden="true"></span></dt><dd>an undated event</dd>
+        <dt><span class="dots" role="img" aria-label="strong link">●●●</span><span class="ab-line" aria-hidden="true"></span></dt>
+        <dd>strong link: two features agree</dd>
+        <dt><span class="dots" role="img" aria-label="medium link">●●○</span><span class="ab-line w2" aria-hidden="true"></span></dt>
+        <dd>medium link: one distinctive feature</dd>
+        <dt><span class="dots" role="img" aria-label="weak link">●○○</span><span class="ab-line w1" aria-hidden="true"></span></dt>
+        <dd>weak link: ambiguous, a lead</dd>
+      </dl>
+      <p class="hintline" style="margin-top:10px">Select an event and its labels get a frame in these styles while the others
+        fade; select a label and its events are tinted the same way (darker for strong, a dashed outline for weak).</p>
+    </div>
+    <div class="ab-part">
+      <h3>On the other pages</h3>
+      <ul>
+        <li><b>Entry form</b>: pale blue fields come from the data, pale amber fields are suggestions to check, «edited ↺»
+          marks your changes. The box keeps the colour of its source (dashed if unverified); a box you drew is green. In the
+          redraw dialog, red is the box from the data and green is yours.</li>
+        <li><b>Review page</b>: purple is the model's box, the white dashed frame the area the data sheet names, green your
+          redrawn box. The progress bar counts correct (green), redrawn (blue), wrong (red) and unsure (amber).</li>
+        <li><b>Search by photo</b>: a green frame marks «Same», a dashed amber frame «?», a faded card «Not it».</li>
+        <li><b>Box viewer</b>: the box has the colour its link gives, usually the colour of its source; dashed means an
+          approximate position or area.</li>
+      </ul>
+    </div>
+
+    <h2 id="about-method">How it was found, in short</h2>
     <ol>
       <li><b>Image index.</b> All <span data-n="backs"></span> photographs of backs were cut into overlapping windows and
-        described with DINOv2 (an image model), so that a photo of a label can be searched like a picture search.</li>
-      <li><b>Image matching.</b> The most similar windows are checked with SuperPoint + LightGlue + MAGSAC: the same
-        physical label has dozens to hundreds of points that agree geometrically. This places the photos of labels and
-        the pictures in SKKG's label register on the backs (as when locating aerial photographs on a map).</li>
-      <li><b>Reading the text.</b> The 236 provenance data sheets describe <span data-n="marks"></span> marks with their
-        position («o. r. Zierrahmen» = top right of the frame) and text. Text recognition (OCR) on the backs finds many
-        of them by their text, some only when the area the data sheet names is read on its own or after an image
-        filter (flat field, single colour channels).</li>
-      <li><b>Templates.</b> Labels whose position is known serve as templates for the same label elsewhere.</li>
-      <li><b>A vision-language model</b> (Qwen3-VL, running locally) proposes a box for the remaining marks from the
-        data sheet's description. These boxes are leads and marked as unverified.</li>
-      <li><b>A label detector</b> (OWLv2, an open-vocabulary object detector, running locally) searched all backs for
-        anything that looks like a label or stamp, without knowing what to look for. It found
-        <span data-n="detected"></span> that no record documents yet, <span data-n="detected_text"></span> of them with
-        text that OCR could read. Their issuer is only a guess from that text, and finds without text are often not
-        labels at all, so all of them are marked to check.</li>
-      <li><b>Found again.</b> Every reliably located label is searched on all other backs. A hit is backed when the
-        records of both works explain it: a shared exhibition, the same seller to SKKG, or the provenance.</li>
-      <li><b>Exploded back and timeline.</b> Every work's dialog lifts its labels off the back and sets them beside a
-        provenance timeline from SKKG's own records: the stations of its provenance in order (dated where SKKG records
-        the sale or the dealer), its exhibitions and its acquisition by SKKG. A label is linked to an event when its
-        text agrees with the record: the issuer and the lot, date or year of a sale, the venue and year of an
-        exhibition, or the same label on another work that shares the event. <span data-n="events_linked"></span> of
-        <span data-n="events"></span> events are documented by a label (<span data-n="events_linked_strong"></span>
-        strongly).</li>
+        described with DINOv2, an image model, so that a photo of a label can be searched like a picture search.</li>
+      <li><b>Image matching.</b> SuperPoint, LightGlue and MAGSAC check the most similar windows: the same physical label has
+        dozens to hundreds of points that agree geometrically. This places the label register's pictures and SKKG's detail
+        photos on the backs, in pixels of the original image; <span data-n="r1p"></span> of the <span data-n="queries"></span>
+        test photos find their back at rank 1.</li>
+      <li><b>Reading the text.</b> The <span data-n="marks"></span> marks described in SKKG's provenance data sheets were
+        looked for on the backs by their text (OCR), some only after an image filter; labels already located served as
+        templates for a few more.</li>
+      <li><b>A vision-language model</b> (Qwen3-VL, running locally) proposed boxes for the rest:
+        <span data-n="marks_model"></span> unverified leads.</li>
+      <li><b>A label detector</b> (OWLv2, running locally) searched every back for anything that looks like a label or stamp:
+        <span data-n="detected"></span> finds that no record documents, <span data-n="detected_text"></span> of them with
+        readable text.</li>
+      <li><b>Found again.</b> Every reliably located label from the register and the detail photos was searched on all other
+        backs: <span data-n="hits"></span> hits, <span data-n="hits_backed"></span> of them backed by the records of both
+        works.</li>
+      <li><b>Timeline.</b> Provenance stations, exhibitions and acquisitions come from SKKG's knowledge graph; a label is
+        linked to an event when its text agrees with the record.</li>
     </ol>
-    <h2>How to read it</h2>
+    <p>The full story, step by step: <a href="how-we-got-here.html"><b>How we got here</b></a>.</p>
+
+    <h2 id="about-privacy">Privacy</h2>
     <ul>
-      <li>Boxes are in pixels of the original image (x, y, width, height) on the SKKG IIIF server; nothing is copied.
-        «Whole back» opens the full photograph with the box in a zoomable viewer.</li>
-      <li><i class="b warn">check</i> marks boxes that are not reliable: uncertain matches, text found elsewhere than
-        expected, similar (not identical) labels, the vision-language model's proposals and the label detector's finds.</li>
-      <li>A label found on another work is a lead, not proof: it can be the same design used for many years, or SKKG's
-        own loan documentation.</li>
-      <li>In the timeline, <b>strong</b> links (solid frame) rest on two features that agree, <b>medium</b> links on one
-        distinctive feature, <b>weak</b> links (dashed) are ambiguous: several events fit, or OCR read a name only
-        approximately. Each link says its basis. Private owners, heirs and sellers who are persons appear only by their
-        role; dealers, auction houses and museums are named as SKKG records them. A label without an event may document
-        a station or an exhibition that the records lack.</li>
+      <li>Names and addresses of private owners that labels, data sheets or the text recognition transcribe are masked
+        («[private owner]», «[address]»). The masking follows patterns and can miss a name: if you see one, report it with
+        «Report a problem» without repeating the name.</li>
+      <li>Sellers to SKKG who are persons are not named. In the timeline, private owners, heirs and private sellers appear
+        only by their role; dealers, auction houses and museums are named as SKKG records them, and provenance actors are
+        shown as SKKG publishes them.</li>
+      <li>The comments in column L of SKKG's label register are not published.</li>
+      <li>The search by photo keeps your photo in your browser. Entries in the form and decisions on the review and search
+        pages stay in your browser until you download them.</li>
+      <li>Feedback becomes a public GitHub issue: no names or addresses of private owners, and no contact details, please.
+        It travels through a small relay on Google Apps Script that keeps each message for a few hours.</li>
+      <li>Besides SKKG's image server, the pages load a few things from elsewhere: the box viewer its zoom library from
+        cdnjs, the entry form its fonts from Google Fonts, the search by photo its image model from Hugging Face and its code
+        library from jsDelivr.</li>
+      <li>SIK-ISEA's research portal is only linked and counted.</li>
     </ul>
-    <h2>Data and downloads</h2>
+
+    <h2 id="about-data">Data and licences</h2>
     <ul>
-      <li><a href="provenance_pursuit_results.xlsx">All results as a workbook (Excel)</a>, with a guide on its first sheet.</li>
-      <li><a href="review.html">Review page</a>: check the vision-language model's proposals (correct, wrong,
-        unsure) and download your decisions for the team.</li>
-      <li><a href="form.html">Entry form</a> for the columns F to L of SKKG's label register (the register is German, so its terms stay German, with English glosses): opens from
-        every box and label, prefilled with what the data already say (marked), keeps your entries in this browser
-        and downloads them as CSV for the team.</li>
-      <li><a href="sik_isea.html">What SIK-ISEA adds</a>: exhibitions and sales that SIK-ISEA's research portal records
-        for SKKG works and SKKG's knowledge graph lacks, with the matching labels on the backs.</li>
-      <li><a href="label-search/">Search by photo</a>: photograph a label and find the most similar backs. Runs in
-        your browser (the photo is not uploaded; the image model, 174&nbsp;MB, is downloaded once). Confirm hits or
-        redraw their boxes and download your decisions for the team.</li>
-      <li><a href="viewer.html">Box viewer</a> for any IIIF image: <code>viewer.html?iiif=…&amp;xywh=x,y,w,h</code></li>
-      <li><a href="https://github.com/ruedtim/glamhack26-box-viewer">Source of this site on GitHub</a></li>
+      <li>Data and images: SKKG Stiftung für Kunst, Kultur und Geschichte, Winterthur (<a href="https://digital.skkg.ch">SKKG
+        Sammlung digital</a>, knowledge graph and IIIF image server). Object metadata and photographs of backs CC0;
+        provenance data sheets CC BY 4.0, SKKG provenance research team; label register and object list from the
+        challenge.</li>
+      <li>Exhibitions and acquisitions were read from the knowledge graph following
+        <a href="https://github.com/kintopp/skkg-mcp">skkg-mcp</a> (RISE, University of Basel).</li>
+      <li>These pages copy no images: every picture is requested from SKKG's IIIF image server, and boxes are kept as x, y,
+        width and height in pixels of the original image.</li>
+      <li>SIK-ISEA's research portal is only linked and counted (<a href="sik_isea.html">What SIK-ISEA adds</a>): its content
+        may not be republished without SIK-ISEA's consent.</li>
+      <li><a href="provenance_pursuit_results.xlsx">All results as a workbook (Excel)</a> ·
+        <a href="https://github.com/ruedtim/glamhack26-box-viewer">Source of this site on GitHub</a> ·
+        <a href="how-we-got-here.html">How we got here</a></li>
     </ul>
-    <h2>Sources and licences</h2>
-    <p>Data and images: SKKG Stiftung für Kunst, Kultur und Geschichte, Winterthur (<a href="https://digital.skkg.ch">SKKG Sammlung digital</a>,
-      knowledge graph and IIIF image server). Object metadata and photographs of backs CC0; provenance data sheets
-      CC BY 4.0, SKKG provenance research team; label register and object list from the challenge. Exhibitions and
-      acquisitions were read from the knowledge graph following <a href="https://github.com/kintopp/skkg-mcp">skkg-mcp</a>
-      (RISE, University of Basel). Names and addresses of private owners that labels, data sheets or the text
-      recognition transcribe are masked («[private owner]», «[address]»); sellers that are persons are not named;
-      provenance actors are shown as SKKG publishes them. SIK-ISEA's research portal is only linked and counted
-      (<a href="sik_isea.html">What SIK-ISEA adds</a>): its content may not be republished without SIK-ISEA's consent.</p>
   </section>
 </main>
 <footer><div class="wrap" id="foot">Provenance Pursuit · GLAMhack 2026, challenge 304 · data and images: SKKG, Winterthur</div></footer>
@@ -817,8 +1274,16 @@
     if (XP) { XP.destroy(); XP = null; }
     OPEN = null;
     if (dlg.open) dlg.close();
-    tab(h || 'labels');
+    const part = /^about-[a-z]+$/.test(h) ? document.getElementById(h) : null;  // a part of the About tab (#about-form …)
+    const from = current;
+    tab(part ? 'about' : h || 'labels');
+    if (part) part.scrollIntoView();
+    else if (current === 'about' && from !== 'about') scrollTo(0, 0);  // the About tab starts at its top
   }
+  const head = document.querySelector('header');  // the sticky header's height, for the About tab's anchors (scroll-margin-top)
+  const headHeight = () => document.documentElement.style.setProperty('--head', head.offsetHeight + 'px');
+  headHeight();
+  new ResizeObserver(headHeight).observe(head);
   document.addEventListener('click', e => {
     const box = e.target.closest('.ov[data-key]');
     if (box) { e.preventDefault(); location.href = formUrl(box.dataset.key); return; }  // a box opens the entry form
@@ -863,7 +1328,11 @@
     D.labels.forEach(l => { const w = WORK[l.w]; HAY[l.id] = [l.t, l.sub, l.d, l.pos, l.type, w.inv, w.title, w.type, w.actors.join(' ')].join(' ').toLowerCase(); });
     for (const w of Object.values(WORK)) w.hay = [w.inv, w.title, w.type, w.actors.join(' '), w.ex.join(' '), w.acq, w.labels.map(l => l.t).join(' ')].join(' ').toLowerCase();
     const n = D.numbers, pct = v => v == null ? '–' : Math.round(v * 100) + ' %';
-    document.querySelectorAll('[data-n]').forEach(el => { el.textContent = (n[el.dataset.n] ?? '').toLocaleString('en'); });
+    const unv = D.labels.filter(unverified).length, works = Object.values(WORK);
+    const N = { ...n, labels: D.labels.length, unverified: unv, shown: D.labels.length - unv,  // the About tab's counts, from the data as loaded
+      model: D.labels.filter(l => l.how === 'vision-language model').length, notext: D.labels.filter(l => l.st === 'new label without text').length,
+      works_labels: works.filter(w => w.labels.length).length, works_shared: works.filter(w => w.shared).length, r1p: pct(n.r1), r1cp: pct(n.r1_coarse) };
+    document.querySelectorAll('[data-n]').forEach(el => { el.textContent = (N[el.dataset.n] ?? '').toLocaleString('en'); });
     $('#stats').innerHTML = [
       [n.located.toLocaleString('en'), `labels, stamps and marks located on the backs (${n.reliable} reliable), plus ${n.marks_model.toLocaleString('en')} unverified proposals of the model`],
       [n.marks_located.toLocaleString('en'), `of ${n.marks.toLocaleString('en')} marks described in the data sheets placed on the backs (${n.marks_ocr} by their text)`],
@@ -878,7 +1347,7 @@
       `${n.hits_backed} hits are backed by the records of both works: ${n.hits_exhibition} by an exhibition both were lent to, ${n.hits_seller} by the same seller to SKKG. ` +
       'Hits without evidence are leads: the same label design of an issuer, or SKKG\'s own documentation.';
     $('#foot').innerHTML = `Provenance Pursuit · GLAMhack 2026, challenge 304 · built ${esc(D.built)} · data and images: SKKG Stiftung für Kunst, Kultur und Geschichte, Winterthur ` +
-      '(metadata and backs CC0, data sheets CC BY 4.0) · <a href="provenance_pursuit_results.xlsx">Excel</a> · <a href="#about">About</a>';
+      '(metadata and backs CC0, data sheets CC BY 4.0) · <a href="provenance_pursuit_results.xlsx">Excel</a> · <a href="#about">About</a> · <a href="how-we-got-here.html">How we got here</a>';
     route();
   }).catch(() => { document.querySelector('main').innerHTML = '<p class="empty">The data could not be loaded.</p>'; });
 })();

@@ -1,0 +1,1145 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>How we got here – Provenance Pursuit</title>
+<meta name="description" content="The steps from the challenge's raw material to the results site, the workbook and the tools of Provenance Pursuit (GLAMhack 2026, challenge 304, SKKG): what we tried, what worked, what didn't, and what we decided.">
+<script src="feedback.js"></script>
+<style>
+  /* Tokens as on the results site (index.html), plus the chart colours of this page (validated for colour vision deficiency
+     against the panel colour in both modes). */
+  :root { --bg: #f5f3ef; --panel: #fff; --ink: #1d1d1b; --muted: #6b6860; --line: #e2ded6; --accent: #1f4e8c;
+          --register: #2166ac; --photo: #c0392b; --sheet: #762a83; --model: #a86b00; --again: #1a7f4b; --detected: #0f7b86;
+          --chip: #efece6; --shadow: 0 1px 2px rgba(0,0,0,.06), 0 3px 10px rgba(0,0,0,.05);
+          --c-text: #762a83; --c-tpl: #2a78d6; --c-model: #a86b00; --c-area: #e4e0d7; --c-on: #fff;
+          --c-meter: #0f7b86; --c-track: #d5e8ea; color-scheme: light; }
+  :root[data-theme="dark"] { --bg: #171716; --panel: #222220; --ink: #ecebe7; --muted: #a8a59d; --line: #36342f;
+          --accent: #9cc2ff; --register: #6aa8e8; --photo: #ff8a7a; --sheet: #cf9be0; --model: #e8b54a; --detected: #5fd1db;
+          --again: #52c891; --chip: #2d2b28; --shadow: none;
+          --c-text: #bf5fb0; --c-tpl: #3987e5; --c-model: #b9800a; --c-area: #4a4842; --c-on: #161615;
+          --c-meter: #2aa3ae; --c-track: #20393b; color-scheme: dark; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg: #171716; --panel: #222220;
+          --ink: #ecebe7; --muted: #a8a59d; --line: #36342f; --accent: #9cc2ff; --register: #6aa8e8; --photo: #ff8a7a;
+          --sheet: #cf9be0; --model: #e8b54a; --detected: #5fd1db; --again: #52c891; --chip: #2d2b28; --shadow: none;
+          --c-text: #bf5fb0; --c-tpl: #3987e5; --c-model: #b9800a; --c-area: #4a4842; --c-on: #161615;
+          --c-meter: #2aa3ae; --c-track: #20393b; color-scheme: dark; } }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.55 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  a { color: var(--accent); }
+  .wrap { max-width: 1280px; margin: 0 auto; padding: 0 16px; }
+  header { background: var(--panel); border-bottom: 1px solid var(--line); position: sticky; top: 0; z-index: 5; }
+  .top { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 6px 24px; padding-top: 14px; }
+  h1 { font-size: 22px; margin: 0; letter-spacing: -.01em; }
+  h1 a { color: inherit; text-decoration: none; }
+  .tagline { color: var(--muted); margin: 0; font-size: 14px; }
+  nav.tabs { display: flex; flex-wrap: wrap; }
+  nav.tabs a { padding: 10px 12px 9px; text-decoration: none; color: var(--muted); border-bottom: 3px solid transparent; font-weight: 600; font-size: 14px; }
+  nav.tabs a:hover { color: var(--ink); }
+  nav.tabs a[aria-current="page"] { color: var(--ink); border-bottom-color: var(--accent); }
+  @media (max-width: 760px) { .top { padding-top: 10px; } nav.tabs a { padding: 8px 9px 7px; } }
+  main { padding: 18px 0 72px; }
+  code { font: 13px/1.4 ui-monospace, "SF Mono", Menlo, monospace; background: var(--chip); padding: 1px 4px; border-radius: 4px; overflow-wrap: anywhere; }
+  b, strong { font-weight: 650; }
+  .mute { color: var(--muted); }
+
+  /* opening */
+  .hero { max-width: 860px; }
+  .hero h2 { font-size: 30px; line-height: 1.15; margin: 6px 0 10px; letter-spacing: -.015em; }
+  .lead { font-size: 17px; margin: 0 0 10px; }
+  .note { color: var(--muted); font-size: 14px; margin: 0 0 10px; }
+  .back { display: flex; flex-wrap: wrap; gap: 6px 20px; font-size: 14px; font-weight: 600; margin: 0 0 16px; }
+  .stats { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 12px; margin: 6px 0 26px; max-width: 1100px; }
+  .stat { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; box-shadow: var(--shadow); }
+  .stat b { display: block; font-size: 26px; line-height: 1.1; font-weight: 650; }
+  .stat span { color: var(--muted); font-size: 13px; display: block; margin-top: 3px; }
+
+  /* page grid: content and the list of steps */
+  .layout { display: grid; grid-template-columns: minmax(0, 1fr); gap: 0 44px; }
+  .content { min-width: 0; max-width: 860px; }
+  .toc { min-width: 0; margin: 0 0 8px; }
+  .toc details { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 8px 14px; }
+  .toc summary { cursor: pointer; font-weight: 650; font-size: 14px; padding: 2px 0; }
+  .toc h4 { margin: 10px 0 2px; font-size: 12px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); }
+  .toc ol, .toc ul { list-style: none; margin: 0; padding: 0; font-size: 13.5px; }
+  .toc li { margin: 0; }
+  .toc a { display: block; padding: 3px 6px; margin: 0 -6px; border-radius: 5px; text-decoration: none; color: var(--ink); }
+  .toc a:hover { background: var(--chip); }
+  .toc a[aria-current="true"] { background: var(--chip); color: var(--accent); font-weight: 650; }
+  .toc a .tn { display: inline-block; min-width: 1.6em; color: var(--muted); font-variant-numeric: tabular-nums; }
+  @media (min-width: 1140px) {
+    .layout { grid-template-columns: minmax(0, 860px) 250px; justify-content: start; }
+    .content { grid-column: 1; grid-row: 1; }
+    .toc { grid-column: 2; grid-row: 1; margin: 0; }
+    .toc details { position: sticky; top: var(--stick, 96px); max-height: calc(100vh - var(--stick, 96px) - 16px); overflow: auto; }
+  }
+
+  /* sections */
+  section > h2 { font-size: 22px; margin: 34px 0 10px; letter-spacing: -.01em; }
+  .day { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 12px; }
+  .day span { color: var(--muted); font-size: 14px; font-weight: 400; }
+  .content > section:first-child > h2 { margin-top: 10px; }
+
+  /* the steps as a timeline */
+  .steps { list-style: none; margin: 0 0 0 14px; padding: 0; border-left: 2px solid var(--line); }
+  .step { position: relative; padding: 0 0 26px 26px; }
+  .step:last-child { padding-bottom: 2px; }
+  .step > h3 { font-size: 18px; line-height: 1.3; margin: 0; padding-top: 3px; }
+  .step > h3 .n { position: absolute; left: -16px; top: 0; width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center;
+                  background: var(--panel); border: 2px solid var(--accent); color: var(--ink); font-size: 13px; font-weight: 700; }
+  .when { display: block; font-size: 13px; color: var(--muted); margin: 2px 0 8px; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 12px 16px 4px; box-shadow: var(--shadow); }
+  .card > p, .card > ul { margin: 0 0 10px; }
+  .card ul { padding-left: 20px; }
+  .card li { margin: 3px 0; }
+  .tag { display: inline-block; font-size: 11px; line-height: 17px; font-weight: 700; letter-spacing: .03em; text-transform: uppercase;
+         padding: 0 7px; border-radius: 99px; margin-right: 7px; vertical-align: 1px; border: 1px solid var(--line); color: var(--muted); background: var(--chip); }
+  .tag.ok { color: var(--again); border-color: color-mix(in srgb, var(--again) 45%, transparent); background: color-mix(in srgb, var(--again) 10%, transparent); }
+  .tag.no { color: var(--photo); border-color: color-mix(in srgb, var(--photo) 45%, transparent); background: color-mix(in srgb, var(--photo) 9%, transparent); }
+  .tag.dec { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 45%, transparent); background: color-mix(in srgb, var(--accent) 10%, transparent); }
+  .tag.live { color: var(--ink); }
+  .live { font-size: 13.5px; color: var(--muted); }
+  .sub { margin: 4px 0 10px; padding: 10px 12px; border-left: 3px solid var(--line); background: color-mix(in srgb, var(--chip) 55%, transparent); border-radius: 0 6px 6px 0; }
+  .sub h4 { margin: 0 0 4px; font-size: 15px; }
+  .sub p { margin: 0 0 6px; }
+  .sub.ok { border-left-color: var(--again); } .sub.no { border-left-color: var(--photo); }
+
+  /* examples cut out by SKKG's IIIF server */
+  .ex { margin: 4px 0 12px; }
+  .exgrid { display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-end; }
+  .exitem { margin: 0; flex: 1 1 180px; min-width: 0; background: var(--chip); border-radius: 6px; padding: 8px; display: flex; flex-direction: column; gap: 6px; }
+  .pic { position: relative; display: block; width: fit-content; max-width: 100%; margin: 0 auto; line-height: 0; }
+  .pic img { display: block; max-width: 100%; height: auto; max-height: 280px; width: auto; border-radius: 3px; background: var(--panel); }
+  .pic svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+  .pic svg rect { fill: none; stroke: var(--photo); stroke-width: 2.5; vector-effect: non-scaling-stroke; }
+  .exitem .cap { font-size: 12.5px; line-height: 1.4; color: var(--muted); }
+  .ex figcaption { font-size: 13px; color: var(--muted); margin-top: 6px; }
+
+  /* diagrams */
+  .fig { margin: 6px 0 14px; }
+  .fig figcaption { font-size: 13px; color: var(--muted); margin-top: 6px; }
+  .pipe { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px 26px; align-items: start; }
+  @media (min-width: 900px) { .pipe { grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr); } }
+  .pipe p { margin: 0 0 10px; }
+  svg.dg { display: block; width: 100%; height: auto; margin: 0 auto; }
+  svg.dg.w-pipe { max-width: 500px; } svg.dg.w-flow, svg.dg.w-swap { max-width: 400px; }
+  .dg .box { fill: var(--panel); stroke: var(--line); stroke-width: 1; }
+  .dg .boxm { fill: var(--chip); stroke: var(--line); stroke-width: 1; }
+  .dg .hub { fill: var(--panel); stroke: var(--accent); stroke-width: 1.6; }
+  .dg text { fill: var(--ink); font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  .dg .t { font-size: 12px; font-weight: 700; }
+  .dg .s { font-size: 10.5px; }
+  .dg .m { font-size: 10.5px; fill: var(--muted); }
+  .dg .mono { font: 9.5px ui-monospace, "SF Mono", Menlo, monospace; fill: var(--muted); }
+  .dg .ar { stroke: var(--muted); stroke-width: 1.3; fill: none; }
+  .dg .ah { fill: var(--muted); }
+  .dg .la { fill: var(--photo); } .dg .lb { fill: var(--sheet); } .dg .lc { fill: var(--detected); }
+  .dg .frame { fill: var(--chip); stroke: var(--muted); stroke-width: 1.2; }
+  .dg .cover { fill: color-mix(in srgb, var(--accent) 22%, transparent); stroke: var(--accent); stroke-width: 1; }
+  .dg .grid { stroke: color-mix(in srgb, var(--accent) 45%, transparent); stroke-width: .6; }
+  .dg .right { fill: none; stroke: var(--again); stroke-width: 2; }
+  .dg .wrong { fill: none; stroke: var(--photo); stroke-width: 2; stroke-dasharray: 4 3; }
+
+  /* charts */
+  .chart { margin: 6px 0 14px; padding: 12px 14px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); }
+  .chart figcaption { font-size: 14px; margin: 0 0 8px; }
+  .chart figcaption span { color: var(--muted); }
+  .legend { list-style: none; margin: 0 0 10px; padding: 0; display: flex; flex-wrap: wrap; gap: 2px 16px; font-size: 13px; color: var(--muted); }
+  .legend i { display: inline-block; width: 12px; height: 12px; border-radius: 3px; vertical-align: -1px; margin-right: 6px; }
+  .sw-text, .seg.text { background: var(--c-text); } .sw-tpl, .seg.tpl { background: var(--c-tpl); }
+  .sw-model, .seg.model { background: var(--c-model); } .sw-area, .seg.area { background: var(--c-area); }
+  .sb { margin: 0 0 12px; }
+  .sb-name { font-size: 13px; color: var(--muted); margin: 0 0 4px; }
+  .sb-bar { display: flex; gap: 2px; height: 28px; }
+  .seg { flex: var(--v) 1 0px; min-width: 3px; border-radius: 4px; display: flex; align-items: center; padding: 0 7px; cursor: default; }
+  .seg:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+  .seg b { display: inline-block; font-size: 12px; font-weight: 650; color: var(--c-on); white-space: nowrap; }
+  .seg.area b { color: var(--ink); }
+  .seg[data-fit="no"] b { visibility: hidden; }
+  .scale { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); border-top: 1px solid var(--line); padding-top: 3px; font-variant-numeric: tabular-nums; }
+  .mrow { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr) 3.4em; gap: 4px 12px; align-items: center; padding: 6px 4px; border-radius: 6px; cursor: default; }
+  .mrow:focus-visible { outline: 2px solid var(--ink); outline-offset: 1px; }
+  .mname { font-size: 13.5px; line-height: 1.35; }
+  .mbar { height: 12px; background: var(--c-track); border-radius: 0 4px 4px 0; position: relative; }
+  .mbar span { position: absolute; left: 0; top: 0; bottom: 0; width: calc(var(--p) * 1%); background: var(--c-meter); border-radius: 0 4px 4px 0; }
+  .mval { font-size: 14px; font-weight: 650; text-align: right; font-variant-numeric: tabular-nums; }
+  @media (max-width: 560px) { .mrow { grid-template-columns: minmax(0, 1fr) 3.4em; } .mname { grid-column: 1 / -1; } }
+  details.tv { margin-top: 4px; font-size: 13px; }
+  details.tv summary { cursor: pointer; color: var(--accent); width: fit-content; }
+  table { border-collapse: collapse; margin: 6px 0 4px; font-size: 13px; }
+  th, td { text-align: left; padding: 4px 12px 4px 0; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { font-weight: 650; }
+  .num { text-align: right; font-variant-numeric: tabular-nums; }
+  .tip { position: fixed; z-index: 1000; pointer-events: none; background: var(--ink); color: var(--bg); font-size: 12.5px; line-height: 1.4;
+         padding: 5px 9px; border-radius: 6px; max-width: 280px; box-shadow: 0 2px 10px rgba(0,0,0,.22); }
+
+  /* decisions, dead ends, publications */
+  .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(255px, 1fr)); gap: 12px; margin: 8px 0 4px; }
+  .dc { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px 6px; box-shadow: var(--shadow); border-top: 3px solid var(--accent); }
+  .dc h3 { font-size: 15.5px; margin: 0 0 6px; }
+  .dc p { margin: 0 0 8px; font-size: 14px; }
+  .dc .see { font-size: 13px; }
+  .dead { list-style: none; margin: 8px 0 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(255px, 1fr)); gap: 8px 22px; }
+  .dead li { padding: 6px 0 6px 12px; border-left: 3px solid color-mix(in srgb, var(--photo) 55%, transparent); font-size: 14px; }
+  .dead b { display: block; }
+  .dead a { font-size: 13px; }
+  .pubs { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 4px 30px; }
+  .pubs h3 { font-size: 15px; margin: 6px 0 4px; }
+  .pubs ol { list-style: none; margin: 0; padding: 0; font-size: 14px; }
+  .pubs li { display: grid; grid-template-columns: 3.4em minmax(0, 1fr); gap: 8px; padding: 4px 0; border-bottom: 1px solid var(--line); }
+  .pubs time { color: var(--muted); font-variant-numeric: tabular-nums; }
+  .prose p { max-width: 860px; }
+  footer { border-top: 1px solid var(--line); color: var(--muted); font-size: 13px; padding: 16px 0 84px; }
+  @media (max-width: 560px) {
+    header { position: static; }
+    .hero h2 { font-size: 26px; }
+    .lead { font-size: 16px; }
+    .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+    .stat { padding: 10px 11px; }
+    .stat b { font-size: 22px; }
+    .steps { margin-left: 12px; }
+    .step { padding-left: 21px; }
+    .step > h3 { font-size: 17px; }
+    .card { padding: 11px 12px 3px; }
+    .sub { padding: 9px 10px; }
+    .chart { padding: 10px 10px 8px; }
+  }
+  @media (prefers-reduced-motion: no-preference) { html { scroll-behavior: smooth; } }
+  @media print { header { position: static; } .toc { display: none; } .tip { display: none; } }
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap top">
+    <div>
+      <h1><a href="./">Provenance Pursuit</a></h1>
+      <p class="tagline">Have I seen this label before? Labels, stamps and marks on the backs of works in the SKKG collection</p>
+    </div>
+    <nav class="tabs" aria-label="Results site">
+      <a href="./#labels">Labels</a>
+      <a href="./#works">Works</a>
+      <a href="./#again">Found again</a>
+      <a href="./#about">About</a>
+      <a href="how-we-got-here.html" aria-current="page">How we got here</a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+  <section class="hero" aria-labelledby="title">
+    <h2 id="title">How we got here</h2>
+    <p class="lead">In a day and a half, a folder of spreadsheets, PDFs and photographs became a results site, a workbook and
+      a handful of tools: a box viewer, an entry form, a review page and a search by photo. This page retraces the steps in
+      order, with the numbers at each one: what we tried and why, what worked, what didn't, and what we decided.</p>
+    <p class="note">GLAMhack 2026, challenge 304 «Provenance Pursuit», SKKG Stiftung für Kunst, Kultur und Geschichte,
+      Winterthur, 13–14 November 2026. The team built it with an AI coding assistant (<a href="#sources">how</a>). Times are
+      Swiss time, taken from the log of the coding sessions and from the publication history of the site. Several steps ran side by side; they are listed in the order their main result arrived. Numbers are as
+      of Saturday 14 November, 14:00.</p>
+    <p class="back"><a href="./">← Back to the results</a><a href="./#about">About this site: what each part does</a></p>
+    <div class="stats" aria-label="Where it ended up">
+      <div class="stat"><b>872</b><span>photographs of backs, searched on SKKG's IIIF server</span></div>
+      <div class="stat"><b>733</b><span>labels and marks from SKKG's records placed as boxes, 594 of them reliably</span></div>
+      <div class="stat"><b>1,913</b><span>further labels no record mentions, found by a detector (to check)</span></div>
+      <div class="stat"><b>135</b><span>times a label turned up on another work; 101 backed by SKKG's records</span></div>
+      <div class="stat"><b>2,015</b><span>events in 594 provenance timelines; 533 documented by a label</span></div>
+      <div class="stat"><b>19</b><span>publications of the site, from Friday 13:20 to Saturday 13:48</span></div>
+    </div>
+  </section>
+
+  <div class="layout">
+    <aside class="toc" aria-label="On this page">
+      <details open>
+        <summary>On this page</summary>
+        <h4>Friday 13 November</h4>
+        <ol>
+          <li><a href="#s1"><span class="tn">1</span>The raw material</a></li>
+          <li><a href="#s2"><span class="tn">2</span>Candidate lists</a></li>
+          <li><a href="#s3"><span class="tn">3</span>An image index of the backs</a></li>
+          <li><a href="#s4"><span class="tn">4</span>A geometric check</a></li>
+          <li><a href="#s5"><span class="tn">5</span>Boxes in original pixels</a></li>
+          <li><a href="#s6"><span class="tn">6</span>Found again on other works</a></li>
+          <li><a href="#s7"><span class="tn">7</span>Marks that exist only as text</a></li>
+          <li><a href="#s8"><span class="tn">8</span>A language model, cut back</a></li>
+          <li><a href="#s9"><span class="tn">9</span>Workbook, viewer, site</a></li>
+          <li><a href="#s10"><span class="tn">10</span>Ten ideas, each with a probe</a></li>
+          <li><a href="#s11"><span class="tn">11</span>SIK-ISEA: links and counts</a></li>
+          <li><a href="#s12"><span class="tn">12</span>Entry form, search by photo</a></li>
+          <li><a href="#s13"><span class="tn">13</span>Masking private owners</a></li>
+        </ol>
+        <h4>Saturday 14 November</h4>
+        <ol>
+          <li><a href="#s14"><span class="tn">14</span>A label detector on every back</a></li>
+          <li><a href="#s15"><span class="tn">15</span>English, except the data</a></li>
+          <li><a href="#s16"><span class="tn">16</span>Ideas from another prototype</a></li>
+          <li><a href="#s17"><span class="tn">17</span>Feedback without an account</a></li>
+          <li><a href="#s18"><span class="tn">18</span>Four backs with swapped sizes</a></li>
+          <li><a href="#s19"><span class="tn">19</span>Writing it down</a></li>
+        </ol>
+        <h4>Looking back</h4>
+        <ul>
+          <li><a href="#pipeline">The routes in one picture</a></li>
+          <li><a href="#decisions">Decisions and why</a></li>
+          <li><a href="#deadends">What didn't work</a></li>
+          <li><a href="#published">Publication history</a></li>
+          <li><a href="#sources">How it was made</a></li>
+        </ul>
+      </details>
+    </aside>
+
+    <div class="content">
+      <section id="pipeline" data-sec="The routes in one picture" aria-labelledby="h-pipe">
+        <h2 id="h-pipe">The routes in one picture</h2>
+        <div class="pipe">
+          <div>
+            <p><b>Three kinds of evidence, three routes, one result.</b> SKKG's records describe a label in one of two
+              ways: with a picture of it (SKKG's photos of single labels, the pictures in its label register) or only in
+              words (the provenance data sheets). Many labels are not recorded at all.</p>
+            <p>Each kind got its own route, and every route ends in the same place: a box in pixels of the original
+              photograph of the back. That box is all SKKG's IIIF server needs to cut the label out, so no picture was
+              ever copied. Reliable boxes were then searched on all other backs, and their hits checked against SKKG's
+              records of exhibitions and acquisitions.</p>
+            <p class="mute">The numbers are today's; the steps below say how each one came about.</p>
+          </div>
+          <figure class="fig">
+            <svg class="dg w-pipe" viewBox="0 0 360 412" role="img" aria-labelledby="pipe-t pipe-d">
+              <title id="pipe-t">How labels were placed on the backs</title>
+              <desc id="pipe-d">Three routes. A picture of the label: DINOv2 finds the most similar windows of the 872 backs, LightGlue and MAGSAC count the points that agree; 187 reliable boxes. A description: OCR looks for the quoted text in the area the data sheet names, else a template, else the vision-language model, unverified; 498 by text, 19 by template, 896 model leads. Nothing yet: OWLv2 marks everything that looks like a label, then OCR and rules sort SKKG's own, known and new labels; 1,913 new labels, 1,407 with text. All three end in a box in pixels of the original photograph, an IIIF region. From there: labels found again on all other backs, checked with SKKG's records; and the site, workbook, viewer, entry form and review page.</desc>
+              <defs><marker id="ah1" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah" d="M0,0 L8,4 L0,8 z"/></marker></defs>
+              <!-- inputs -->
+              <rect class="box" x="0.5" y="0.5" width="114" height="62" rx="6"/><rect class="la" x="0.5" y="0.5" width="114" height="4" rx="2"/>
+              <text class="t" x="57.5" y="22" text-anchor="middle">A picture of it</text>
+              <text class="s" x="57.5" y="38" text-anchor="middle">197 label photos,</text>
+              <text class="s" x="57.5" y="52" text-anchor="middle">75 register pictures</text>
+              <rect class="box" x="123" y="0.5" width="114" height="62" rx="6"/><rect class="lb" x="123" y="0.5" width="114" height="4" rx="2"/>
+              <text class="t" x="180" y="22" text-anchor="middle">A description</text>
+              <text class="s" x="180" y="38" text-anchor="middle">1,906 marks from</text>
+              <text class="s" x="180" y="52" text-anchor="middle">236 data sheets</text>
+              <rect class="box" x="245.5" y="0.5" width="114" height="62" rx="6"/><rect class="lc" x="245.5" y="0.5" width="114" height="4" rx="2"/>
+              <text class="t" x="302.5" y="22" text-anchor="middle">Nothing yet</text>
+              <text class="s" x="302.5" y="38" text-anchor="middle">labels that no</text>
+              <text class="s" x="302.5" y="52" text-anchor="middle">record mentions</text>
+              <path class="ar" d="M57.5 63 V78" marker-end="url(#ah1)"/><path class="ar" d="M180 63 V78" marker-end="url(#ah1)"/><path class="ar" d="M302.5 63 V78" marker-end="url(#ah1)"/>
+              <!-- first method -->
+              <rect class="boxm" x="0.5" y="80.5" width="114" height="56" rx="6"/>
+              <text class="s" x="57.5" y="99" text-anchor="middle">DINOv2: the most</text>
+              <text class="s" x="57.5" y="113" text-anchor="middle">similar windows</text>
+              <text class="s" x="57.5" y="127" text-anchor="middle">of 872 backs</text>
+              <rect class="boxm" x="123" y="80.5" width="114" height="56" rx="6"/>
+              <text class="s" x="180" y="99" text-anchor="middle">OCR: the quoted</text>
+              <text class="s" x="180" y="113" text-anchor="middle">text, in the area</text>
+              <text class="s" x="180" y="127" text-anchor="middle">the sheet names</text>
+              <rect class="boxm" x="245.5" y="80.5" width="114" height="56" rx="6"/>
+              <text class="s" x="302.5" y="99" text-anchor="middle">OWLv2 marks</text>
+              <text class="s" x="302.5" y="113" text-anchor="middle">all that looks</text>
+              <text class="s" x="302.5" y="127" text-anchor="middle">like a label</text>
+              <path class="ar" d="M57.5 137 V150" marker-end="url(#ah1)"/><path class="ar" d="M180 137 V150" marker-end="url(#ah1)"/><path class="ar" d="M302.5 137 V150" marker-end="url(#ah1)"/>
+              <!-- second method -->
+              <rect class="boxm" x="0.5" y="152.5" width="114" height="56" rx="6"/>
+              <text class="s" x="57.5" y="171" text-anchor="middle">LightGlue and</text>
+              <text class="s" x="57.5" y="185" text-anchor="middle">MAGSAC count the</text>
+              <text class="s" x="57.5" y="199" text-anchor="middle">points that agree</text>
+              <rect class="boxm" x="123" y="152.5" width="114" height="56" rx="6"/>
+              <text class="s" x="180" y="171" text-anchor="middle">else a template,</text>
+              <text class="s" x="180" y="185" text-anchor="middle">else the model</text>
+              <text class="s" x="180" y="199" text-anchor="middle">(unverified)</text>
+              <rect class="boxm" x="245.5" y="152.5" width="114" height="56" rx="6"/>
+              <text class="s" x="302.5" y="171" text-anchor="middle">OCR and rules:</text>
+              <text class="s" x="302.5" y="185" text-anchor="middle">SKKG's own,</text>
+              <text class="s" x="302.5" y="199" text-anchor="middle">known or new</text>
+              <!-- results per route -->
+              <text class="m" x="57.5" y="228" text-anchor="middle">187 reliable boxes</text>
+              <text class="m" x="180" y="228" text-anchor="middle">498 by text, 19 by</text>
+              <text class="m" x="180" y="242" text-anchor="middle">template, 896 leads</text>
+              <text class="m" x="302.5" y="228" text-anchor="middle">1,913 new labels,</text>
+              <text class="m" x="302.5" y="242" text-anchor="middle">1,407 with text</text>
+              <path class="ar" d="M57.5 234 V270" marker-end="url(#ah1)"/>
+              <path class="ar" d="M180 248 V270" marker-end="url(#ah1)"/>
+              <path class="ar" d="M302.5 248 V270" marker-end="url(#ah1)"/>
+              <!-- the hub -->
+              <rect class="hub" x="0.8" y="272.8" width="358.4" height="56" rx="7"/>
+              <text class="t" x="180" y="292" text-anchor="middle">A box in pixels of the original photograph</text>
+              <text class="mono" x="180" y="307" text-anchor="middle">…/iiif/3/{image}/x,y,w,h/max/0/default.jpg</text>
+              <text class="s" x="180" y="321" text-anchor="middle">is the label, cut out by SKKG's IIIF server</text>
+              <path class="ar" d="M87 329.5 V346" marker-end="url(#ah1)"/><path class="ar" d="M273 329.5 V346" marker-end="url(#ah1)"/>
+              <!-- outputs -->
+              <rect class="box" x="0.5" y="348.5" width="174" height="62" rx="6"/>
+              <text class="t" x="87.5" y="368" text-anchor="middle">Found again</text>
+              <text class="s" x="87.5" y="384" text-anchor="middle">searched on all other backs,</text>
+              <text class="s" x="87.5" y="398" text-anchor="middle">checked with SKKG's records</text>
+              <rect class="box" x="185.5" y="348.5" width="174" height="62" rx="6"/>
+              <text class="t" x="272.5" y="368" text-anchor="middle">Shown and checked</text>
+              <text class="s" x="272.5" y="384" text-anchor="middle">site, workbook, viewer,</text>
+              <text class="s" x="272.5" y="398" text-anchor="middle">entry form, review page</text>
+            </svg>
+            <figcaption>Each route uses the most precise method that its evidence allows; the less precise ones get only what
+              is left. Colours as on the results site: red label photos, purple data sheets, teal label detector.</figcaption>
+          </figure>
+        </div>
+      </section>
+
+      <section id="friday" aria-labelledby="h-fri">
+        <h2 class="day" id="h-fri">Friday 13 November <span>Steps 1–13</span></h2>
+        <ol class="steps">
+          <li class="step" id="s1" data-sec="Step 1: The raw material">
+            <h3><span class="n">1</span>The raw material, and what it lacked</h3>
+            <span class="when"><time datetime="2026-11-13T08:18+01:00">08:18</time>–<time datetime="2026-11-13T09:54+01:00">09:54</time></span>
+            <div class="card">
+              <p><span class="tag">Why 304</span>The challenge asks «Have I seen this label before?». That is an image-search
+                question, and the team knew a method for it from earlier work on placing aerial photographs on maps: an image
+                model proposes candidates, a geometric matcher confirms them.</p>
+              <p><span class="tag">What we had</span>From the challenge: SKKG's draft label register (75 entries on 49 works),
+                an object list (237 works), 236 provenance data sheets (PDF) and full-resolution photographs (200 backs,
+                3.3 GB). Openly available: SKKG's knowledge graph (SPARQL) and its IIIF image server, with about 11,700
+                photographs of backs and 4,421 images typed as labels.</p>
+              <p><span class="tag no">What it lacked</span>Nothing said where on a back a label sits: no boxes, no
+                coordinates. The register is a data model with 75 examples rather than a training set: 51 of its pictures
+                are only 105&nbsp;px wide, Sotheby's is spelled five ways, positions come in 55 free-text variants, and its
+                column «other SKKG works with this label» is filled in once. That column is the gap a tool should close. Of
+                the 4,421 label images only 356 are photos of a label on the object; 4,065 are A4 scans of detached tags,
+                mostly of weapons, locks and sculptures. The object list cuts the provenance short for 170 of 237 works
+                («[...]»).</p>
+              <p><span class="tag dec">Decided</span>Work from SKKG's IIIF server, with copies of the backs at 1,600&nbsp;px
+                and full resolution only for the regions that need it, instead of downloading the full-size files; take the
+                provenance from the knowledge graph rather than the object list.</p>
+            </div>
+          </li>
+
+          <li class="step" id="s2" data-sec="Step 2: Candidate lists">
+            <h3><span class="n">2</span>Candidate lists from three sources</h3>
+            <span class="when"><time datetime="2026-11-13T09:54+01:00">09:54</time></span>
+            <div class="card">
+              <p><span class="tag">Tried</span>One script joins the register, the object list and the knowledge graph. The
+                SPARQL endpoint answers quick series of queries with «429 Too Many Requests», so the script pauses between
+                them.</p>
+              <p><span class="tag ok">Worked</span>705 works; 2,036 IIIF images, among them 872 photographs of backs of 622
+                works; a test set of 197 label photos of 150 works whose back is photographed too; 93 pairs of works with
+                labels of the same issuer; 405 provenance stations (auction houses, dealers, estates) whose label might be on a
+                back; 382 provenance actors with their spellings.</p>
+              <p><span class="tag">Learned</span>A provenance station does not guarantee a label. On Inv. 1098 the provenance
+                names six dealers and auction houses; the back shows the label of one of those dealers, but none from Koller.</p>
+            </div>
+          </li>
+
+          <li class="step" id="s3" data-sec="Step 3: An image index of the backs">
+            <h3><span class="n">3</span>An image index of the backs</h3>
+            <span class="when"><time datetime="2026-11-13T10:09+01:00">10:09</time>–<time datetime="2026-11-13T11:40+01:00">11:40</time></span>
+            <div class="card">
+              <p><span class="tag">Tried</span>Labels are small, so a whole back would drown them. Every back was cut into
+                overlapping square windows of 20&nbsp;% and 35&nbsp;% of its shorter side, and DINOv2 turned each window into a
+                vector of 1,536 values: 143,963 windows, about 100 a second on the laptop's GPU. The run pauses with Enter, for
+                when the laptop gets too loud, and resumes where it stopped.</p>
+              <p><span class="tag ok">Worked</span>Against all 872 backs, the right back is the top hit for 37&nbsp;% of the
+                197 test photos and among the first 20 for 59&nbsp;% (by chance: 2&nbsp;%).</p>
+              <p><span class="tag no">Didn't work</span>The first evaluation, at 10:21, said 63&nbsp;%, but only 181 backs and
+                16 photos were ready then; small galleries flatter. Most misses are labels that are not visible on the back
+                photo (inserted slips, marks under a vessel) or too small for the windows. A second set of windows at
+                10&nbsp;% (459,377 of them) moved such backs up the list (Inv. 1745 from rank 32 to 12), not to the top, so it
+                was computed only for 86 backs.</p>
+            </div>
+          </li>
+
+          <li class="step" id="s4" data-sec="Step 4: A geometric check">
+            <h3><span class="n">4</span>A geometric check</h3>
+            <span class="when"><time datetime="2026-11-13T11:29+01:00">11:29</time>, full evaluation <time datetime="2026-11-13T13:03+01:00">13:03</time></span>
+            <div class="card">
+              <p><span class="tag">Tried</span>For the 30 best backs, SuperPoint and LightGlue match the photo against the most
+                similar windows, and a robust homography (MAGSAC) counts the points that agree in one perspective. The same
+                physical label gives dozens to hundreds of such inliers, a merely similar one hardly any; from 15 on, a back
+                moves up.</p>
+              <p><span class="tag ok">Worked</span>Top hit right: 37&nbsp;% → <b>56&nbsp;%</b>; mean reciprocal rank 0.42 →
+                0.57. The whole test set took 39 minutes.</p>
+              <p><span class="tag no">Didn't work</span>Matching image pairs in batches gave wrong counts: the same pair had 105
+                inliers on its own and 9 in a batch of eight. Every pair is matched on its own since.</p>
+            </div>
+          </li>
+
+          <li class="step" id="s5" data-sec="Step 5: Boxes in original pixels">
+            <h3><span class="n">5</span>Boxes in original pixels</h3>
+            <span class="when"><time datetime="2026-11-13T11:35+01:00">11:35</time>–<time datetime="2026-11-13T12:10+01:00">12:10</time></span>
+            <div class="card">
+              <p><span class="tag dec">Decided</span>A box for every label, relative to the original IIIF image, so that no new
+                pictures of labels have to be made and everything refers to the original. (More under
+                <a href="#decisions">Decisions</a>.)</p>
+              <p><span class="tag">How</span>The homography from step 4 maps the outline of a label photo onto the back. The
+                models worked on 1,600&nbsp;px copies with a known scale factor, so every box converts exactly into pixels of
+                the original photograph: <code>x, y, w, h</code> is an IIIF region. Reliable boxes are also exported as W3C Web
+                Annotations.</p>
+              <p><span class="tag ok">Worked</span>Label photos: <b>135 of 197</b> placed reliably (median 101 agreeing points;
+                boxes were right even at 30), 9 uncertain, 53 not found, in 4 minutes. Register: <b>52 of 75</b> reliable, 33
+                of them from the 105&nbsp;px pictures; 6 uncertain, 14 only roughly placed, and 3 sit on the front of the frame
+                and were not searched.</p>
+              <figure class="ex">
+                <div class="exgrid">
+                  <div class="exitem">
+                    <span class="pic"><img loading="lazy" decoding="async" width="429" height="480"
+                      src="https://iiif.digital.skkg.ch/iiif/3/8a47091d-5bc2-454f-b7f6-fae505b316dc/full/!480,480/0/default.jpg"
+                      alt="The back of Inv. 595, with a red box around a framer's label at the upper left"><svg viewBox="0 0 4972 5563" preserveAspectRatio="none" aria-hidden="true"><rect x="1643" y="1625" width="1677" height="1724"/></svg></span>
+                    <span class="cap">The whole back of Inv. 595 and the box: <code>1643,1625,1677,1724</code>, in pixels of the
+                      4,972 × 5,563 original.</span>
+                  </div>
+                  <div class="exitem">
+                    <span class="pic"><img loading="lazy" decoding="async" width="311" height="320"
+                      src="https://iiif.digital.skkg.ch/iiif/3/8a47091d-5bc2-454f-b7f6-fae505b316dc/1643,1625,1677,1724/!320,320/0/default.jpg"
+                      alt="The framer's label, cut out of the original photograph by SKKG's IIIF server"></span>
+                    <span class="cap">The same box as an IIIF region: SKKG's server cuts the label out of the original.</span>
+                  </div>
+                </div>
+                <figcaption>SKKG's photo of this framer's label was placed on the back with 754 agreeing points.
+                  <a href="viewer.html?iiif=https://iiif.digital.skkg.ch/iiif/3/8a47091d-5bc2-454f-b7f6-fae505b316dc&amp;xywh=1643,1625,1677,1724&amp;title=Inv.%20595">Whole back, zoomable</a> ·
+                  <a href="./#work=106">The work on the results site</a></figcaption>
+              </figure>
+              <p><span class="tag">Learned</span>The label photos and the register hardly overlap: only 3 of the register's 49
+                works have such a photo. That is why the site shows more labels than the register lists.</p>
+            </div>
+          </li>
+
+          <li class="step" id="s6" data-sec="Step 6: Found again on other works">
+            <h3><span class="n">6</span>Found again on other works</h3>
+            <span class="when"><time datetime="2026-11-13T12:24+01:00">12:24</time>, evidence from exhibitions and sales <time datetime="2026-11-13T14:30+01:00">14:30</time></span>
+            <div class="card">
+              <p><span class="tag">Tried</span>Every reliably placed label (187) was cut from its back and searched on all other
+                backs; LightGlue confirms a hit from 25 agreeing points.</p>
+              <p><span class="tag ok">Worked</span><b>40 labels</b> turned up on other works, in <b>135 hits</b>.</p>
+              <figure class="ex">
+                <div class="exgrid">
+                  <div class="exitem">
+                    <span class="pic"><img loading="lazy" decoding="async" width="320" height="117"
+                      src="https://iiif.digital.skkg.ch/iiif/3/7cb9a443-a8ca-4419-90a9-2f3ddd0d5946/1949,1424,1881,689/!320,320/0/default.jpg"
+                      alt="A typed label on the back of Inv. 198, cut out by SKKG's IIIF server"></span>
+                    <span class="cap"><a href="./#work=502">Inv. 198</a>: SKKG's label photo, placed on its back.</span>
+                  </div>
+                  <div class="exitem">
+                    <span class="pic"><img loading="lazy" decoding="async" width="320" height="188"
+                      src="https://iiif.digital.skkg.ch/iiif/3/9320f0af-36b7-4837-93d8-f72eb4ebf55c/1751,1383,1534,902/!320,320/0/default.jpg"
+                      alt="A label typed the same way on the back of Inv. 196, cut out by SKKG's IIIF server"></span>
+                    <span class="cap"><a href="./#work=500">Inv. 196</a>: found with 88 agreeing points.</span>
+                  </div>
+                </div>
+                <figcaption>Two labels typed the same way for two related works (only the title and size differ), matched
+                  with 88 agreeing points. Both works came to SKKG from the same seller, which backs the hit.</figcaption>
+              </figure>
+              <p><span class="tag no">Didn't work</span>At first only 3 of the 135 hits were explained by the provenance
+                chains, mostly because the provenance of most works is still open.</p>
+              <p><span class="tag ok">Fixed</span>The exhibitions and acquisitions of the 705 works, read from the knowledge
+                graph following the graph model of <a href="https://github.com/kintopp/skkg-mcp">skkg-mcp</a>: 746 loans of 211
+                works to 281 exhibitions, 657 acquisitions by SKKG (532 of them from institutions). Now <b>101 of 135</b> hits
+                are backed: 87 by an exhibition both works were lent to, 18 by the same seller, 3 by the provenance.</p>
+              <p><span class="tag">Learned</span>Hits are leads, not proof. One exhibition, «Sesam öffne dich!» (Bern and
+                Martigny, 2014/15), showed about 70 of these works, and SKKG's own loan strips recur on many backs: they
+                document a loan, not an earlier owner.</p>
+            </div>
+          </li>
+
+          <li class="step" id="s7" data-sec="Step 7: Marks that exist only as text">
+            <h3><span class="n">7</span>1,906 marks that exist only as text</h3>
+            <span class="when"><time datetime="2026-11-13T12:32+01:00">12:32</time>–<time datetime="2026-11-13T12:54+01:00">12:54</time></span>
+            <div class="card">
+              <p><span class="tag">What we had</span>The 236 data sheets (206&nbsp;MB) describe the provenance marks of each
+                work in a section «Provenienzmerkmale». Parsed into a table: <b>1,906 marks</b> (804 labels, 259 stamps, 1,140
+                inscriptions; one mark can be several), each with its side, position («o. r. Zierrahmen» = top right of the
+                frame) and the quoted text («№ 1143»). Ten times as many as in the register, but without pictures.</p>
+              <p><span class="tag">Tried</span>Apple's text recognition, running on the laptop, read the backs of these works
+                at 3,000&nbsp;px from IIIF. The position gives a search area; the quote is looked for in what was read, digit
+                sequences exactly and words fuzzily.</p>
+              <p><span class="tag ok">Worked</span>235 marks found in the area the data sheet names, 50 elsewhere on the back.</p>
+              <p><span class="tag no">Didn't work</span>For 1,295 marks only the area was known: handwriting, worn labels, short
+                codes. 279 marks are on the front and were not searched; 47 belong to works without a photographed back.</p>
+            </div>
+          </li>
+
+          <li class="step" id="s8" data-sec="Step 8: A language model, cut back">
+            <h3><span class="n">8</span>A vision-language model, cut back</h3>
+            <span class="when"><time datetime="2026-11-13T13:13+01:00">13:13</time>–<time datetime="2026-11-13T15:23+01:00">15:23</time>; review page <time datetime="2026-11-13T16:04+01:00">16:04</time></span>
+            <div class="card">
+              <p><span class="tag">Tried</span>Qwen3-VL-4B, a vision-language model running on the laptop, for the 1,295 marks:
+                it sees the area plus a margin and the data sheet's description, and answers with a box. In a pilot on 40 marks
+                whose text OCR had found, 33 of its boxes contained that text (82.5&nbsp;%), at 4.6 seconds a mark.</p>
+              <p><span class="tag no">Didn't work</span>It always answers with a box, even when the mark is not visible. In a
+                spot check of 20 boxes, 9 were right, 2 plausible, 6 wrong and 3 unclear; four of the wrong ones sat on SKKG's
+                own inventory label, the most conspicuous label on a back.</p>
+              <p><span class="tag dec">Decided</span>At 13:45 the team asked for something more precise: the model should only
+                be used where nothing better exists. The run stopped at 481 of 1,295.</p>
+              <p><span class="tag">Tried</span>Template matching, as for the aerial photographs: 328 labels with a known
+                position served as templates. In the area the data sheet names, DINOv2 picks the most similar templates and all
+                templates of the same issuer; LightGlue and MAGSAC must agree on at least 25 points.</p>
+              <p><span class="tag no">Didn't work</span>Most labels are one-offs, with no second copy to serve as a template. In
+                a pilot on 141 marks with a known position, only 15 matched any template; 10 got a box, 6 of them on the right
+                spot. In all, <b>19 of 733</b> labels and stamps: 5 by a template of the same issuer, 14 by a similar label; 25
+                times another issuer's label sat in the area and was not assigned.</p>
+              <p><span class="tag ok">Worked</span>The model then ran only on the remaining 803 marks, for about an hour:
+                <b>1,107 boxes</b>, all marked unverified; 145 marks «not visible»; 24 boxes on SKKG's own inventory labels
+                dropped.</p>
+              <figure class="chart" aria-labelledby="ch1-t">
+                <figcaption id="ch1-t"><b>The 1,295 marks that reading the whole back did not find</b>
+                  <span>· how they are placed, on Friday evening and on Saturday (step 16)</span></figcaption>
+                <ul class="legend">
+                  <li><i class="sw-text"></i>Found by their text (OCR)</li>
+                  <li><i class="sw-tpl"></i>Template match</li>
+                  <li><i class="sw-model"></i>Model proposal, unverified</li>
+                  <li><i class="sw-area"></i>Area only, no box</li>
+                </ul>
+                <div class="sb">
+                  <div class="sb-name">Friday 15:23, after the model run</div>
+                  <div class="sb-bar" role="group" aria-label="Friday 15:23: 19 template matches, 1,107 model proposals, 169 area only">
+                    <span class="seg tpl" style="--v:19" tabindex="0" role="img" aria-label="Template match: 19 of 1,295 (1.5 %)" data-tip="Template match: 19 of 1,295 (1.5 %)"><b>19</b></span>
+                    <span class="seg model" style="--v:1107" tabindex="0" role="img" aria-label="Model proposal, unverified: 1,107 of 1,295 (85 %)" data-tip="Model proposal, unverified: 1,107 of 1,295 (85 %)"><b>1,107</b></span>
+                    <span class="seg area" style="--v:169" tabindex="0" role="img" aria-label="Area only, no box: 169 of 1,295 (13 %)" data-tip="Area only, no box: 169 of 1,295 (13 %)"><b>169</b></span>
+                  </div>
+                </div>
+                <div class="sb">
+                  <div class="sb-name">Saturday 13:21, after reading each area on its own and with image filters</div>
+                  <div class="sb-bar" role="group" aria-label="Saturday 13:21: 213 found by their text, 19 template matches, 896 model proposals, 167 area only">
+                    <span class="seg text" style="--v:213" tabindex="0" role="img" aria-label="Found by their text: 213 of 1,295 (16 %)" data-tip="Found by their text: 213 of 1,295 (16 %); 155 from the area's own crop, 58 only after an image filter"><b>213</b></span>
+                    <span class="seg tpl" style="--v:19" tabindex="0" role="img" aria-label="Template match: 19 of 1,295 (1.5 %)" data-tip="Template match: 19 of 1,295 (1.5 %)"><b>19</b></span>
+                    <span class="seg model" style="--v:896" tabindex="0" role="img" aria-label="Model proposal, unverified: 896 of 1,295 (69 %)" data-tip="Model proposal, unverified: 896 of 1,295 (69 %)"><b>896</b></span>
+                    <span class="seg area" style="--v:167" tabindex="0" role="img" aria-label="Area only, no box: 167 of 1,295 (13 %)" data-tip="Area only, no box: 167 of 1,295 (13 %)"><b>167</b></span>
+                  </div>
+                </div>
+                <div class="scale" aria-hidden="true"><span>0</span><span>1,295 marks</span></div>
+                <details class="tv"><summary>As a table</summary>
+                  <table>
+                    <thead><tr><th scope="col">Placed by</th><th scope="col" class="num">Friday 15:23</th><th scope="col" class="num">Saturday 13:21</th></tr></thead>
+                    <tbody>
+                      <tr><th scope="row">Their text (OCR)</th><td class="num">0</td><td class="num">213</td></tr>
+                      <tr><th scope="row">Template match</th><td class="num">19</td><td class="num">19</td></tr>
+                      <tr><th scope="row">Model proposal, unverified</th><td class="num">1,107</td><td class="num">896</td></tr>
+                      <tr><th scope="row">Area only, no box</th><td class="num">169</td><td class="num">167</td></tr>
+                      <tr><th scope="row">All</th><td class="num">1,295</td><td class="num">1,295</td></tr>
+                    </tbody>
+                  </table>
+                </details>
+              </figure>
+              <p><span class="tag">Review</span>A <a href="review.html">review page</a> (16:04) shows one proposal at a time:
+                correct (Y), wrong (N) or unsure (U), and since 17:52 redraw (R) on the whole back. Decisions stay in the
+                reviewer's browser and are downloaded as CSV for the team, which merges them into the workbook and the site. No
+                decisions have been merged yet.</p>
+            </div>
+          </li>
+
+          <li class="step" id="s9" data-sec="Step 9: Workbook, viewer, site">
+            <h3><span class="n">9</span>Workbook, box viewer and the first site</h3>
+            <span class="when"><time datetime="2026-11-13T12:26+01:00">12:26</time>–<time datetime="2026-11-13T15:27+01:00">15:27</time></span>
+            <div class="card">
+              <p><span class="tag">Tried</span>At 12:26 a first workbook went into the team's shared folder, with a small
+                preview picture of every box.</p>
+              <p><span class="tag no">Didn't work</span>The team did not want pictures in the workbook, but the whole image from
+                IIIF with the box drawn on it (13:18).</p>
+              <p><span class="tag ok">Worked</span>A <a href="viewer.html">box viewer</a>: one page that loads the whole
+                photograph from SKKG's IIIF server with deep zoom and draws the boxes given in its address. Every one of 1,931
+                boxes in the workbook got a «view» link, and the file shrank from 3.4 to 1.1&nbsp;MB. The viewer went live at
+                13:20. GitHub Pages would not serve the private repository, so it was made public at 13:32; it holds only what
+                the site shows.</p>
+              <p><span class="tag ok">Worked</span>At 15:09 the workbook's first sheet got a guide: what each sheet, row,
+                status, colour and link means. At 15:27 the results site went live: every label as a picture cut out by SKKG's
+                server, the works with their boxes, the labels found again with their evidence, and the workbook to download.
+                93 of 144 label photos got their own text, read once by OCR, as a title.</p>
+              <p class="live"><span class="tag live">Live</span>13:20 box viewer · 15:27 results site and workbook</p>
+            </div>
+          </li>
+
+          <li class="step" id="s10" data-sec="Step 10: Ten ideas, each with a probe">
+            <h3><span class="n">10</span>What next: ten ideas, each with a probe</h3>
+            <span class="when"><time datetime="2026-11-13T15:59+01:00">15:59</time>–<time datetime="2026-11-13T16:41+01:00">16:41</time></span>
+            <div class="card">
+              <p><span class="tag">Tried</span>A side session tested ten ideas with small probes (a few requests or a short
+                local run each) and ranked them by what they add to «Have I seen this label before?».</p>
+              <p><span class="tag ok">Built next</span>The comparison with SIK-ISEA (step 11); a label detector (OWLv2 found
+                70&nbsp;% of 44 known labels on 12 backs in 17 seconds; step 14); and the search by photo in the browser (a
+                4.6&nbsp;MB index instead of 442&nbsp;MB searched as well; step 12).</p>
+              <p><span class="tag">Explored, not built</span>An IIIF export for the Mirador viewer (SKKG's manifest server took
+                95 seconds per manifest; small static manifests worked), an agent on skkg-mcp, Heidelberg University Library's
+                digitised auction catalogues (3 of 7 lots before 1946 found), the 4,065 scans of detached tags as a reference
+                collection, a direct look-up of SIK-ISEA's control numbers, and network or map views.</p>
+              <p><span class="tag no">Dead end</span>Grouping label crops into families by DINOv2 similarity: labels of the same
+                issuer were hardly closer to each other than to others (AUC 0.63). The vectors capture «white paper on wood»,
+                not the design.</p>
+            </div>
+          </li>
+
+          <li class="step" id="s11" data-sec="Step 11: SIK-ISEA, links and counts">
+            <h3><span class="n">11</span>SIK-ISEA: links and counts only</h3>
+            <span class="when"><time datetime="2026-11-13T17:03+01:00">17:03</time>–<time datetime="2026-11-13T18:02+01:00">18:02</time>, counts updated Saturday <time datetime="2026-11-14T10:55+01:00">10:55</time></span>
+            <div class="card">
+              <p><span class="tag">Tried</span>SIK-ISEA's research portal has a public interface. 347 of its records belong to
+                SKKG; 298 were linked to SKKG objects (237 by the inventory number, 61 by artist and title), 120 of them among
+                the works with a photographed back.</p>
+              <p><span class="tag ok">Worked</span><b>536</b> exhibition venues and ownership stations that SIK-ISEA records and
+                SKKG's knowledge graph lacks, on 97 works; <b>51</b> of them match a label on the back, 28 strongly (36 before
+                the label detector's text was added on Saturday).</p>
+              <p><span class="tag dec">Decided</span>(17:57) SIK-ISEA's
+                <a href="https://www.sik-isea.ch/de-ch/%C3%9Cber-uns/%C3%9Cber-uns/Rechtliche-Hinweise">legal notice</a> does
+                not allow its content to be republished without consent, and its ownership histories name private owners. So the
+                public site and workbook link to SIK-ISEA's records and count what they add, next to our own label evidence;
+                no exhibitions, venues, years, lots, titles or dates from the portal. The details stay in the team's internal
+                workbook, and the raw responses never leave the internal folder. Since 17:59 there are two workbooks: the
+                internal one and a public copy.</p>
+              <p class="live"><span class="tag live">Live</span>17:59 public workbook · 18:02 <a href="sik_isea.html">What
+                SIK-ISEA adds</a></p>
+            </div>
+          </li>
+
+          <li class="step" id="s12" data-sec="Step 12: Entry form, search by photo">
+            <h3><span class="n">12</span>Entry form and search by photo</h3>
+            <span class="when"><time datetime="2026-11-13T17:28+01:00">17:28</time>–<time datetime="2026-11-13T18:21+01:00">18:21</time></span>
+            <div class="card">
+              <p><span class="tag ok">Worked</span>At 17:28 a teammate added an <a href="form.html">entry form</a> for columns F
+                to L of SKKG's label register. It was connected to every box: it opens prefilled with what the data already say,
+                marked as such; the box can be confirmed or redrawn on the whole back; entries stay in the browser and are
+                downloaded as CSV for the team.</p>
+              <p><span class="tag ok">Worked</span><a href="label-search/">Search by photo</a>: DINOv2 runs on the visitor's
+                device (a 174&nbsp;MB model, downloaded once) against an index of 4.6&nbsp;MB (256 dimensions, one bit each);
+                the photo never leaves the device. The top hit is right for 36&nbsp;% of the test photos: the coarse search
+                only, since the 56&nbsp;% of step 4 need LightGlue on a GPU. Hits can be confirmed or redrawn too.</p>
+              <p><span class="tag no">Didn't work</span>A smaller, quantised model gave unusable vectors (similarity 0.18 to
+                the original). On WebGPU the model computes in half precision and its vectors drift (0.88–0.96), so the page
+                computes on the processor instead: 2 to 6 seconds a photo.</p>
+              <p class="live"><span class="tag live">Live</span>18:21 entry form behind every box, search by photo</p>
+            </div>
+          </li>
+
+          <li class="step" id="s13" data-sec="Step 13: Masking private owners">
+            <h3><span class="n">13</span>Masking private owners</h3>
+            <span class="when"><time datetime="2026-11-13T18:18+01:00">18:18</time>, tightened Saturday <time datetime="2026-11-14T12:32+01:00">12:32</time></span>
+            <div class="card">
+              <p><span class="tag no">Found</span>Before the publication at 18:21, a scan of the public files found label
+                transcriptions from the data sheets with names and addresses of former private owners. They had been in the
+                site's data since its first publication.</p>
+              <p><span class="tag dec">Decided</span>Mask them in everything public: on the site 187 names became
+                «[private owner]» and 66 addresses «[address]». Sellers who are persons are not named. The internal workbook keeps
+                the full text for the team.</p>
+              <p><span class="tag no">Didn't hold</span>On Saturday, while linking labels to timeline events, about 17 published
+                label texts turned up in which a private owner's name had slipped through: owner fields in capitals or after a
+                «|» («EIGENTUM VON | …»), «SAMMLUNG …», «reserviert für …», lender fields.</p>
+              <p><span class="tag ok">Fixed</span>(12:32) The masking now ignores case and «|» and covers inclusive forms; a name
+                that a data sheet's description gives as owner is hidden in the label's quoted text too. Names left in label
+                texts are those SKKG itself publishes as provenance actors; in the timelines, persons appear only by their
+                role. At 13:47 the team confirmed that the label detector's text stays public, masked in the same way: the
+                search and the entry form rely on it.</p>
+            </div>
+          </li>
+        </ol>
+      </section>
+
+      <section id="saturday" aria-labelledby="h-sat">
+        <h2 class="day" id="h-sat">Saturday 14 November <span>Steps 14–19</span></h2>
+        <ol class="steps" start="14">
+          <li class="step" id="s14" data-sec="Step 14: A label detector on every back">
+            <h3><span class="n">14</span>A label detector on every back</h3>
+            <span class="when">Friday <time datetime="2026-11-13T17:03+01:00">17:03</time> → Saturday <time datetime="2026-11-14T10:55+01:00">10:55</time></span>
+            <div class="card">
+              <p><span class="tag">Why</span>Every route so far finds only labels that some record documents.</p>
+              <p><span class="tag">Tried</span>OWLv2, an open-vocabulary object detector, looked for «a paper label», «a
+                sticker», «a label with printed text», «a rubber stamp» and «a handwritten note on paper» on all 872 backs, in
+                chunks of under five minutes: 9,711 detections; threshold 0.15. Each box was read by OCR. Boxes with little
+                text were read once more from a 1,000&nbsp;px IIIF region: 1,887 requests, one a second, about 49 minutes;
+                464 of 972 boxes without text became readable. SKKG's own inventory labels, QR labels and colour charts
+                (1,680), makers' stamps (66) and boxes on documented labels were set aside.</p>
+              <p><span class="tag ok">Worked</span>It finds 73&nbsp;% of the 428 documented labels (data sheets 92&nbsp;%,
+                register 77&nbsp;%, label photos 61&nbsp;%), and <b>1,913 labels no record mentions</b>, 1,407 of them with
+                readable text. On <a href="./#work=5590">Inv. 4999</a> it read exhibition labels from Baden-Baden and Montréal
+                that SKKG's record does not list.</p>
+              <p><span class="tag no">Limits</span>Of 21 checked finds with text, 20 were labels or marks (15 provenance
+                labels); of 15 finds without text, 7 were not labels at all. So every find is marked «check», and those without
+                text appear only with «include unverified boxes». The issuer is a guess from the text read.</p>
+              <p class="live"><span class="tag live">Live</span>10:55 on the site, in the entry form and in the workbook (sheet
+                «Detected labels»)</p>
+            </div>
+          </li>
+
+          <li class="step" id="s15" data-sec="Step 15: English, except the data">
+            <h3><span class="n">15</span>English, except the data</h3>
+            <span class="when">Friday <time datetime="2026-11-13T11:52+01:00">11:52</time>; Saturday <time datetime="2026-11-14T11:07+01:00">11:07</time>–<time datetime="2026-11-14T11:19+01:00">11:19</time></span>
+            <div class="card">
+              <p><span class="tag dec">Decided</span>(Friday 11:52) The team is English-speaking, so every page, the
+                workbook, the documentation and the scripts' messages are English. What SKKG delivered stays as it is: titles, descriptions,
+                positions, file and column names, with a glossary in the project's README.</p>
+              <p><span class="tag ok">Worked</span>The entry form's interface became English at 11:07. What it writes into
+                SKKG's German register stays German, with English glosses in the lists. The comment it prefills in column L was
+                English for twelve minutes and went back to German at 11:19, because it lands in the same German register
+                row.</p>
+            </div>
+          </li>
+
+          <li class="step" id="s16" data-sec="Step 16: Ideas from another prototype">
+            <h3><span class="n">16</span>Four ideas from another prototype for this challenge</h3>
+            <span class="when"><time datetime="2026-11-14T11:26+01:00">11:26</time>–<time datetime="2026-11-14T13:21+01:00">13:21</time></span>
+            <div class="card">
+              <p><span class="tag">Tried</span>Another prototype for this challenge, built on a single photograph with classical
+                image processing, had four ideas we did not have. Each was tried on SKKG's data in its own side session; none
+                of its code or pictures was copied.</p>
+              <div class="sub ok">
+                <h4>1 · The back, exploded, with a provenance timeline: worked</h4>
+                <p>Each work's labels lift off its back, beside a timeline from SKKG's records: provenance, exhibitions,
+                  acquisition. Clicking an event lights up the labels that document it, and the other way round. 594 works have
+                  a timeline; 533 of 2,015 events are documented by a label (252 strongly), through 805 links from 575 labels
+                  on 291 works. Persons appear by role only. Live at 12:32.</p>
+              </div>
+              <div class="sub no">
+                <h4>2 · Its mark finder as a second detector: added almost nothing</h4>
+                <p>As shipped it finds 9&nbsp;% of the 428 documented labels, tuned 23&nbsp;%, against 73&nbsp;% for OWLv2;
+                  both together 77&nbsp;%. A frame or stretcher forms one closed outline around everything inside it, so the
+                  labels within are never proposed, and on busy wood labels merge with the grain. Of its 104 new boxes, two are
+                  genuinely new marks (an inscription on Inv. 1447, a strip of worn labels on Inv. 4769); in a random sample
+                  of 30, one was. Not imported.</p>
+              </div>
+              <figure class="chart" aria-labelledby="ch2-t">
+                <figcaption id="ch2-t"><b>Share of the 428 documented labels each detector finds</b></figcaption>
+                <div class="mrow" tabindex="0" data-tip="OWLv2 label detector: 314 of 428 (73 %)"><span class="mname">OWLv2 label detector</span><span class="mbar"><span style="--p:73.4"></span></span><span class="mval">73&nbsp;%</span></div>
+                <div class="mrow" tabindex="0" data-tip="The other prototype's mark finder, as shipped: 39 of 428 (9 %)"><span class="mname">The other prototype's mark finder, as shipped</span><span class="mbar"><span style="--p:9.1"></span></span><span class="mval">9&nbsp;%</span></div>
+                <div class="mrow" tabindex="0" data-tip="The same, tuned on SKKG's labels: 98 of 428 (23 %)"><span class="mname">The same, tuned on SKKG's labels</span><span class="mbar"><span style="--p:22.9"></span></span><span class="mval">23&nbsp;%</span></div>
+                <div class="mrow" tabindex="0" data-tip="Both together: 330 of 428 (77 %)"><span class="mname">Both together</span><span class="mbar"><span style="--p:77.1"></span></span><span class="mval">77&nbsp;%</span></div>
+                <details class="tv"><summary>As a table</summary>
+                  <table>
+                    <thead><tr><th scope="col">Detector</th><th scope="col" class="num">Labels found</th><th scope="col" class="num">Share</th></tr></thead>
+                    <tbody>
+                      <tr><th scope="row">OWLv2 label detector (score ≥ 0.15)</th><td class="num">314</td><td class="num">73 %</td></tr>
+                      <tr><th scope="row">Other prototype's mark finder, as shipped</th><td class="num">39</td><td class="num">9 %</td></tr>
+                      <tr><th scope="row">The same, tuned</th><td class="num">98</td><td class="num">23 %</td></tr>
+                      <tr><th scope="row">Both together</th><td class="num">330</td><td class="num">77 %</td></tr>
+                    </tbody>
+                  </table>
+                </details>
+              </figure>
+              <div class="sub ok">
+                <h4>3 · Its image filters before OCR: worked</h4>
+                <p>Reading each data-sheet area on its own, and again after image filters (single colour channels, flat
+                  field, local contrast), found <b>213 more marks by their quoted text</b>: 155 from the area's own crop, 58
+                  only after a filter, mostly pencil and chalk on wood. All 15 filter-only finds checked by eye sat on the
+                  quoted mark. Reliable boxes on the site rose from 427 to 594, model proposals fell from 1,107 to 896 (see the
+                  chart in step 8). Live at 13:21. The same filters became «Ways of seeing» in the entry form (12:21): computed
+                  in the browser from the IIIF region, with nothing stored.</p>
+              </div>
+              <div class="sub no">
+                <h4>4 · Shared storage for the team's entries: not possible here</h4>
+                <p>Hosted pages with a built-in database may only load their own files, so SKKG's IIIF images and the site's
+                  data would be blocked; links into them cannot carry a query, and everyone who writes needs an account. The
+                  entry form and the review page keep their entries in the browser and pass them on as CSV files.</p>
+              </div>
+            </div>
+          </li>
+
+          <li class="step" id="s17" data-sec="Step 17: Feedback without an account">
+            <h3><span class="n">17</span>Feedback without a GitHub account</h3>
+            <span class="when"><time datetime="2026-11-14T11:51+01:00">11:51</time>–<time datetime="2026-11-14T12:21+01:00">12:21</time></span>
+            <div class="card">
+              <p><span class="tag">Tried</span>At 11:56 a «Feedback» button on every page opened GitHub's form for a new issue,
+                prefilled with the page, the work, the label's key and the box.</p>
+              <p><span class="tag no">Didn't work</span>That needs a GitHub account, and most of the people whose feedback
+                matters have none. A static page cannot open an issue by itself: that takes a token, and a token cannot sit in
+                a public page. The first relay needed a personal GitHub token pasted into its settings; a way without any token
+                replaced it within the hour.</p>
+              <p><span class="tag ok">Worked</span>(12:19–12:21) The form on the page sends the message to a small relay, a
+                Google Apps Script web app that only keeps it, for six hours at most, and holds no secret. Every 10 minutes a
+                GitHub Action in the site's repository fetches new messages and opens one public issue each, with the
+                short-lived token GitHub gives every run. No personal token is stored anywhere. A test message went through end
+                to end, and the test issue was deleted.</p>
+              <figure class="fig">
+                <svg class="dg w-flow" viewBox="0 0 300 232" role="img" aria-labelledby="fb-t fb-d">
+                  <title id="fb-t">How feedback becomes an issue</title>
+                  <desc id="fb-d">Form on the page: no account needed, page, work and box go along. Relay, a Google Apps Script web app: keeps messages for at most 6 hours and holds no secret. GitHub Action, every 10 minutes: uses the token GitHub gives each run. Public issue in the site's repository, 10 to 20 minutes after sending.</desc>
+                  <defs><marker id="ah2" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah" d="M0,0 L8,4 L0,8 z"/></marker></defs>
+                  <rect class="box" x="0.5" y="0.5" width="299" height="46" rx="6"/>
+                  <text class="t" x="12" y="20">Form on the page</text>
+                  <text class="s" x="12" y="36">no account; page, work and box go along</text>
+                  <path class="ar" d="M150 47 V60" marker-end="url(#ah2)"/>
+                  <rect class="box" x="0.5" y="62.5" width="299" height="46" rx="6"/>
+                  <text class="t" x="12" y="82">Relay: a Google Apps Script web app</text>
+                  <text class="s" x="12" y="98">keeps messages ≤ 6 hours, holds no secret</text>
+                  <path class="ar" d="M150 109 V122" marker-end="url(#ah2)"/>
+                  <rect class="box" x="0.5" y="124.5" width="299" height="46" rx="6"/>
+                  <text class="t" x="12" y="144">GitHub Action, every 10 minutes</text>
+                  <text class="s" x="12" y="160">uses the token GitHub gives each run</text>
+                  <path class="ar" d="M150 171 V184" marker-end="url(#ah2)"/>
+                  <rect class="hub" x="0.8" y="186.8" width="298.4" height="44.4" rx="6"/>
+                  <text class="t" x="12" y="206">Public issue in the site's repository</text>
+                  <text class="s" x="12" y="222">10 to 20 minutes after sending</text>
+                </svg>
+                <figcaption>No step holds a personal token. Those with a GitHub account can still open the prefilled issue on
+                  GitHub directly.</figcaption>
+              </figure>
+              <p><span class="tag dec">Decided</span>The price is a wait of 10 to 20 minutes: the schedule, plus GitHub's own
+                delays around the full hour. The team kept the 10-minute schedule (13:53). «Report a problem» links on labels,
+                boxes, matches and timeline events carry the same context.</p>
+              <p class="live"><span class="tag live">Live</span>11:56 button · 12:19 relay and Action · 12:21 form without an
+                account</p>
+            </div>
+          </li>
+
+          <li class="step" id="s18" data-sec="Step 18: Four backs with swapped sizes">
+            <h3><span class="n">18</span>Four backs with swapped sizes</h3>
+            <span class="when"><time datetime="2026-11-14T13:21+01:00">13:21</time>–<time datetime="2026-11-14T13:55+01:00">13:55</time></span>
+            <div class="card">
+              <p><span class="tag no">Found</span>While testing the other prototype's filters (step 16): SKKG's image list gives
+                width and height swapped for four portrait backs (Inv. 71, 4965, 4991 and 5826). The IIIF server's image
+                information and the photographs themselves are portrait.</p>
+              <figure class="fig">
+                <svg class="dg w-swap" viewBox="0 0 300 214" role="img" aria-labelledby="sw-t sw-d">
+                  <title id="sw-t">What the swapped size did</title>
+                  <desc id="sw-d">Left: the index took the back to be 7,952 pixels wide and 5,304 high, so its scale factor was 4.97. Right: the photograph is 5,304 wide and 7,952 high, scale factor 3.315. The search windows covered only its top 44 to 47 percent, and a box scaled with 4.97 lands down and to the right of the label, partly outside the image.</desc>
+                  <text class="t" x="0" y="14">What the index said</text>
+                  <rect class="frame" x="0.6" y="34.6" width="126" height="84"/>
+                  <text class="s" x="0" y="138">7,952 × 5,304 px,</text>
+                  <text class="s" x="0" y="152">so a scale factor of 4.97</text>
+                  <text class="t" x="160" y="14">The photograph</text>
+                  <rect class="frame" x="160.6" y="22.6" width="90" height="135"/>
+                  <rect class="cover" x="160.6" y="22.6" width="90" height="60"/>
+                  <path class="grid" d="M175.6 22.6 V82.6 M190.6 22.6 V82.6 M205.6 22.6 V82.6 M220.6 22.6 V82.6 M235.6 22.6 V82.6 M160.6 37.6 H250.6 M160.6 52.6 H250.6 M160.6 67.6 H250.6"/>
+                  <rect class="right" x="210" y="106" width="16" height="11"/>
+                  <rect class="wrong" x="235" y="148" width="24" height="16.5"/>
+                  <text class="s" x="160" y="180">really 5,304 × 7,952,</text>
+                  <text class="s" x="160" y="194">factor 3.315; windows</text>
+                  <text class="s" x="160" y="208">only on the top 44–47 %</text>
+                  <rect class="right" x="1" y="172" width="13" height="9"/><text class="s" x="21" y="180">where a label is</text>
+                  <rect class="wrong" x="1" y="188" width="13" height="9"/><text class="s" x="21" y="196">its box, scaled × 4.97</text>
+                </svg>
+                <figcaption>The models worked on 1,600&nbsp;px copies. With the swapped size, the index expected a copy
+                  1,067&nbsp;px high instead of 2,399&nbsp;px, laid its windows over the top part only, and scaled boxes back by
+                  the wrong factor.</figcaption>
+              </figure>
+              <p><span class="tag">Effect</span>Boxes on these backs were scaled with 4.97 instead of 3.315 and lay partly
+                outside the image: seven model boxes and 17 of the detector's (three IIIF requests had been refused with
+                «400»). The search windows of these backs covered only their top 44–47&nbsp;%.</p>
+              <p><span class="tag ok">Fixed</span>Everywhere: the index, the data-sheet areas and model boxes (13:21); the
+                detector's boxes, re-read over IIIF (13:40); the search windows (736 replaced by 664), their vectors and the
+                browser's index of 143,891 windows, where the top hit is now right for 37&nbsp;% of the test photos instead of
+                36&nbsp;% (13:48).</p>
+              <p><span class="tag dec">Decided</span>Fix it at the source too: the script that builds the index now compares
+                every size with the cached image (13:55). It found the four backs and 16 label photos with the same swap.</p>
+            </div>
+          </li>
+
+          <li class="step" id="s19" data-sec="Step 19: Writing it down">
+            <h3><span class="n">19</span>Writing it down</h3>
+            <span class="when"><time datetime="2026-11-14T13:53+01:00">13:53</time></span>
+            <div class="card">
+              <p>The <a href="./#about">About tab</a> describes what the site and its tools do; this page, how they came
+                about. Both were written by side sessions of the coding assistant, from the same sources
+                (<a href="#sources">below</a>).</p>
+            </div>
+          </li>
+        </ol>
+      </section>
+
+      <section id="decisions" data-sec="Decisions and why" aria-labelledby="h-dec">
+        <h2 id="h-dec">Decisions and why</h2>
+        <div class="cards">
+          <div class="dc">
+            <h3>Boxes, not copies</h3>
+            <p>Every label is a box in pixels of SKKG's original photograph, and so an IIIF region:
+              <code>…/1643,1625,1677,1724/max/0/default.jpg</code> is the label.</p>
+            <p><b>Why:</b> the originals and their rights stay with SKKG; a box takes a few bytes instead of a picture; SKKG
+              can take the boxes over as they are, also as W3C Web Annotations. The site's pictures are all cut out by SKKG's
+              server, and the workbook links to the viewer instead of holding pictures (apart from the register's own).</p>
+            <p><b>The price:</b> everything depends on SKKG's servers, which all teams shared, so bulk requests went one at
+              a time, a second apart.</p>
+            <p class="see"><a href="#s5">Step 5</a> · <a href="#s9">step 9</a></p>
+          </div>
+          <div class="dc">
+            <h3>SIK-ISEA: links and counts</h3>
+            <p><b>Why:</b> SIK-ISEA's legal notice does not allow its portal's content to be republished without consent, and
+              its ownership histories name private owners.</p>
+            <p>So the public site and workbook link to SIK-ISEA's records and say how much they add (536 items, 51 of them
+              matched by a label on the back). The details stay in the team's internal workbook.</p>
+            <p class="see"><a href="#s11">Step 11</a> · <a href="sik_isea.html">What SIK-ISEA adds</a></p>
+          </div>
+          <div class="dc">
+            <h3>Private owners masked</h3>
+            <p><b>Why:</b> labels and data sheets transcribe names and addresses of former private owners, and the site is
+              public.</p>
+            <p>Everything public masks them («[private owner]», «[address]»); sellers who are persons are not named, and the
+              timelines show persons only by their role. Dealers, auction houses and museums are named as SKKG records them.
+              The internal workbook keeps the full text for the team.</p>
+            <p class="see"><a href="#s13">Step 13</a></p>
+          </div>
+          <div class="dc">
+            <h3>Feedback without an account</h3>
+            <p><b>Why:</b> most of the people whose feedback matters have no GitHub account, and a token must not sit in a
+              public page.</p>
+            <p>So feedback goes through a form on the page, a relay that holds no secret and a scheduled GitHub Action. The
+              price is a wait of 10 to 20 minutes.</p>
+            <p class="see"><a href="#s17">Step 17</a></p>
+          </div>
+          <div class="dc">
+            <h3>The most precise method first</h3>
+            <p><b>Why:</b> a model that always answers with a box makes leads, not facts.</p>
+            <p>Text before templates, templates before the model. The model's boxes are marked unverified and hidden by
+              default until the team confirms them on the review page.</p>
+            <p class="see"><a href="#s8">Step 8</a> · <a href="review.html">Review page</a></p>
+          </div>
+          <div class="dc">
+            <h3>English interface, German data</h3>
+            <p><b>Why:</b> the team is English-speaking, and SKKG's register is German.</p>
+            <p>Pages, workbook and documentation are English; SKKG's data and the register's own terms stay as delivered,
+              with English glosses.</p>
+            <p class="see"><a href="#s15">Step 15</a></p>
+          </div>
+          <div class="dc">
+            <h3>Local, pausable, gentle</h3>
+            <p>The models that processed the collection, six neural networks in five roles, all ran on one laptop (Apple M2
+              Max): DINOv2, SuperPoint and LightGlue, Apple's text recognition, Qwen3-VL-4B and OWLv2. One GPU job at a time,
+              every long run pausable, and few parallel requests to SKKG's servers. The coding assistant worked in the cloud,
+              on code, results and samples.</p>
+            <p class="see"><a href="#s3">Step 3</a> · <a href="#s14">step 14</a></p>
+          </div>
+        </div>
+      </section>
+
+      <section id="deadends" data-sec="What didn't work" aria-labelledby="h-dead">
+        <h2 id="h-dead">What didn't work</h2>
+        <ul class="dead">
+          <li><b>A score that flattered</b>63&nbsp;% against 181 backs became 37&nbsp;% against all 872. <a href="#s3">Step 3</a></li>
+          <li><b>Small windows alone</b>They moved tiny labels up the list, not to the top. <a href="#s3">Step 3</a></li>
+          <li><b>Matching in batches</b>Wrong counts of agreeing points; every pair is matched on its own. <a href="#s4">Step 4</a></li>
+          <li><b>The model for everything</b>It always answers with a box; cut back to the marks nothing else finds. <a href="#s8">Step 8</a></li>
+          <li><b>Templates for one-off labels</b>19 of 733 labels and stamps: most have no second copy. <a href="#s8">Step 8</a></li>
+          <li><b>Pictures in the workbook</b>Replaced by links to the whole image with the box. <a href="#s9">Step 9</a></li>
+          <li><b>Label families by image similarity</b>AUC 0.63; the vectors see paper on wood, not the design. <a href="#s10">Step 10</a></li>
+          <li><b>Smaller or faster models in the browser</b>The quantised model was unusable, WebGPU drifted. <a href="#s12">Step 12</a></li>
+          <li><b>Masking that missed fields</b>About 17 label texts with owners' names; tightened on Saturday. <a href="#s13">Step 13</a></li>
+          <li><b>A second detector</b>73&nbsp;% became 77&nbsp;% together, with two genuinely new marks. <a href="#s16">Step 16</a></li>
+          <li><b>Shared storage in hosted pages</b>They cannot load SKKG's images or the site's data. <a href="#s16">Step 16</a></li>
+          <li><b>Feedback through GitHub's own form</b>It needs an account most people don't have. <a href="#s17">Step 17</a></li>
+          <li><b>Swapped image sizes</b>Four backs; fixed everywhere, and guarded against. <a href="#s18">Step 18</a></li>
+        </ul>
+      </section>
+
+      <section id="published" data-sec="Publication history" aria-labelledby="h-pub">
+        <h2 id="h-pub">Publication history</h2>
+        <p class="mute">Each time the site changed, from the history of its public repository
+          (<a href="https://github.com/ruedtim/glamhack26-box-viewer/commits/main">on GitHub</a>), in Swiss time.</p>
+        <div class="pubs">
+          <div>
+            <h3>Friday 13 November</h3>
+            <ol>
+              <li><time datetime="2026-11-13T13:20+01:00">13:20</time><span>Box viewer for IIIF images</span></li>
+              <li><time datetime="2026-11-13T15:27+01:00">15:27</time><span>Results site and workbook</span></li>
+              <li><time datetime="2026-11-13T16:04+01:00">16:04</time><span>Review page for the model's proposals</span></li>
+              <li><time datetime="2026-11-13T17:28+01:00">17:28</time><span>A teammate's entry form for the label register</span></li>
+              <li><time datetime="2026-11-13T17:52+01:00">17:52</time><span>Review page: redraw a box</span></li>
+              <li><time datetime="2026-11-13T17:59+01:00">17:59</time><span>Public workbook, SIK-ISEA as links and counts</span></li>
+              <li><time datetime="2026-11-13T18:02+01:00">18:02</time><span>The SIK-ISEA page</span></li>
+              <li><time datetime="2026-11-13T18:21+01:00">18:21</time><span>Entry form behind every box, search by photo, private owners masked</span></li>
+            </ol>
+          </div>
+          <div>
+            <h3>Saturday 14 November</h3>
+            <ol>
+              <li><time datetime="2026-11-14T10:55+01:00">10:55</time><span>The label detector's 1,913 finds</span></li>
+              <li><time datetime="2026-11-14T11:07+01:00">11:07</time><span>Entry form and start page in English</span></li>
+              <li><time datetime="2026-11-14T11:19+01:00">11:19</time><span>Column L comment in German again</span></li>
+              <li><time datetime="2026-11-14T11:56+01:00">11:56</time><span>Feedback button (an issue on GitHub)</span></li>
+              <li><time datetime="2026-11-14T11:58+01:00">11:58</time><span>Feedback button on the SIK-ISEA page</span></li>
+              <li><time datetime="2026-11-14T12:19+01:00">12:19</time><span>Feedback relay and Action</span></li>
+              <li><time datetime="2026-11-14T12:21+01:00">12:21</time><span>Feedback without an account; «Ways of seeing» in the form</span></li>
+              <li><time datetime="2026-11-14T12:32+01:00">12:32</time><span>Exploded back and timeline; tighter masking</span></li>
+              <li><time datetime="2026-11-14T13:21+01:00">13:21</time><span>213 more marks by their text; four backs' sizes fixed</span></li>
+              <li><time datetime="2026-11-14T13:40+01:00">13:40</time><span>Detector boxes on the four backs corrected</span></li>
+              <li><time datetime="2026-11-14T13:48+01:00">13:48</time><span>Search index over the whole of the four backs</span></li>
+            </ol>
+          </div>
+        </div>
+      </section>
+
+      <section id="sources" class="prose" data-sec="How it was made" aria-labelledby="h-src">
+        <h2 id="h-src">How it was made</h2>
+        <p><b>With an AI coding assistant.</b> The team worked with Claude Code, Anthropic's AI coding assistant. A main
+          session wrote most of the scripts, pages and analyses. Side sessions took on separate tasks in parallel: the ten
+          ideas, the comparison with SIK-ISEA, the label detector, the search by photo, connecting the entry form, the English
+          interface, the timeline, the other prototype's ideas, the About tab and this page. The team chose the challenge,
+          set the direction (boxes on the originals, a method like the one for the aerial photographs, the model only for
+          what is left, SIK-ISEA as links and counts, feedback without an account) and took the decisions described on
+          this page; the sessions' commits name Claude Opus 5.5 as co-author. The spot checks on this page (the model's boxes, the
+          detector's finds, the filters' finds) were made by the assistant looking at the IIIF crops; the team's own review
+          of the model's boxes is still open.</p>
+        <p><b>Where these facts come from.</b> This page was written by one of the side sessions, from the main session's
+          log (the team's requests and decisions and the results, with their times), the side sessions' hand-over notes,
+          the publication history of the site's repository, the project's documentation and exploration notes, and the data
+          behind the site. Every number on it was checked against one of them. Where two sources disagreed, the current data
+          won.</p>
+        <p>Data and images: SKKG Stiftung für Kunst, Kultur und Geschichte, Winterthur (<a href="https://digital.skkg.ch">SKKG
+          Sammlung digital</a>, knowledge graph and IIIF image server). Object metadata and photographs of backs CC0;
+          provenance data sheets CC BY 4.0, SKKG provenance research team. All pictures on this page are cut out live by SKKG's
+          IIIF server; none is stored here.</p>
+        <p><a href="./">← Back to the results</a> · <a href="./#about">About this site</a></p>
+      </section>
+    </div>
+  </div>
+</main>
+<footer><div class="wrap">Provenance Pursuit · GLAMhack 2026, challenge 304 · data and images: SKKG, Winterthur</div></footer>
+
+<script>
+(() => {
+  'use strict';
+  const header = document.querySelector('header');
+  const root = document.documentElement;
+
+  // anchors land below the sticky header; the list of steps sticks below it too
+  const pad = () => {
+    const h = getComputedStyle(header).position === 'sticky' ? header.offsetHeight : 0;
+    root.style.scrollPaddingTop = (h + 12) + 'px';
+    root.style.setProperty('--stick', (h + 16) + 'px');
+  };
+  pad();
+  addEventListener('resize', pad);
+
+  // the list of steps starts closed where it sits above the text
+  const toc = document.querySelector('.toc details');
+  if (toc && matchMedia('(max-width: 1139px)').matches) toc.open = false;
+
+  // the part being read: highlighted in the list, and sent along with feedback
+  const links = new Map([...document.querySelectorAll('.toc a[href^="#"]')].map(a => [a.getAttribute('href').slice(1), a]));
+  let reading = '';
+  const mark = el => {
+    reading = el.dataset.sec || '';
+    links.forEach(a => a.removeAttribute('aria-current'));
+    const a = links.get(el.id);
+    if (a) a.setAttribute('aria-current', 'true');
+  };
+  if ('IntersectionObserver' in window) {
+    const io = new IntersectionObserver(entries => entries.forEach(e => { if (e.isIntersecting) mark(e.target); }),
+      { rootMargin: '-30% 0px -65% 0px' });
+    document.querySelectorAll('[data-sec]').forEach(s => io.observe(s));
+  }
+  window.ppFeedbackContext = () => ({ where: 'How we got here', note: reading ? 'Reading: ' + reading : '' });
+
+  // numbers inside the bar segments only where they fit
+  const fit = () => document.querySelectorAll('.seg').forEach(s => {
+    const b = s.querySelector('b');
+    if (b) s.dataset.fit = b.offsetWidth + 12 <= s.clientWidth ? 'yes' : 'no';
+  });
+  fit();
+  addEventListener('resize', fit);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(fit);
+
+  // tooltips for the chart marks (hover and keyboard focus)
+  const tip = document.createElement('div');
+  tip.className = 'tip';
+  tip.setAttribute('role', 'tooltip');
+  tip.hidden = true;
+  document.body.appendChild(tip);
+  const place = (x, y) => {
+    const r = tip.getBoundingClientRect();
+    let left = x + 12, top = y + 14;
+    if (left + r.width > innerWidth - 8) left = Math.max(8, x - r.width - 12);
+    if (top + r.height > innerHeight - 8) top = Math.max(8, y - r.height - 12);
+    tip.style.left = left + 'px';
+    tip.style.top = top + 'px';
+  };
+  const show = (el, x, y) => { tip.textContent = el.dataset.tip; tip.hidden = false; place(x, y); };
+  const hide = () => { tip.hidden = true; };
+  document.addEventListener('pointermove', e => {
+    const el = e.target instanceof Element ? e.target.closest('[data-tip]') : null;
+    if (el) show(el, e.clientX, e.clientY); else if (!tip.hidden && !(document.activeElement && document.activeElement.matches('[data-tip]'))) hide();
+  });
+  document.addEventListener('focusin', e => {
+    const el = e.target instanceof Element ? e.target.closest('[data-tip]') : null;
+    if (!el) { hide(); return; }
+    const r = el.getBoundingClientRect();
+    show(el, r.left + Math.min(r.width / 2, 40), r.bottom - 6);
+  });
+  document.addEventListener('focusout', hide);
+  addEventListener('scroll', hide, { passive: true });
+})();
+</script>
+</body>
+</html>
