@@ -15,8 +15,8 @@
   this browser (localStorage). Download / load CSV to merge the team's entries.
   «Ways of seeing»: the label picture (the IIIF region of the box, or SKKG's detail photo) is drawn on a canvas and
   can be shown through image filters (local contrast, flat field, high-pass, decorrelation stretch, threshold, single
-  colour channels, inverted), computed in the browser; nothing is stored or uploaded. Idea from the prototype
-  github.com/iniphi/verso-decomposition («ways of seeing» layers); the code here is our own.
+  colour channels, inverted), computed in the browser; nothing is stored or uploaded. The idea comes from another
+  GLAMhack prototype for this challenge («ways of seeing» layers); the code here is our own.
   The interface is English. What goes into SKKG's German label register stays German: the values of the
   selects and buttons (with English glosses on screen), the column headings F–L, and the row's conventions
   («o. D.», «(Lot …)»).
@@ -482,6 +482,8 @@ function howShort(l) {
   if (l.src === 'hit') return `image search and image matching, ${points(l.n)}`;
   if (l.src === 'detected') return `label detector (OWLv2), score ${l.score}, ` + (l.d ? 'text read (OCR)' : 'no text read');
   return { 'text found (OCR)': 'text from the data sheet read on the back (OCR)',
+    'text found (OCR, image filter)': 'text from the data sheet read on the back after an image filter (OCR)',
+    'text found (OCR), weak match': 'text from the data sheet read on the back (OCR), weak match',
     'text found elsewhere (OCR)': 'text from the data sheet read on the back (OCR), but not at the place the data sheet names',
     'template, same issuer': `template of the same issuer (Inv. ${l.tpl}), ${points(l.n)}`,
     'template, similar label': `a similar label as template (Inv. ${l.tpl}), ${points(l.n)}`,
@@ -498,6 +500,8 @@ function howSentence(l) {  // the comment for column L, how the box was found: G
   if (l.src === 'detected') return `Box: vom Etikettendetektor (OWLv2, Wert ${l.score}) auf dem Rückseitenfoto gefunden; in keinem Register und keinem Datenblatt verzeichnet`
     + (l.iss ? `; Aussteller nur aus dem gelesenen Text vermutet (${l.iss})` : '') + ', bitte prüfen.';
   return { 'text found (OCR)': 'Box: Text aus dem Provenienzdatenblatt auf dem Rückseitenfoto gelesen (Texterkennung).',
+    'text found (OCR, image filter)': 'Box: Text aus dem Provenienzdatenblatt auf dem Rückseitenfoto gelesen (Texterkennung nach Bildfilter).',
+    'text found (OCR), weak match': 'Box: Text aus dem Provenienzdatenblatt auf dem Rückseitenfoto gelesen (Texterkennung), nur schwache Übereinstimmung, bitte prüfen.',
     'text found elsewhere (OCR)': 'Box: Text aus dem Provenienzdatenblatt auf dem Rückseitenfoto gelesen (Texterkennung), aber nicht an der im Datenblatt genannten Stelle, bitte prüfen.',
     'template, same issuer': `Box: über ein Etikett desselben Ausstellers gefunden (Vorlage auf Inv. ${l.tpl}, Bildabgleich, ${pointsDe(l.n)}).`,
     'template, similar label': `Box: über ein ähnliches Etikett gefunden (Vorlage auf Inv. ${l.tpl}, ${pointsDe(l.n)}), bitte prüfen.`,
@@ -767,7 +771,7 @@ function prefill(l) {
 
 // ---------------------------------------------------------------- Ways of seeing
 // The label's IIIF region on a canvas, passed through standard image filters so that faint pencil, blue crayon and
-// stamps become easier to read (idea: the «ways of seeing» layers of the verso-decomposition prototype). Everything is
+// stamps become easier to read (idea: the «ways of seeing» layers of another prototype for this challenge). Everything is
 // computed in this browser from the pixels the IIIF server sends (it allows cross-origin reading); nothing is
 // stored or uploaded, and the choice of filter is not saved.
 const IP = (() => {  // image processing on typed arrays: luminance, blur, quantiles, CLAHE, decorrelation stretch, Lab
