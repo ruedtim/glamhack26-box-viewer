@@ -6,40 +6,88 @@
 <title>Provenance Pursuit – labels on the backs of SKKG works</title>
 <meta name="description" content="Have I seen this label before? Provenance labels, stamps and marks located on the backs of works in the SKKG collection – GLAMhack 2026, challenge 304.">
 <script src="feedback.js"></script>
+<script src="nav.js"></script>
 <style>
   :root { --bg: #f5f3ef; --panel: #fff; --ink: #1d1d1b; --muted: #6b6860; --line: #e2ded6; --accent: #1f4e8c;
           --register: #2166ac; --photo: #c0392b; --sheet: #762a83; --model: #a86b00; --again: #1a7f4b; --detected: #0f7b86;
-          --chip: #efece6; --shadow: 0 1px 2px rgba(0,0,0,.06), 0 3px 10px rgba(0,0,0,.05);
+          --chip: #efece6; --shadow: 0 1px 2px rgba(0,0,0,.06), 0 3px 10px rgba(0,0,0,.05); --badge-ink: #fff;
           --tl-own: #8c5a24; --tl-ex: #2f7a68; --tl-acq: #1f4e8c; --lift: 0 4px 14px rgba(40,30,20,.28); }
+  /* dark: the badge colours are light there, so the text on them is dark (--badge-ink) */
   :root[data-theme="dark"] { --bg: #171716; --panel: #222220; --ink: #ecebe7; --muted: #a8a59d; --line: #36342f;
           --accent: #9cc2ff; --register: #6aa8e8; --photo: #ff8a7a; --sheet: #cf9be0; --model: #e8b54a; --detected: #5fd1db;
-          --again: #52c891; --chip: #2d2b28; --shadow: none;
+          --again: #52c891; --chip: #2d2b28; --shadow: none; --badge-ink: #171716;
           --tl-own: #dca76a; --tl-ex: #6ccab3; --tl-acq: #9cc2ff; --lift: 0 4px 16px rgba(0,0,0,.6); }
   @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg: #171716; --panel: #222220;
           --ink: #ecebe7; --muted: #a8a59d; --line: #36342f; --accent: #9cc2ff; --register: #6aa8e8; --photo: #ff8a7a;
           --sheet: #cf9be0; --model: #e8b54a; --detected: #5fd1db; --again: #52c891; --chip: #2d2b28; --shadow: none;
+          --badge-ink: #171716;
           --tl-own: #dca76a; --tl-ex: #6ccab3; --tl-acq: #9cc2ff; --lift: 0 4px 16px rgba(0,0,0,.6); } }
   * { box-sizing: border-box; }
   body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
   a { color: var(--accent); }
   .wrap { max-width: 1280px; margin: 0 auto; padding: 0 16px; }
   header { background: var(--panel); border-bottom: 1px solid var(--line); position: sticky; top: 0; z-index: 5; }
-  .top { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 6px 24px; padding-top: 14px; }
-  h1 { font-size: 22px; margin: 0; letter-spacing: -.01em; }
-  .tagline { color: var(--muted); margin: 0; font-size: 14px; }
+  /* the site header: the name, the tab links and what nav.js adds to the <nav> («Tools» before «About», «How we got here») */
+  .top { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 0 24px; padding-top: 8px; }
+  .brand { flex: 1 1 200px; min-width: 0; padding-bottom: 6px; }
+  h1 { font-size: 21px; line-height: 1.25; margin: 0; letter-spacing: -.01em; }
+  .tagline { color: var(--muted); margin: 0; font-size: 13px; line-height: 1.35; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   nav { display: flex; flex-wrap: wrap; }
   nav a { padding: 10px 12px 9px; text-decoration: none; color: var(--muted); border-bottom: 3px solid transparent; font-weight: 600; font-size: 14px; }
   nav a[aria-current="page"] { color: var(--ink); border-bottom-color: var(--accent); }
-  main { padding: 18px 0 40px; }
+  @media (max-width: 1279px) { .tagline { display: none; } .brand { padding-bottom: 9px; } }  /* no room beside the links */
+  @media (max-width: 760px) {  /* phones: a smaller name over the links, which are lower */
+    .top { padding-top: 6px; } .brand { padding-bottom: 1px; } h1 { font-size: 18px; }
+    nav a, nav details.ppnav-tools > summary.ppnav-sum { padding: 6px 9px 5px; }
+  }
+  @media (min-width: 360px) and (max-width: 560px) {  /* two rows of links: the tabs and «Tools», then «About» and «How we got here» */
+    nav::after { content: ""; flex-basis: 100%; order: 1; }
+    nav a[data-tab="about"], nav a[data-tab="about"] ~ a { order: 2; }
+  }
+  main.wrap { padding-bottom: 40px; }
   section[hidden] { display: none; }
-  .intro { max-width: 860px; color: var(--muted); margin: 0 0 14px; }
-  .controls { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; margin-bottom: 14px; }
+  .intro { color: var(--muted); margin: 8px 0 7px; font-size: 14px; }  /* one sentence and a link to the tab's part of About */
+  .intro a { white-space: nowrap; }
+  .controls { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; margin-bottom: 12px; }
   input[type=search] { font: inherit; padding: 7px 10px; border: 1px solid var(--line); border-radius: 6px; background: var(--panel); color: var(--ink); width: 280px; max-width: 100%; }
   .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; background: var(--panel); }
   .seg button { font: inherit; font-size: 13px; border: 0; background: none; color: var(--muted); padding: 6px 10px; cursor: pointer; }
   .seg button[aria-pressed="true"] { background: var(--accent); color: var(--panel); }
   label.tg { font-size: 13px; color: var(--muted); display: inline-flex; gap: 5px; align-items: center; cursor: pointer; }
   .count { font-size: 13px; color: var(--muted); }
+  .controls .count { margin-left: auto; }
+  /* Filters: a region under the search row that folds behind the «Filters» button (.ftoggle), which then says what is
+     active. Its groups (.fgroup: a label and one control) sit in a row and wrap; a choice is a row of buttons (.seg) on
+     wide screens and a <select> (.fsel) on narrow ones. More groups go into .facets, which takes a row of its own. */
+  .ftoggle { font: inherit; font-size: 13px; font-weight: 600; padding: 6px 10px; border: 1px solid var(--line); border-radius: 6px; background: var(--panel); color: var(--ink); cursor: pointer; text-align: left; }
+  .ftoggle:hover, .ftoggle:focus-visible { border-color: var(--accent); }
+  .ftoggle::after { content: "▾"; margin-left: 6px; font-size: 11px; color: var(--muted); }
+  .ftoggle[aria-expanded="true"]::after { content: "▴"; }
+  .fsum { font-weight: 400; color: var(--muted); }
+  .ftoggle[aria-expanded="true"] .fsum { display: none; }
+  .filters { flex: 1 1 100%; order: 1; display: none; flex-wrap: wrap; align-items: center; gap: 8px 20px; }
+  .filters.open { display: flex; }
+  .fgroup { display: inline-flex; align-items: center; gap: 7px; min-width: 0; }
+  .flabel { font-size: 13px; color: var(--muted); }
+  .fsel { font: inherit; font-size: 14px; padding: 6px 8px; border: 1px solid var(--line); border-radius: 6px; background: var(--panel); color: var(--ink); max-width: 100%; }
+  .facets { flex: 1 1 100%; } .facets[hidden] { display: none; }
+  .key { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; margin: -2px 0 12px; font-size: 13px; color: var(--muted); }
+  @media (min-width: 761px) {
+    .on-narrow { display: none; }
+    .filters.inline { display: flex; flex: 0 1 auto; order: 0; gap: 8px 14px; }  /* few filters: always there, in the search row */
+  }
+  @media (max-width: 760px) {
+    .on-wide { display: none; }
+    .controls { gap: 8px 10px; }
+    .controls input[type=search] { flex: 1 1 100%; width: auto; }
+    input[type=search], .fsel { font-size: 16px; }  /* smaller text makes a phone zoom in on the field */
+    .ftoggle { min-width: 0; }
+    .filters { gap: 10px; padding: 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); }
+    .fgroup { display: flex; flex: 1 1 100%; }
+    .flabel { flex: 0 0 52px; }
+    .fsel { flex: 1 1 auto; min-width: 0; }
+    .key { display: none; }  /* the colours are in About */
+  }
   .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 14px; }
   .card { all: unset; box-sizing: border-box; display: flex; flex-direction: column; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; overflow: hidden; cursor: pointer; box-shadow: var(--shadow); }
   .card:hover, .card:focus-visible { border-color: var(--accent); outline: none; }
@@ -49,10 +97,11 @@
   .cap b { font-size: 14px; line-height: 1.3; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow-wrap: anywhere; }
   .meta { color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .badges { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 2px; }
-  .b { font-style: normal; font-size: 11px; font-weight: 600; padding: 1px 7px; border-radius: 99px; color: #fff; background: var(--muted); }
+  .b { font-style: normal; font-size: 11px; font-weight: 600; padding: 1px 7px; border-radius: 99px; color: var(--badge-ink); background: var(--muted); }
   .b.register { background: var(--register); } .b.photo { background: var(--photo); } .b.sheet { background: var(--sheet); }
   .b.detected { background: var(--detected); } .ov.detected { stroke: var(--detected); } .ov.detected.weak { stroke-dasharray: 6 4; }
   .b.model { background: var(--model); } .b.again { background: var(--again); } .b.warn { background: transparent; color: var(--model); border: 1px solid var(--model); }
+  .b.warn.unv { border-style: dashed; }  /* «unverified», dashed like its box; «to check» is solid */
   .more { display: block; margin: 18px auto 0; font: inherit; padding: 8px 18px; border-radius: 6px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); cursor: pointer; }
   svg.back { display: block; width: 100%; height: auto; background: var(--chip); border-radius: 4px; }
   .wcard svg.back { height: 200px; border-radius: 0; }
@@ -61,7 +110,8 @@
   .ov.hit { stroke: var(--again); stroke-dasharray: 6 4; } .ov.sel { stroke-width: 4; }
   .ov:hover { stroke-width: 4; }
   .group { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 12px; margin-bottom: 14px; box-shadow: var(--shadow); }
-  .group h3 { margin: 0 0 8px; font-size: 15px; }
+  .group h3 { margin: 0 0 8px; font-size: 15px; overflow-wrap: anywhere; }
+  .group h3 .meta { white-space: normal; }  /* a long title wraps instead of widening the page */
   .row { display: flex; gap: 12px; overflow-x: auto; padding-bottom: 4px; }
   .row .card { flex: 0 0 180px; }
   .arrow { align-self: center; color: var(--muted); font-size: 22px; flex: 0 0 auto; }
@@ -69,7 +119,8 @@
   .ev span { color: var(--again); overflow: hidden; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; }
   .hitc { flex: 0 0 180px; display: flex; flex-direction: column; gap: 4px; min-width: 0; }
   .hitc > .card { flex: 1 1 auto; }
-  .hitc .ppfb-link { font-size: 12px; padding: 0 2px; }
+  .hitc .ppfb-link { font-size: 12px; padding: 0 2px; color: var(--muted); }  /* «Report»: its title says what */
+  .hitc .ppfb-link:hover, .hitc .ppfb-link:focus-visible { color: var(--accent); }
   dialog { width: min(1100px, 96vw); max-height: 92vh; border: 1px solid var(--line); border-radius: 10px; padding: 0; background: var(--panel); color: var(--ink); }
   dialog::backdrop { background: rgba(0,0,0,.45); }
   .dhead { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; padding: 14px 18px; border-bottom: 1px solid var(--line); position: sticky; top: 0; background: var(--panel); z-index: 2; }
@@ -77,18 +128,30 @@
   .close { font: inherit; font-size: 20px; line-height: 1; border: 0; background: none; color: var(--muted); cursor: pointer; padding: 4px 8px; }
   .dbody { padding: 16px 18px 22px; }
   .two { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 18px; }
-  @media (max-width: 760px) { .two { grid-template-columns: 1fr; } .top { padding-top: 10px; } }
+  @media (max-width: 760px) { .two { grid-template-columns: 1fr; } }
   .big { background: var(--chip); border-radius: 6px; display: grid; place-items: center; min-height: 180px; overflow: hidden; }
   .big img { max-width: 100%; max-height: 420px; display: block; }
   dl { display: grid; grid-template-columns: max-content 1fr; gap: 6px 14px; margin: 0; font-size: 14px; }
   dt { color: var(--muted); } dd { margin: 0; overflow-wrap: anywhere; }
   h4 { margin: 20px 0 8px; font-size: 15px; }
   .links { display: flex; flex-wrap: wrap; gap: 6px 14px; margin-top: 10px; font-size: 14px; }
-  .formrow { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; margin: 14px 0 4px; }
   .formbtn { display: inline-block; padding: 7px 14px; border-radius: 6px; background: var(--accent); color: var(--bg); text-decoration: none; font-weight: 600; font-size: 14px; }
   .formbtn:hover, .formbtn:focus-visible { filter: brightness(1.12); }
-  .formrow span, .hintline { font-size: 13px; color: var(--muted); }
+  .hintline { font-size: 13px; color: var(--muted); }
   .hintline { margin: 0 0 8px; }
+  /* label dialog (.ldlg): the pictures on the left (the label, SKKG's photograph of it, the back), on the right the
+     actions in one row, the primary one first, and the facts */
+  .acts { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin: 0 0 14px; font-size: 13px; }
+  .ldlg { grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); }  /* room for the four actions in one row */
+  .ldlg svg.back { max-height: min(62vh, 480px); }  /* where the label sits: the whole back, no taller than this */
+  @media (max-width: 760px) {  /* one column: the label, the actions, the facts, then SKKG's photograph and the back */
+    .ldlg { display: flex; flex-direction: column; }
+    .ldlg > div { display: contents; }
+    .ldlg .lcut { order: 1; } .ldlg .acts { order: 2; margin: 0; } .ldlg dl { order: 3; } .ldlg .lphoto { order: 4; } .ldlg .lback { order: 5; }
+    .ldlg .lphoto h4, .ldlg .lback h4 { margin-top: 0; }
+    .ldlg dl { grid-template-columns: minmax(0, 1fr); gap: 0; }  /* each fact under its name: the text gets the whole width */
+    .ldlg dt { font-size: 12px; margin-top: 8px; } .ldlg dt:first-child { margin-top: 0; }
+  }
   .stats { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; margin: 10px 0 20px; }
   .stat { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; box-shadow: var(--shadow); }
   .stat b { display: block; font-size: 26px; line-height: 1.1; }
@@ -209,12 +272,44 @@
   details.boxes { margin-top: 18px; }
   details.boxes > summary { cursor: pointer; font-weight: 600; font-size: 15px; margin-bottom: 8px; }
   @media (prefers-reduced-motion: reduce) { .xp-piece { transition: none; } }
+  /* fronts of the works: SKKG's photographs under CC BY 4.0 or CC0, credited under each (works[].front) */
+  .credit { font-size: 11px; line-height: 1.35; color: var(--muted); overflow-wrap: anywhere; }
+  .credit a { color: inherit; }
+  .wcard .wf { display: grid; grid-template-columns: 56px minmax(0, 1fr); gap: 3px 9px; align-items: start; }
+  .wcard .wf > img { width: 56px; height: 56px; object-fit: contain; background: var(--chip); border-radius: 3px; display: block; }
+  .wcard .wft { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+  .front { margin: 0 0 16px; }
+  .front h3 { margin: 0 0 6px; font-size: 15px; }
+  .front .fbig { display: block; background: var(--chip); border-radius: 6px; overflow: hidden; }
+  .front .fbig img { display: block; width: 100%; height: auto; max-height: 320px; object-fit: contain; }
+  .front figcaption { margin-top: 5px; }
+  .fstrip { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 6px; font-size: 12px; }
+  .fstrip[hidden] { display: none; }
+  .fstrip button { all: unset; box-sizing: border-box; cursor: pointer; border: 2px solid transparent; border-radius: 4px; padding: 1px; }
+  .fstrip button[aria-pressed="true"] { border-color: var(--accent); }
+  .fstrip button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .fstrip img { width: 44px; height: 44px; object-fit: contain; display: block; background: var(--chip); border-radius: 2px; }
+  .xp.notl.hasfront { grid-template-columns: minmax(0, 2fr) minmax(0, 3fr); }
+  .xp.notl.hasfront > .hintline { grid-column: 1 / -1; }
+  @media (max-width: 760px) { .xp.notl.hasfront { grid-template-columns: minmax(0, 1fr); } }
+  .fsmall { display: inline-block; }
+  .fsmall img { display: block; max-width: 150px; max-height: 120px; width: auto; height: auto; background: var(--chip); border-radius: 4px; }
+  dd .credit { display: block; margin-top: 3px; }
+  /* the work turned over: the stage of the exploded back shows the front first */
+  .xp-front { all: unset; box-sizing: border-box; position: absolute; inset: 0; z-index: 40; display: none; cursor: pointer; background: var(--chip); }
+  .xp-stage.front-side .xp-front { display: block; }
+  .xp-stage.front-side > :not(.xp-front) { visibility: hidden; }
+  .xp-front img { display: block; width: 100%; height: 100%; object-fit: contain; }
+  .xp-front:focus-visible { outline: 3px solid var(--accent); outline-offset: -3px; }
+  .xp-credit { margin: 6px 0 0; }
+  .xp-turn { font: inherit; font-size: 13px; font-weight: 600; padding: 5px 12px; border-radius: 6px; border: 1px solid var(--accent); background: var(--panel); color: var(--accent); cursor: pointer; flex: 0 0 auto; }
+  .xp-turn:hover, .xp-turn:focus-visible { background: var(--chip); }
 </style>
 </head>
 <body>
 <header>
   <div class="wrap top">
-    <div>
+    <div class="brand">
       <h1>Provenance Pursuit</h1>
       <p class="tagline">Have I seen this label before? Labels, stamps and marks on the backs of works in the SKKG collection</p>
     </div>
@@ -228,45 +323,69 @@
 </header>
 <main class="wrap">
   <section id="labels" hidden>
-    <p class="intro">Every picture is cut out of the original photograph of a work's back by the SKKG image server.
-      Click a label to see where it sits on the back, which work it belongs to, and on which other works the same label
-      was found. Clicking a box on a back opens the entry form for SKKG's label register, prefilled with what
-      we already know. <a href="review.html">Help check the vision-language model's proposals →</a>
-      <a href="label-search/">Search by photo: have I seen this label before? →</a>
-      <a href="#about-labels">What the filters and badges mean →</a></p>
+    <p class="intro">Click a label to see where it sits on a work's back and which other works in the SKKG collection
+      carry it. <a href="#about-labels">What the filters and badges mean →</a></p>
     <div class="controls">
       <input type="search" id="lq" placeholder="Search: issuer, text, Inv. no., title …" aria-label="Search labels">
-      <div class="seg" id="lsrc" role="group" aria-label="Source">
-        <button data-v="all" aria-pressed="true">All</button><button data-v="register">Label register</button><button data-v="photo">Label photos</button><button data-v="data sheet">Data sheets</button><button data-v="detected">Detected</button>
+      <button type="button" class="ftoggle" id="lftoggle" aria-expanded="false" aria-controls="lfilters">Filters<span class="fsum" id="lfsum"></span></button>
+      <span class="count" id="lcount" aria-live="polite"></span>
+      <!-- the Filters region: it folds behind #lftoggle (open on wide screens, folded on phones); syncFilters() sets its
+           controls from `state` (lsrc, lok and lmodel for «Show», lagain) -->
+      <div class="filters" id="lfilters" role="group" aria-label="Filters">
+        <div class="fgroup">
+          <span class="flabel" id="lsrcl">Source</span>
+          <div class="seg on-wide" id="lsrc" role="group" aria-labelledby="lsrcl">
+            <button data-v="all" aria-pressed="true">All</button><button data-v="register">Label register</button><button data-v="photo">Label photos</button><button data-v="data sheet">Data sheets</button><button data-v="detected">Detected</button>
+          </div>
+          <select class="fsel on-narrow" id="lsrcsel" aria-labelledby="lsrcl">
+            <option value="all">All</option><option value="register">Label register</option><option value="photo">Label photos</option><option value="data sheet">Data sheets</option><option value="detected">Detected</option>
+          </select>
+        </div>
+        <div class="fgroup">
+          <span class="flabel" id="lshowl">Show</span>
+          <div class="seg on-wide" id="lshow" role="group" aria-labelledby="lshowl">
+            <button data-v="reliable" title="Only the reliable boxes: matches with the register's picture or SKKG's detail photo, data sheet text read where the data sheet places it, templates of the same issuer">Reliable only</button><button data-v="located" aria-pressed="true" title="The reliable boxes and the boxes to check, without the unverified leads">All located</button><button data-v="all" title="Adds the unverified leads: the model's proposals and detected labels without text">With unverified leads</button>
+          </div>
+          <select class="fsel on-narrow" id="lshowsel" aria-labelledby="lshowl">
+            <option value="reliable">Reliable only</option><option value="located" selected>All located</option><option value="all">With unverified leads</option>
+          </select>
+          <input type="checkbox" id="lmodel" hidden><!-- mirrors state.lmodel, which the «unverified boxes» checkbox of a work dialog sets -->
+        </div>
+        <div class="fgroup"><label class="tg"><input type="checkbox" id="lagain"> found on other works</label></div>
+        <!-- facets: more filter groups go here --><div id="lfacets" class="facets" hidden></div>
       </div>
-      <label class="tg"><input type="checkbox" id="lagain"> found on other works</label>
-      <label class="tg"><input type="checkbox" id="lok"> only reliable</label>
-      <label class="tg"><input type="checkbox" id="lmodel"> include unverified boxes (model proposals, detected labels without text)</label>
-      <span class="count" id="lcount"></span>
     </div>
     <div class="grid" id="lgrid"></div>
     <button class="more" id="lmore" hidden>Show more</button>
   </section>
   <section id="works" hidden>
-    <p class="intro">The backs of the works with the labels and marks located on them. Colours: <i class="b register">label register</i>
-      <i class="b photo">label photo</i> <i class="b sheet">data sheet</i> <i class="b model">model (unverified)</i> <i class="b detected">label detector</i>
-      <i class="b again">same label as on another work</i> <a href="#about-works">How to read a work: exploded back and timeline →</a></p>
+    <p class="intro">The backs of the works with the labels located on them: click a work for its front, its exploded
+      back and its provenance timeline. <a href="#about-works">How to read a work →</a></p>
     <div class="controls">
       <input type="search" id="wq" placeholder="Search: Inv. no., title, actor, exhibition …" aria-label="Search works">
-      <label class="tg"><input type="checkbox" id="wlab" checked> only works with located labels</label>
-      <label class="tg"><input type="checkbox" id="wagain"> only works that share a label</label>
-      <span class="count" id="wcount"></span>
+      <button type="button" class="ftoggle on-narrow" id="wftoggle" aria-expanded="false" aria-controls="wfilters">Filters<span class="fsum" id="wfsum"></span></button>
+      <div class="filters inline" id="wfilters" role="group" aria-label="Filters">
+        <label class="tg"><input type="checkbox" id="wlab" checked> only works with located labels</label>
+        <label class="tg"><input type="checkbox" id="wagain"> only works that share a label</label>
+        <!-- facets: more filter groups for the works go here --><div id="wfacets" class="facets" hidden></div>
+      </div>
+      <span class="count" id="wcount" aria-live="polite"></span>
     </div>
+    <p class="key">Colours: <i class="b register">label register</i> <i class="b photo">label photo</i> <i class="b sheet">data sheet</i>
+      <i class="b model">model (unverified)</i> <i class="b detected">label detector</i> <i class="b again">same label as on another work</i></p>
     <div class="grid" id="wgrid"></div>
     <button class="more" id="wmore" hidden>Show more</button>
   </section>
   <section id="again" hidden>
     <p class="intro"><span id="againintro"></span> <a href="#about-again">How to read the hits →</a></p>
     <div class="controls">
-      <div class="seg" id="aev" role="group" aria-label="Evidence">
+      <div class="seg on-wide" id="aev" role="group" aria-label="Evidence">
         <button data-v="all" aria-pressed="true">All hits</button><button data-v="exhibition">Shared exhibition</button><button data-v="seller">Same seller</button><button data-v="provenance">Provenance</button><button data-v="none">No evidence yet</button>
       </div>
-      <span class="count" id="acount"></span>
+      <select class="fsel on-narrow" id="aevsel" aria-label="Evidence">
+        <option value="all">All hits</option><option value="exhibition">Shared exhibition</option><option value="seller">Same seller</option><option value="provenance">Provenance</option><option value="none">No evidence yet</option>
+      </select>
+      <span class="count" id="acount" aria-live="polite"></span>
     </div>
     <div id="alist"></div>
   </section>
@@ -324,20 +443,22 @@
         <dd><ul>
           <li><b>Search</b> looks in the label's title (for register entries, the issuer), its text or description, event,
             position and type, and in the work's inventory number, title, object type and provenance actors.</li>
-          <li><b>Source</b> buttons: All, Label register, Label photos, Data sheets, Detected.</li>
+          <li><b>Source</b>: All, Label register, Label photos, Data sheets, Detected.</li>
           <li><b>found on other works</b>: only labels that were found again on another back.</li>
-          <li><b>only reliable</b>: only the <span data-n="reliable"></span> reliable boxes: matches with the register's picture
+          <li><b>Show</b>, «Reliable only»: only the <span data-n="reliable"></span> reliable boxes: matches with the register's picture
             or SKKG's detail photo, data sheet text read where the data sheet places it (also after an image filter), and
             templates of the same issuer.</li>
-          <li><b>include unverified boxes</b> (off by default) adds <span data-n="unverified"></span> boxes: the
+          <li><b>Show</b>, «With unverified leads» (the default is «All located») adds <span data-n="unverified"></span> boxes: the
             <span data-n="model"></span> proposals of the vision-language model and the <span data-n="notext"></span> detector
             finds without readable text. The «unverified boxes» checkbox in a work's dialog is the same switch.</li>
-          <li>The filters combine; the count says how many labels match, and «Show more» loads the next 96. Labels found on the
+          <li>The filters combine, and «Filters» folds them away (on a phone they start folded); the count says how many
+            labels match, and «Show more» loads the next 96. Labels found on the
             most works come first, then the reliable ones. Click a card for the <a href="#about-label">label dialog</a>.</li>
         </ul></dd>
         <dt>Watch for</dt>
         <dd>By default <span data-n="shown"></span> of the <span data-n="labels"></span> labels are shown. Every box that is
-          not reliable carries <i class="b warn">check</i>. An amber «Data sheet» badge is a box the model proposed:
+          not reliable carries <i class="b warn">to check</i> or, if it is an unverified lead,
+          <i class="b warn unv">unverified</i>. An amber «Data sheet» badge is a box the model proposed:
           unverified. For detected labels, issuer and kind are guesses from the text read by OCR, and OCR misspells names.</dd>
       </dl>
     </div>
@@ -386,7 +507,7 @@
           strongly). The timeline holds only what SKKG's records hold, so a label without an event may document a station or an
           exhibition the records lack. The order is reconstructed: an undated station stays after the dated one before it, and
           exhibitions are placed by their year. «+1 with an unverified box» under an event means that a hidden box documents it
-          too. A link is evidence to weigh, not proof. Owners, heirs and sellers are named as SKKG records them.</dd>
+          too. A link is evidence to weigh, not proof. Owners, heirs and sellers are named as SKKG's public records name them.</dd>
       </dl>
     </div>
 
@@ -396,7 +517,7 @@
         <dt>Shows</dt>
         <dd><span data-n="labels_found_again"></span> located labels that were found again on the backs of other works, with
           <span data-n="hits"></span> hits. Each row starts with the label and its work; after the arrow come the backs where the
-          same label was found: the cut-out there, the number of points that agree between the two pictures (inliers), and the
+          same label was found: the cut-out there, the number of points that agree between the two pictures (matching points), and the
           evidence from the records of both works:
           <ul>
             <li>«Exhibition: …»: both works were lent to this exhibition;</li>
@@ -407,9 +528,9 @@
           <span data-n="hits_backed"></span> hits are backed by the records: <span data-n="hits_exhibition"></span> by a shared
           exhibition, <span data-n="hits_seller"></span> by the same seller.</dd>
         <dt>How to use</dt>
-        <dd>The buttons filter by evidence: All hits, Shared exhibition, Same seller, Provenance, No evidence yet. Labels with
+        <dd>Filter by evidence: All hits, Shared exhibition, Same seller, Provenance, No evidence yet. Labels with
           the most hits come first. Click the label for its dialog, or a hit for the other work's dialog, where the hit appears as
-          a green dashed piece. Each hit has «Report a problem with this match».</dd>
+          a green dashed piece. Each hit has «Report», for a problem with this match.</dd>
         <dt>Watch for</dt>
         <dd>A hit is the same label design, confirmed by image matching: a lead, not proof. It can be an identical label on
           related works, one issuer's standard label used for decades, or one of SKKG's own loan strips with a crate number,
@@ -424,22 +545,22 @@
       <dl class="ab-sw">
         <dt>Shows</dt>
         <dd>One label: its cut-out and, where there is one, SKKG's own detail photo; the facts: work (with links to the work
-          and to SKKG's collection), source, «Located by» (image match with the number of agreeing points, the most similar
+          and to SKKG's collection), source, «Located by» (image match with the number of matching points, the most similar
           window, text read by OCR, a template from another work, the vision-language model, or the detector's score), position,
           type, description or text read, issuer guess, and the provenance events it is linked to. Below: where it sits on the
           back, the same label on other works, and the other marks on the same work.</dd>
         <dt>How to use</dt>
-        <dd>Click any card. «✎ Record this label in the entry form» opens the <a href="#about-form">entry form</a>, and so does
+        <dd>Click any card. «✎ Record this label» opens the <a href="#about-form">entry form</a>, and so does
           a click on the box on the back. The cut-out and «Whole back, zoomable» open the <a href="#about-viewer">box viewer</a>;
-          «Label in full resolution (IIIF)» opens the cut-out itself; «Report a problem with this box» opens the
+          «Full resolution» opens the cut-out itself; «Report a problem» opens the
           <a href="#about-feedback">feedback form</a>. Close with ✕, <kbd>Esc</kbd> or a click beside the dialog. Every dialog
           has its own address: <code>#label=</code> and the label's key (for example
           <a href="#label=register:52"><code>#label=register:52</code></a>), or <code>#work=</code> and SKKG's object ID, the
           number in the work's collection address.</dd>
         <dt>Watch for</dt>
-        <dd><i class="b warn">check</i> after «Located by» marks a box that is not reliable. «Kind (guess)», «Issuer (guess)»
-          and «Text read (OCR)» of a detected label are machine readings: expect misspellings and masked addresses
-          («[address]»).</dd>
+        <dd><i class="b warn">to check</i> or <i class="b warn unv">unverified</i> after «Located by» marks a box that is not
+          reliable. «Kind (guess)», «Issuer (guess)» and «Text read (OCR)» of a detected label are machine readings: expect
+          misspellings; addresses are masked («[address]»).</dd>
       </dl>
     </div>
 
@@ -454,7 +575,7 @@
           register row.</dd>
         <dt>How to use</dt>
         <dd><ul>
-          <li><b>Open</b> it from a box (click it), from «✎ Record this label in the entry form», or from a box in the box viewer.
+          <li><b>Open</b> it from a box (click it), from «✎ Record this label», or from a box in the box viewer.
             Its address is <code>form.html?label=</code> and the label's key; without a key it is an empty form.</li>
           <li><b>Prefill</b>: what the data hold is filled in and tagged. A pale blue field tagged «Register», «Data sheet» or
             «Box» comes from the data. A pale amber field tagged «Suggestion», «OCR» or «Image search» is derived: shape, colour
@@ -599,9 +720,9 @@
         <dd>Every box has two links: «region» opens the cut-out on the IIIF server, «view» the whole image with the box in the
           box viewer. Sort and filter as in any spreadsheet.</dd>
         <dt>Watch for</dt>
-        <dd>This is the public copy: addresses are masked (names are shown), and SIK-ISEA appears only as links and
-          counts. Apart from the label register's own pictures it holds no images. It is a snapshot from the build date in the
-          footer.</dd>
+        <dd>This is the public copy: names appear as SKKG's public records and the labels give them, addresses are masked
+          («[address]»), and SIK-ISEA appears only as links and counts. Apart from the label register's own pictures it holds
+          no images. It is a snapshot from the build date in the footer.</dd>
       </dl>
     </div>
 
@@ -610,7 +731,7 @@
       <dl class="ab-sw">
         <dt>Shows</dt>
         <dd>A «Feedback» button at the bottom right of every page (in an open dialog it moves into the dialog), and «Report a
-          problem …» links next to boxes, labels, timeline events and matches.</dd>
+          problem …» or «Report» links next to boxes, labels, timeline events and matches.</dd>
         <dt>How to use</dt>
         <dd>Choose what it is about (a box is wrong or missing, a text or data value is wrong, something doesn't work, an idea
           or wish, other), say what you saw and what you expected, look over the lines sent along (page, work, label key, box;
@@ -618,9 +739,9 @@
           the same issue, prefilled.</dd>
         <dt>Watch for</dt>
         <dd>Your message becomes a <b>public</b> issue in the <a href="https://github.com/ruedtim/glamhack26-box-viewer/issues">site's
-          GitHub repository</a>, usually 10 to 20 minutes after you send it. Names from the records are fine; don't write
-          addresses or your own contact details. Your text goes in as plain text, together with the lines under «Sent along» (page,
-          the work's SKKG title, label key, box, browser), never a label's text.</dd>
+          GitHub repository</a> when the site's GitHub Action next picks it up; GitHub starts that Action on a timer that can lag by hours. Names from the records are fine; please don't
+          write addresses or your own contact details. Your text goes in as plain text, together with the lines under
+          «Sent along» (page, the work's SKKG title, label key, box, browser), never a label's text.</dd>
       </dl>
     </div>
 
@@ -640,7 +761,7 @@
         <code>box:&lt;IIIF ID&gt;:&lt;x,y,w,h&gt;</code>.</p>
     </div>
 
-    <h2 id="about-colours">Colours, badges and «check»</h2>
+    <h2 id="about-colours">Colours, badges and «to check»</h2>
     <div class="ab-part">
       <h3>Badges on the cards</h3>
       <dl class="ab-key">
@@ -653,9 +774,10 @@
         <dt><i class="b detected">Detected label</i></dt><dd>found by the label detector; no record documents it</dd>
         <dt><i class="b again">on 2 other works</i></dt><dd>found again on the backs of other works (on a work's card: «shares a
           label with another work»)</dd>
-        <dt><i class="b warn">check</i></dt><dd>not reliable: an uncertain image match, a register picture placed only roughly
+        <dt><i class="b warn">to check</i></dt><dd>not reliable: an uncertain image match, a register picture placed only roughly
           (the most similar window), data sheet text that matched weakly or was found elsewhere than the data sheet says, a
-          similar label used as a template, a model proposal, or a detector find</dd>
+          similar label used as a template, or a detector find with text</dd>
+        <dt><i class="b warn unv">unverified</i></dt><dd>a lead: a model proposal, or a detector find without text</dd>
       </dl>
     </div>
     <div class="ab-part">
@@ -666,7 +788,7 @@
         <dd>solid, in the colour of the badge: label register, label photo, data sheet, detected label with text</dd>
         <dt><span class="ab-box dash" style="--c:var(--model)" aria-hidden="true"></span> <span class="ab-box dash" style="--c:var(--detected)" aria-hidden="true"></span></dt>
         <dd>dashed: unverified, a model proposal or a detected label without text; the Labels tab and the dialogs show
-          them only with «include unverified boxes», the cards of the Works tab always draw them</dd>
+          them only with «With unverified leads», the cards of the Works tab always draw them</dd>
         <dt><span class="ab-box dash" style="--c:var(--again)" aria-hidden="true"></span></dt>
         <dd>dashed green: the same label as on another work, found here by the search</dd>
         <dt><span class="ab-num" aria-hidden="true">2</span></dt>
@@ -731,16 +853,17 @@
 
     <h2 id="about-privacy">Privacy</h2>
     <ul>
-      <li>Names are shown, owners, lenders and sellers included: they come from public sources (SKKG's data sheets,
-        knowledge graph and photographs), and for provenance research they matter most. This was the team's decision on
-        14 Nov 2026; until then, owners' names were masked.</li>
-      <li>Addresses that labels, data sheets or the text recognition transcribe are masked («[address]»). The masking
-        follows patterns and can miss one: if you see an address, report it with «Report a problem» without repeating it.</li>
+      <li>Names appear as SKKG's public records and the labels give them: the sources are public, and the names matter for
+        provenance research. Addresses that labels, data sheets or the text recognition transcribe are masked
+        («[address]»). The masking follows patterns and can miss an address: if you see one, report it with
+        «Report a problem» without repeating it.</li>
+      <li>In the timeline, owners, heirs, sellers, dealers, auction houses and museums are named as SKKG's public records
+        name them, and provenance actors are shown as SKKG publishes them.</li>
       <li>The comments in column L of SKKG's label register are not published.</li>
       <li>The search by photo keeps your photo in your browser. Entries in the form and decisions on the review and search
         pages stay in your browser until you download them.</li>
-      <li>Feedback becomes a public GitHub issue: names from the records are fine, but no addresses or contact details,
-        please. It travels through a small relay on Google Apps Script that keeps each message for up to 48 hours.</li>
+      <li>Feedback becomes a public GitHub issue: names from the records are fine; no addresses and no contact details,
+        please. It travels through a small relay on Google Apps Script that keeps each message for a few hours.</li>
       <li>Besides SKKG's image server, the pages load a few things from elsewhere: the box viewer its zoom library from
         cdnjs, the entry form its fonts from Google Fonts, the search by photo its image model from Hugging Face and its code
         library from jsDelivr.</li>
@@ -751,8 +874,9 @@
     <ul>
       <li>Data and images: SKKG Stiftung für Kunst, Kultur und Geschichte, Winterthur (<a href="https://digital.skkg.ch">SKKG
         Sammlung digital</a>, knowledge graph and IIIF image server). Object metadata and photographs of backs CC0;
-        provenance data sheets CC BY 4.0, SKKG provenance research team; label register and object list from the
-        challenge.</li>
+        photographs of fronts as SKKG publishes them (mostly CC BY 4.0, some CC0 or ©), credited under each picture with
+        the licence and the rights holder SKKG names; provenance data sheets CC BY 4.0, SKKG provenance research team;
+        label register and object list from the challenge.</li>
       <li>Exhibitions and acquisitions were read from the knowledge graph following
         <a href="https://github.com/kintopp/skkg-mcp">skkg-mcp</a> (RISE, University of Basel).</li>
       <li>These pages copy no images: every picture is requested from SKKG's IIIF image server, and boxes are kept as x, y,
@@ -781,9 +905,30 @@
   const SRC = { register: 'Label register', photo: 'Label photo', 'data sheet': 'Data sheet', detected: 'Detected label' };
   const COLOUR = { register: '3d9bff', photo: 'ff3b30', 'data sheet': 'bf5af2', detected: '64d2ff' };
   const unverified = l => l.how === 'vision-language model' || l.st === 'new label without text';
+  // how sure a box is, in the same three words everywhere: reliable, to check, unverified (a lead: a model proposal or a
+  // detected label without text)
+  const sure = l => l.ok ? 'reliable' : unverified(l) ? 'unverified' : 'to check';
+  const sureBadge = l => l.ok ? '' : `<i class="b warn${unverified(l) ? ' unv' : ''}">${sure(l)}</i>`;
+  const num = n => Number(n).toLocaleString('en');  // 3,542
   let D, LAB = {}, BYKEY = {}, WORK = {}, DIM = {}, HAY = {}, current = 'labels';
-  const state = { lq: '', lsrc: 'all', lagain: false, lok: false, lmodel: false, lpage: 1,
-                  wq: '', wlab: true, wagain: false, wpage: 1, aev: 'all' };
+  const WIDE = matchMedia('(min-width: 761px)');  // narrower is a phone: the filters start folded there
+  // The filters of the tabs (nothing of this is in the address). Labels: lq (search text), lsrc ('all' | 'register' |
+  // 'photo' | 'data sheet' | 'detected'), lok and lmodel (together the «Show» control: showOf() reads them, setShow()
+  // sets them; the work dialog's «unverified boxes» checkbox sets lmodel), lagain (found on other works), lpage (pages
+  // shown), lfopen (the Filters region is unfolded). Works: wq (search text), wlab (only works with located labels),
+  // wagain (only works that share a label), wpage, wfopen. Found again: aev ('all' | 'exhibition' | 'seller' |
+  // 'provenance' | 'none').
+  const state = { lq: '', lsrc: 'all', lagain: false, lok: false, lmodel: false, lpage: 1, lfopen: WIDE.matches,
+                  wq: '', wlab: true, wagain: false, wpage: 1, wfopen: WIDE.matches, aev: 'all' };
+  // Hooks for more filter groups (facets). Labels tab, in #lfacets: assign the test for one label to facetPass and the
+  // short text of what is active there to facetSummary, then call renderLabels(). baseLabels() gives the labels before
+  // that test (for live counts), labelList() those that pass it too; filterSummary() calls facetSummary() on every
+  // renderLabels(). Works tab, in #wfacets, the same with workPass (one [object id, work] entry), workFacetSummary,
+  // baseWorks(), workList(), workSummary() and renderWorks().
+  let facetPass = () => true;
+  let facetSummary = () => '';
+  let workPass = () => true;
+  let workFacetSummary = () => '';
 
   const region = (iiif, b, s = 320) => `${iiif}/${b.join(',')}/${b[2] > s || b[3] > s ? `!${s},${s}` : 'max'}/0/default.jpg`;
   const full = (iiif, s = 700) => `${iiif}/full/!${s},${s}/0/default.jpg`;
@@ -801,26 +946,76 @@
     return 'viewer.html?' + p;
   }
   const workTitle = w => `Inv. ${w.inv} · ${w.title}`;
+
+  // ---------------------------------------------------------------- Fronts
+  // works[].front (build_site.py, from fetch_fronts.py): the photographs of the front SKKG publishes, each credited as SKKG
+  // gives its rights: «© holder ·» where SKKG names a rights holder, then «SKKG» and the licence, linked (CC BY 4.0, CC0)
+  const LICENCE = { 'CC BY 4.0': 'https://creativecommons.org/licenses/by/4.0/', 'CC0 1.0': 'https://creativecommons.org/publicdomain/zero/1.0/' };
+  const fronts = w => (w.front && w.front.img) || [];
+  const frontLic = (w, im) => im.length > 3 ? im[3] : w.front.lic;  // an image whose rights differ carries them: [.., licence, holder]
+  const frontHolder = (w, im) => im.length > 3 ? im[4] : (w.front.c || '');
+  function rightsText(w, im, link) {  // «© Fondation Wilhelm Gimmi · SKKG» · «SKKG, CC BY 4.0»; HTML (escaped), the licence linked if asked
+    const lic = frontLic(w, im), holder = frontHolder(w, im), url = LICENCE[lic];
+    const c = holder ? `© ${holder} · ` : lic === '©' ? '© all rights reserved · ' : '';
+    return `${esc(c)}SKKG${url ? `, ${link ? `<a href="${esc(url)}" target="_blank" rel="license noopener">${esc(lic)}</a>` : esc(lic)}` : ''}`;
+  }
+  const creditHTML = (w, im) => `Front: ${w.front.by ? esc(w.front.by) + ', ' : ''}<i>${esc(w.front.t || w.title)}</i> · ${rightsText(w, im, true)}`;
+  function frontView(w, i = 0) {  // the front, zoomable in the box viewer (no box), with its credit
+    const im = fronts(w)[i], n = w.front.n || fronts(w).length, lic = frontLic(w, im), holder = frontHolder(w, im);
+    const rights = `${holder ? `© ${holder} · ` : lic === '©' ? '© all rights reserved · ' : ''}SKKG${LICENCE[lic] ? ', ' + lic : ''}`;
+    const p = new URLSearchParams({ iiif: im[0], title: workTitle(w), note: n > 1 ? `Front, photograph ${i + 1} of ${n}` : 'Front',
+      credit: `Front: ${w.front.by ? w.front.by + ', ' : ''}«${w.front.t || w.title}» · ${rights}`, rights: LICENCE[lic] || '', page: w.url });
+    return 'viewer.html?' + p;
+  }
+  const frontCaption = (w, i) => `${creditHTML(w, fronts(w)[i])} · <a href="${esc(frontView(w, i))}" target="_blank" rel="noopener">zoomable</a>`;
+  const frontMore = w => { const more = (w.front.n || fronts(w).length) - fronts(w).length; return more > 0 ? `<a href="${esc(w.url)}" target="_blank" rel="noopener">+${more} more in SKKG's collection</a>` : ''; };
+  const frontStrip = (w, attr, cls = '') => fronts(w).length > 1 ? `<div class="fstrip${cls}" role="group" aria-label="Photographs of the front">${fronts(w).map((x, i) => `<button type="button" ${attr}="${i}" aria-pressed="${i === 0}" aria-label="Photograph ${i + 1} of the front"><img alt="" loading="lazy" src="${esc(full(x[0], 300))}"></button>`).join('')}${frontMore(w)}</div>` : '';
+  function frontHTML(w, oid) {  // the work dialog without an exploded back: SKKG's main photograph of the front, the others as small buttons
+    const im = fronts(w);
+    if (!im.length) return '';
+    return `<figure class="front" data-w="${esc(oid)}"><h3>The front</h3><a class="fbig" href="${esc(frontView(w))}" target="_blank" rel="noopener" title="Front, zoomable"><img alt="Front of the work" decoding="async" width="${im[0][1]}" height="${im[0][2]}" src="${esc(full(im[0][0], 800))}"></a>${frontStrip(w, 'data-fi')}<figcaption class="credit">${frontCaption(w, 0)}</figcaption></figure>`;
+  }
+  function pickFront(b) {  // another photograph of the front (the figure of frontHTML)
+    const fig = b.closest('.front'), w = fig && WORK[fig.dataset.w], i = +b.dataset.fi, im = w && fronts(w)[i];
+    if (!im) return;
+    const a = fig.querySelector('.fbig'), img = a.querySelector('img');
+    img.width = im[1]; img.height = im[2]; img.src = full(im[0], 800);
+    a.href = frontView(w, i);
+    fig.querySelector('figcaption').innerHTML = frontCaption(w, i);
+    fig.querySelectorAll('[data-fi]').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+  }
+  const frontSmall = w => { const im = fronts(w)[0]; return `<a class="fsmall" href="${esc(frontView(w))}" target="_blank" rel="noopener" title="Front of the work, zoomable"><img alt="Front of the work" loading="lazy" src="${esc(full(im[0], 300))}"></a><span class="credit">${creditHTML(w, im)}</span>`; };
   const howText = l => l.src === 'data sheet' ? l.how
     : l.src === 'detected' ? `label detector (OWLv2), score ${l.score}${l.st === 'new label without text' ? ', no text read' : ''}`
-    : (l.st === 'retrieval only' ? 'most similar window' : `image match, ${l.n} inliers`);
+    : (l.st === 'retrieval only' ? 'most similar window' : `image match, ${l.n} matching points`);
 
   function labelCard(l) {
     const w = WORK[l.w], again = (l.hits || []).length;
     return `<button class="card" data-label="${l.id}"><span class="thumb"><img loading="lazy" alt="" src="${esc(region(l.iiif, l.box))}"></span>
       <span class="cap"><b>${esc(l.t)}</b><span class="meta">${esc(workTitle(w))}</span><span class="badges">
-      <i class="b ${kind(l)}">${esc(SRC[l.src])}</i>${l.ok ? '' : '<i class="b warn">check</i>'}${again ? `<i class="b again">on ${again} other work${again > 1 ? 's' : ''}</i>` : ''}</span></span></button>`;
+      <i class="b ${kind(l)}">${esc(SRC[l.src])}</i>${sureBadge(l)}${again ? `<i class="b again">on ${again} other work${again > 1 ? 's' : ''}</i>` : ''}</span></span></button>`;
   }
   // feedback (site/feedback.js, the main session's): a public GitHub issue. Only the work's SKKG title, the stable label
-  // key and the box go along, never a label's text (it can hold an owner's name that the masking missed)
+  // key and the box go along, never a label's text (it can hold an address that the masking missed)
   const feedback = (ctx, text) => window.ppFeedback ? window.ppFeedback.html(ctx, text) : '';
-  const hitFeedback = h => feedback({ where: 'Found again', inv: WORK[h.w].inv, title: WORK[h.w].title, key: h.key, iiif: h.iiif, box: h.box,
-    kind: 'A box is wrong or missing', note: `Same label as on Inv. ${WORK[LAB[h.q].w].inv} (label key ${LAB[h.q].key})` }, 'Report a problem with this match');
+  function shortLink(html, short) {  // a feedback link with a short text: its sentence stays as the title and the accessible name
+    const t = document.createElement('template');
+    t.innerHTML = html;
+    const a = t.content.firstElementChild;
+    if (!a) return html;
+    const sentence = a.textContent;
+    a.title = sentence;
+    a.setAttribute('aria-label', sentence);
+    a.textContent = short;
+    return a.outerHTML;
+  }
+  const hitFeedback = h => shortLink(feedback({ where: 'Found again', inv: WORK[h.w].inv, title: WORK[h.w].title, key: h.key, iiif: h.iiif, box: h.box,
+    kind: 'A box is wrong or missing', note: `Same label as on Inv. ${WORK[LAB[h.q].w].inv} (label key ${LAB[h.q].key})` }, 'Report a problem with this match'), 'Report');
   function hitCard(h, title) {
     const w = WORK[h.w];
     const ev = Object.entries(h.ev).map(([k, v]) => `<span>${esc({ exhibition: 'Exhibition', seller: 'Same seller', provenance: 'Provenance' }[k])}: ${esc(v.split(' | ')[0])}</span>`).join('');
     return `<div class="hitc"><button class="card" data-work="${h.w}"><span class="thumb"><img loading="lazy" alt="" src="${esc(region(h.iiif, h.box))}"></span>
-      <span class="cap"><b>${esc(title || workTitle(w))}</b><span class="meta">${h.n} inliers</span><span class="ev">${ev || '<i class="meta">no evidence in the records yet</i>'}</span></span></button>${hitFeedback(h)}</div>`;
+      <span class="cap"><b>${esc(title || workTitle(w))}</b><span class="meta">${h.n} matching points</span><span class="ev">${ev || '<i class="meta">no evidence in the records yet</i>'}</span></span></button>${hitFeedback(h)}</div>`;
   }
   function backWithBoxes(iiif, boxes, size = 700) {  // boxes: [{box, cls, label, key, title}] in original pixels; a box with a key opens the form
     const [W, H] = DIM[iiif] || [1000, 1000];
@@ -829,41 +1024,92 @@
   }
 
   // ---------------------------------------------------------------- Labels
-  function labelList() {
+  // «Show» is one scale for how sure a box is: 'reliable' (only reliable boxes), 'located' (the default: reliable and to
+  // check), 'all' (with the unverified leads). It lives in state.lok and state.lmodel, which other code reads.
+  const showOf = () => state.lmodel ? 'all' : state.lok ? 'reliable' : 'located';
+  function setShow(v) { state.lok = v === 'reliable'; state.lmodel = v === 'all'; }
+  function baseLabels() {  // the labels that pass source, «Show», «found on other works» and the search
     const q = state.lq.toLowerCase().trim();
     return D.labels.filter(l => (state.lsrc === 'all' || l.src === state.lsrc)
       && (state.lmodel || !unverified(l)) && (!state.lagain || (l.hits || []).length)
       && (!state.lok || l.ok) && (!q || HAY[l.id].includes(q)));
   }
-  function renderLabels() {
+  const labelList = () => baseLabels().filter(l => facetPass(l));  // … and the further filter groups
+  // a choice shown as buttons (wide screens) and as a <select> (narrow screens): mark the chosen value, read its words
+  function mark(id, v) {
+    $(id).querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.v === v)));
+    $(id + 'sel').value = v;
+  }
+  const words = (id, v) => ([...$(id).querySelectorAll('button')].find(b => b.dataset.v === v) || {}).textContent || '';
+  function fold(id, open, text) {  // a «Filters» button (#…ftoggle) and its region (#…filters): folded, the button says what is active
+    $(id + 'ftoggle').setAttribute('aria-expanded', String(open));
+    $(id + 'filters').classList.toggle('open', open);
+    $(id + 'fsum').textContent = text ? ' · ' + text : '';
+  }
+  function filterSummary() {  // what is active on the Labels tab, in a few words
+    return [state.lsrc !== 'all' && words('#lsrc', state.lsrc), words('#lshow', showOf()), state.lagain && 'found on other works',
+      facetSummary()].filter(Boolean).join(' · ');
+  }
+  function syncFilters() {  // the Labels tab's controls follow `state`
+    if (state.lmodel) state.lok = false;  // set by a work dialog's «unverified boxes»: the top of the scale
+    mark('#lsrc', state.lsrc);
+    mark('#lshow', showOf());
+    $('#lmodel').checked = state.lmodel;
+    $('#lagain').checked = state.lagain;
+    if ($('#lq').value !== state.lq) $('#lq').value = state.lq;
+    fold('#l', state.lfopen, filterSummary());
+  }
+  function renderLabels() {  // the single place that redraws the list, the count and the filter controls
+    syncFilters();
     const list = labelList(), shown = list.slice(0, state.lpage * PAGE);
     $('#lgrid').innerHTML = shown.map(labelCard).join('') || '<p class="empty">No labels match.</p>';
-    $('#lcount').textContent = `${list.length} of ${D.labels.length}`;
+    $('#lcount').textContent = `${num(list.length)} of ${num(D.labels.length)}`;
     $('#lmore').hidden = shown.length >= list.length;
   }
 
   // ---------------------------------------------------------------- Works
-  function workList() {
+  function baseWorks() {  // the works that pass the search and the two checkboxes, as [object id, work]; most labels first
     const q = state.wq.toLowerCase().trim();
     return Object.entries(WORK).filter(([, w]) => (!state.wlab || w.labels.length) && (!state.wagain || w.shared)
       && (!q || w.hay.includes(q))).sort((a, b) => b[1].labels.length - a[1].labels.length || a[1].inv.localeCompare(b[1].inv));
   }
+  const workList = () => baseWorks().filter(e => workPass(e));  // … and the further filter groups
+  function workSummary() {  // what is active on the Works tab, in a few words
+    return [state.wlab && 'with located labels', state.wagain && 'sharing a label', workFacetSummary()].filter(Boolean).join(' · ') || 'all works';
+  }
   function workCard([oid, w]) {
     const back = w.backs.map(b => b[0]).sort((a, b) => w.labels.filter(l => l.iiif === b).length - w.labels.filter(l => l.iiif === a).length)[0];
     const boxes = w.labels.filter(l => l.iiif === back).map(l => ({ box: l.box, cls: kind(l) }));
-    return `<button class="card wcard" data-work="${oid}">${backWithBoxes(back, boxes, 400)}<span class="cap"><b>${esc(workTitle(w))}</b>
+    const f = fronts(w)[0];  // the front beside the title, with a short credit
+    const text = `<b>${esc(workTitle(w))}</b>
       <span class="meta">${esc(w.type)} · ${w.labels.length} label${w.labels.length === 1 ? '' : 's'} located</span>
-      ${w.shared ? '<span class="badges"><i class="b again">shares a label with another work</i></span>' : ''}</span></button>`;
+      ${w.shared ? '<span class="badges"><i class="b again">shares a label with another work</i></span>' : ''}`;
+    return `<button class="card wcard" data-work="${oid}">${backWithBoxes(back, boxes, 400)}<span class="cap">${f
+      ? `<span class="wf"><img loading="lazy" alt="" src="${esc(full(f[0], 300))}"><span class="wft">${text}</span></span><span class="credit">Front: ${w.front.by ? esc(w.front.by) + ' · ' : ''}${rightsText(w, f, false)}</span>`
+      : text}</span></button>`;
   }
-  function renderWorks() {
+  function syncWorks() {  // the Works tab's controls follow `state`
+    $('#wlab').checked = state.wlab;
+    $('#wagain').checked = state.wagain;
+    if ($('#wq').value !== state.wq) $('#wq').value = state.wq;
+    // the two checkboxes stand in the search row and fold behind «Filters» only on a phone (.inline, .on-narrow); once
+    // #wfacets holds more groups, the region is one like the Labels tab's, on every width
+    const few = $('#wfacets').hidden;
+    $('#wfilters').classList.toggle('inline', few);
+    $('#wftoggle').classList.toggle('on-narrow', few);
+    fold('#w', state.wfopen, workSummary());
+  }
+  function renderWorks() {  // the single place that redraws the list, the count and the filter controls
+    syncWorks();
     const list = workList(), shown = list.slice(0, state.wpage * PAGE / 2);
     $('#wgrid').innerHTML = shown.map(workCard).join('') || '<p class="empty">No works match.</p>';
-    $('#wcount').textContent = `${list.length} works`;
+    $('#wcount').textContent = `${num(list.length)} works`;
     $('#wmore').hidden = shown.length >= list.length;
   }
 
   // ---------------------------------------------------------------- Found again
   function renderAgain() {
+    mark('#aev', state.aev);
     const groups = {};
     D.hits.forEach(h => {
       const keys = Object.keys(h.ev);
@@ -875,7 +1121,7 @@
       return `<div class="group"><h3>${esc(l.t)} <span class="meta">· ${esc(workTitle(w))}</span></h3><div class="row">${labelCard(l)}<span class="arrow" aria-hidden="true">→</span>
         ${groups[id].map(h => hitCard(h)).join('')}</div></div>`;
     }).join('') || '<p class="empty">No hits with this evidence.</p>';
-    $('#acount').textContent = `${ids.length} labels, ${ids.reduce((s, id) => s + groups[id].length, 0)} hits`;
+    $('#acount').textContent = `${num(ids.length)} labels, ${num(ids.reduce((s, id) => s + groups[id].length, 0))} hits`;
   }
 
   // ---------------------------------------------------------------- Details
@@ -892,10 +1138,13 @@
     if (!l) return;
     const w = WORK[l.w];
     OPEN = { label: l };
+    const typed = l.type && l.src !== 'photo';  // the type has a row of its own
+    const sub = l.sub && l.sub !== l.t && l.sub !== SRC[l.src] && !(typed && l.sub === l.type) ? l.sub : '';  // nothing said twice
     const facts = [['Work', `<a href="#work=${l.w}">${esc(workTitle(w))}</a> (${esc(w.type)}) · <a href="${esc(w.url)}" target="_blank" rel="noopener">SKKG collection</a>`],
-      ['Source', esc(SRC[l.src]) + (l.sub && l.sub !== l.t ? ` · ${esc(l.sub)}` : '')],
-      ['Located by', esc(howText(l)) + (l.tpl ? ` (template from Inv. ${esc(l.tpl)})` : '') + (l.ok ? '' : ' · <i class="b warn">check</i>')],
-      l.pos && ['Position', esc(l.pos)], l.type && l.src !== 'photo' && [l.src === 'detected' ? 'Kind (guess)' : 'Type', esc(l.type)],
+      fronts(w).length && ['Front', frontSmall(w)],
+      ['Source', esc(SRC[l.src]) + (sub ? ` · ${esc(sub)}` : '')],
+      ['Located by', esc(howText(l)) + (l.tpl ? ` (template from Inv. ${esc(l.tpl)})` : '') + (l.ok ? '' : ' · ' + sureBadge(l))],
+      l.pos && ['Position', esc(l.pos)], typed && [l.src === 'detected' ? 'Kind (guess)' : 'Type', esc(l.type)],
       l.src === 'detected' && l.iss && ['Issuer (guess)', esc(l.iss)],
       l.d && [l.src === 'detected' ? 'Text read (OCR)' : 'Description', esc(l.d)],
       (l.tl || []).length && ['Provenance events', l.tl.map(([i, s, b]) => `${dots(s)} ${esc(evLine(evView(w, w.tl[i])))} <span class="mute">(${STRENGTH[s]}: ${esc(basisText({ label: l }, b))})</span>`).join('<br>') +
@@ -903,18 +1152,21 @@
     const others = w.labels.filter(o => o.id !== l.id && (state.lmodel || !unverified(o)));
     const hits = (l.hits || []).map(i => D.hits[i]);
     const view = viewer(l.iiif, [l.box], workTitle(w), `${SRC[l.src]}: ${l.t}`, COLOUR[l.src], l.how === 'vision-language model', [l.key]);
-    openDialog(l.t, `<div class="two"><div><div class="big"><a href="${esc(view)}" target="_blank" rel="noopener" title="Whole back, zoomable"><img alt="${esc(l.t)}" src="${esc(region(l.iiif, l.box, 900))}"></a></div>
-      ${l.photo ? `<h4>SKKG's photograph of this label</h4><div class="big"><img alt="Detail photograph" loading="lazy" src="${esc(full(l.photo, 800))}"></div>` : ''}</div>
-      <div><dl>${facts.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join('')}</dl>
-      <p class="formrow"><a class="formbtn" href="${esc(formUrl(l.key))}">✎ Record this label in the entry form</a><span>for SKKG's label register, prefilled with what is known</span></p>
-      <h4>Where it sits on the back</h4>${backWithBoxes(l.iiif, [{ box: l.box, cls: kind(l) + ' sel', key: l.key, title: 'Click to open the entry form for this label' }], 700)}
-      <div class="links"><a href="${esc(view)}" target="_blank" rel="noopener">Whole back, zoomable</a><a href="${esc(`${l.iiif}/${l.box.join(',')}/max/0/default.jpg`)}" target="_blank" rel="noopener">Label in full resolution (IIIF)</a>${feedback({ where: 'Label', inv: w.inv, title: w.title, key: l.key, iiif: l.iiif, box: l.box, kind: 'A box is wrong or missing' }, 'Report a problem with this box')}</div></div></div>
+    // the actions in one row, the primary one first; on a phone they follow the label's picture (CSS order of .ldlg)
+    const acts = `<div class="acts"><a class="formbtn" href="${esc(formUrl(l.key))}" title="Open the entry form for SKKG's label register, prefilled with what is known">✎ Record this label</a>
+      <a href="${esc(view)}" target="_blank" rel="noopener">Whole back, zoomable</a><a href="${esc(`${l.iiif}/${l.box.join(',')}/max/0/default.jpg`)}" target="_blank" rel="noopener" title="The label in full resolution, from SKKG's IIIF image server">Full resolution</a>${shortLink(feedback({ where: 'Label', inv: w.inv, title: w.title, key: l.key, iiif: l.iiif, box: l.box, kind: 'A box is wrong or missing' }, 'Report a problem with this box'), 'Report a problem')}</div>`;
+    openDialog(l.t, `<div class="two ldlg"><div><div class="big lcut"><a href="${esc(view)}" target="_blank" rel="noopener" title="Whole back, zoomable"><img alt="${esc(l.t)}" src="${esc(region(l.iiif, l.box, 900))}"></a></div>
+      ${l.photo ? `<div class="lphoto"><h4>SKKG's photograph of this label</h4><div class="big"><img alt="Detail photograph" loading="lazy" src="${esc(full(l.photo, 800))}"></div></div>` : ''}
+      <div class="lback"><h4>Where it sits on the back</h4>${backWithBoxes(l.iiif, [{ box: l.box, cls: kind(l) + ' sel', key: l.key, title: 'Click to open the entry form for this label' }], 700)}</div></div>
+      <div>${acts}<dl>${facts.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join('')}</dl></div></div>
       ${hits.length ? `<h4>The same label on ${hits.length} other work${hits.length > 1 ? 's' : ''}</h4><div class="row">${hits.map(h => hitCard(h)).join('')}</div>` : ''}
       ${others.length ? `<h4>Other marks on this work</h4><div class="row">${others.slice(0, 20).map(labelCard).join('')}</div>` : ''}`);
   }
   function showWork(oid) {
     const w = WORK[oid];
     if (!w) return;
+    const startBack = KEEP_SIDE ? KEEP_SIDE === 'back' : !!(OPEN && OPEN.label && OPEN.label.w === oid);  // from one of its labels: the back first
+    KEEP_SIDE = null;
     OPEN = { work: oid };
     const hitsHere = D.hits.filter(h => h.w === oid);
     const backs = w.backs.map(([iiif]) => {
@@ -933,12 +1185,13 @@
     const shares = hitsHere.length ? `<h4>Labels it shares with other works</h4><div class="row">${hitsHere.map(h => `<div class="hitc"><button class="card" data-label="${h.q}"><span class="thumb"><img loading="lazy" alt="" src="${esc(region(h.iiif, h.box))}"></span><span class="cap"><b>${esc(LAB[h.q].t)}</b><span class="meta">also on Inv. ${esc(WORK[LAB[h.q].w].inv)}</span></span></button>${hitFeedback(h)}</div>`).join('')}</div>` : '';
     const hint = '<p class="hintline">Click a box to open the entry form for that label (for SKKG\'s label register).</p>';
     // with located labels the exploded back comes first and the boxes for the entry form fold away below the facts
+    const front = frontHTML(w, oid), xp = xpHTML(oid, w, pieces, front);  // the front: in the turning stage, or beside the timeline
     const main = pieces.length
       ? `<div class="two"><div>${dl}</div><div>${shares}</div></div><details class="boxes"><summary>Boxes on the back: click a box to open the entry form</summary>${hint}${backs}</details>`
-      : `<div class="two"><div>${hint}${backs}</div><div>${dl}${shares}</div></div>`;
-    openDialog(workTitle(w), `${xpHTML(oid, w, pieces)}${main}
+      : `<div class="two"><div>${hint}${backs}</div><div>${xp ? '' : front}${dl}${shares}</div></div>`;
+    openDialog(workTitle(w), `${xp}${main}
       <h4>${shown.length} label${shown.length === 1 ? '' : 's'} and marks located${state.lmodel ? '' : ' (without unverified boxes)'}</h4><div class="grid">${shown.map(labelCard).join('') || '<p class="empty">None located yet.</p>'}</div>`);
-    XP = explode($('#dbody').querySelector('.xp'), oid, w, pieces);
+    XP = explode($('#dbody').querySelector('.xp'), oid, w, pieces, { back: startBack });
   }
 
   // ---------------------------------------------------------------- Exploded back and provenance timeline
@@ -946,7 +1199,7 @@
   // the original image, nothing is copied. The timeline holds the events from SKKG's records (works[].tl: [kind, when,
   // what, note]); labels[].tl and hits[].tl link a label to them: [event index, strength 3|2|1, basis].
   const STRENGTH = { 3: 'strong', 2: 'medium', 1: 'weak' };
-  const ROLE = { r: 'The artist', o: 'Private owner', u: 'Unknown owner', e: 'Estate or heirs', d: 'Dealer',
+  const ROLE = { r: 'The artist', o: 'Owner', u: 'Unknown owner', e: 'Estate or heirs', d: 'Dealer',
                  h: 'Auction house', m: 'Museum', s: 'SKKG', a: 'Acquired by SKKG', x: 'Exhibition' };
   const GLOSS = { Auktion: 'auction', Freihandkauf: 'private sale', Ankauf: 'purchase', Schenkung: 'gift', Tausch: 'exchange',
                   Pfandleihgabe: 'pledge' };
@@ -954,6 +1207,7 @@
   const dots = s => `<span class="dots" role="img" aria-label="${STRENGTH[s]} link" title="${STRENGTH[s]} link">${'●'.repeat(s)}${'○'.repeat(3 - s)}</span>`;
   const reduced = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
   let XP = null;  // the exploded view of the open work dialog
+  let KEEP_SIDE = null;  // 'front' | 'back': the side to show again when the work dialog is drawn anew
   let OPEN = null;  // what the dialog shows: { label } or { work }, for the feedback button
   const TABS = { labels: 'Labels', works: 'Works', again: 'Found again', about: 'About' };
   window.ppFeedbackContext = () => {  // asked by the floating «Feedback» button at the moment of the click
@@ -1002,31 +1256,34 @@
     return out;
   }
 
-  function xpHTML(oid, w, pieces) {
+  function xpHTML(oid, w, pieces, front = '') {  // front (frontHTML): beside the timeline when there is no exploded back
     const ev = w.tl || [];
     const items = ev.map((e, i) => {
       const v = evView(w, e);
       const inner = `<span class="tl-when">${esc(v.when)}</span><span class="tl-role">${esc(v.role)}</span>${v.what ? `<span class="tl-what">${esc(v.what)}</span>` : ''}${v.note ? `<span class="tl-note">${esc(v.note)}</span>` : ''}<span class="tl-sup"></span>`;
       return `<li class="tl-i k-${v.k}${v.dated ? '' : ' undated'}">${pieces.length ? `<button type="button" class="tl-ev" data-xe="${i}" aria-pressed="false">${inner}</button>` : `<div class="tl-ev">${inner}</div>`}<div class="tl-why"></div></li>`;
     }).join('');
-    const timeline = `<div class="tl-wrap"><h3>Provenance timeline <span>· from SKKG's records</span></h3>
+    const timeline = `<div class="tl-wrap">${pieces.length && !fronts(w).length ? front : ''}<h3>Provenance timeline <span>· from SKKG's records</span></h3>
       <p class="tl-sum">${ev.length ? '' : 'SKKG\'s records hold no provenance station, exhibition or acquisition for this work.'}</p>${ev.length ? `<ol class="tl">${items}</ol>` : ''}</div>`;
-    if (!pieces.length) return ev.length || w.labels.length ? `<section class="xp notl" aria-label="Provenance timeline">${timeline}${w.labels.length ? `<p class="hintline"><label class="tg"><input type="checkbox" class="xp-unv"${state.lmodel ? ' checked' : ''}> show the ${w.labels.length} unverified box${w.labels.length > 1 ? 'es' : ''} on the exploded back</label></p>` : ''}</section>` : '';
+    const big = front && fronts(w).length;  // without an exploded back the front stands beside the timeline
+    if (!pieces.length) return ev.length || w.labels.length ? `<section class="xp notl${big ? ' hasfront' : ''}" aria-label="Provenance timeline">${big ? `<div>${front}</div>` : front}${timeline}${w.labels.length ? `<p class="hintline"><label class="tg"><input type="checkbox" class="xp-unv"${state.lmodel ? ' checked' : ''}> show the ${w.labels.length} unverified box${w.labels.length > 1 ? 'es' : ''} on the exploded back</label></p>` : ''}</section>` : '';
     const backs = w.backs.map(b => b[0]).filter(b => pieces.some(p => p.iiif === b));
-    const n = pieces.length;
+    const n = pieces.length, f0 = fronts(w)[0];  // with a front, the stage shows it first and turns over to the back
     return `<section class="xp" aria-label="Exploded back and provenance timeline"><div>
-      <h3>The back, exploded <span>· ${n} label${n === 1 ? '' : 's'} and mark${n === 1 ? '' : 's'}${state.lmodel ? '' : ', without unverified boxes'}</span></h3>
+      ${f0 ? `<h3 class="xp-hf">The front <span>· turn it over: ${n} label${n === 1 ? '' : 's'} and mark${n === 1 ? '' : 's'} on the back</span></h3>` : ''}<h3 class="xp-hb">The back, exploded <span>· ${n} label${n === 1 ? '' : 's'} and mark${n === 1 ? '' : 's'}${state.lmodel ? '' : ', without unverified boxes'}</span></h3>
       <div class="xp-stage" role="group" aria-label="Back of the work; its labels are buttons"><img class="xp-back" alt="Back of the work" decoding="async"><svg class="xp-lines" aria-hidden="true"></svg>
-      ${pieces.map(p => `<button type="button" class="xp-piece ${p.cls}" data-xp="${p.i}" aria-pressed="false" title="${esc(p.title)}" aria-label="${esc(p.title)}${p.links.length ? `, linked to ${p.links.length} event${p.links.length > 1 ? 's' : ''}` : ''}" style="z-index:${p.z}" hidden><img alt="" loading="lazy" src="${esc(region(p.iiif, p.box))}">${p.links.length ? `<span class="xp-badge">${p.links.length}</span>` : ''}</button>`).join('')}</div>
-      <div class="xp-ctl"><label>Explode <input type="range" class="xp-range" min="0" max="100" value="0" aria-label="Lift the labels off the back"></label>
+      ${pieces.map(p => `<button type="button" class="xp-piece ${p.cls}" data-xp="${p.i}" aria-pressed="false" title="${esc(p.title)}" aria-label="${esc(p.title)}${p.links.length ? `, linked to ${p.links.length} event${p.links.length > 1 ? 's' : ''}` : ''}" style="z-index:${p.z}" hidden><img alt="" loading="lazy" src="${esc(region(p.iiif, p.box))}">${p.links.length ? `<span class="xp-badge">${p.links.length}</span>` : ''}</button>`).join('')}${f0 ? `<button type="button" class="xp-front" title="Turn it over" aria-label="Front of the work: turn it over to see the back"><img alt="" decoding="async" src="${esc(full(f0[0], 900))}"></button>` : ''}</div>
+      ${f0 ? `<p class="credit xp-credit">${frontCaption(w, 0)}</p>${frontStrip(w, 'data-xf', ' xp-fstrip')}` : ''}
+      <div class="xp-ctl">${f0 ? '<button type="button" class="xp-turn" aria-pressed="false">Turn over</button>' : ''}<label>Explode <input type="range" class="xp-range" min="0" max="100" value="0" aria-label="Lift the labels off the back"></label>
       ${backs.length > 1 ? `<div class="seg xp-backs" role="group" aria-label="Photograph of the back">${backs.map((b, i) => `<button type="button" data-xb="${esc(b)}" aria-pressed="false">Back ${i + 1}</button>`).join('')}</div>` : ''}
       ${w.labels.some(unverified) ? `<label class="tg"><input type="checkbox" class="xp-unv"${state.lmodel ? ' checked' : ''}> unverified boxes</label>` : ''}</div>
       <p class="xp-legend"><span><i></i>strong</span><span><i class="w2"></i>medium</span><span><i class="w1"></i>weak link</span><span>the number on a label: its events</span></p>
       <div class="xp-detail" aria-live="polite"></div></div>${timeline}</section>`;
   }
 
-  function explode(root, oid, w, pieces) {
+  function explode(root, oid, w, pieces, opts = {}) {  // opts.back: start on the back (else on the front, if it has one)
     if (!root) return null;
+    const view = { front: false, dead: false };  // the side the stage shows
     const ev = w.tl || [], tl = root.querySelector('.tl'), sum = root.querySelector('.tl-sum');
     const sup = ev.map(() => []);  // per event: the pieces that document it
     pieces.forEach(p => p.links.forEach(([i, s, b]) => { if (sup[i]) sup[i].push({ p, s, b }); }));
@@ -1037,9 +1294,10 @@
       const x = sup[i], more = hidden[i] ? `<span class="mute">${x.length ? ' ' : ''}+${hidden[i]} with ${hidden[i] > 1 ? 'unverified boxes' : 'an unverified box'}</span>` : '';
       if (x.length || more) li.querySelector('.tl-sup').innerHTML = (x.length ? `${dots(x[0].s)} ${x.length} label${x.length > 1 ? 's' : ''}` : '') + more;
     });
-    root.querySelector('.xp-unv')?.addEventListener('change', e => {  // the same setting as the Labels tab's «include unverified boxes»
+    root.querySelector('.xp-unv')?.addEventListener('change', e => {  // the same setting as «With unverified leads» of the Labels tab's «Show»
       state.lmodel = e.target.checked;
       $('#lmodel').checked = state.lmodel;
+      KEEP_SIDE = view.front ? 'front' : 'back';
       showWork(oid);
     });
     const linked = sup.filter(x => x.length).length, unseen = hidden.filter((h, i) => h && !sup[i].length).length;
@@ -1055,6 +1313,43 @@
     const count = b => pieces.filter(p => p.iiif === b).length;
     const S = { back: w.backs.map(b => b[0]).sort((a, b) => count(b) - count(a))[0], t: 0, piece: null, event: null, raf: 0, g: null };
     const linkOf = (p, i) => p.links.find(l => l[0] === i);
+
+    // the work turned over: the stage shows the front first and turns around its vertical axis to the back, where the
+    // labels lift off once it has turned (an idea from another prototype for this challenge; our own code)
+    const face = stage.querySelector('.xp-front'), turnBtn = root.querySelector('.xp-turn');
+    let turning = null;
+    function showSide() {
+      stage.classList.toggle('front-side', view.front);
+      root.querySelectorAll('.xp-hf').forEach(el => { el.hidden = !view.front; });  // credit and photographs stay: no jump
+      root.querySelector('.xp-hb').hidden = view.front;
+      if (turnBtn) { turnBtn.textContent = view.front ? 'Turn over' : 'Turn to the front'; turnBtn.setAttribute('aria-pressed', String(!view.front)); }
+    }
+    function turn(toFront) {  // resolves once the turn is done
+      if (turning) return turning.then(() => turn(toFront));
+      if (!face || view.front === toFront || view.dead) return Promise.resolve();
+      const swap = () => { view.front = toFront; showSide(); };
+      if (reduced() || !stage.animate) { swap(); return Promise.resolve(); }
+      // timers drive the turn, the animation only shows it (a tab in the background draws no frames)
+      const R = 'perspective(1600px) rotateY(', wait = ms => new Promise(res => setTimeout(res, ms));
+      stage.animate([{ transform: R + '0deg)' }, { transform: R + '90deg)' }], { duration: 220, easing: 'ease-in', fill: 'forwards' });
+      turning = wait(220).then(() => {
+        stage.getAnimations().forEach(a => a.cancel());
+        swap();
+        if (!view.dead) stage.animate([{ transform: R + '-90deg)' }, { transform: R + '0deg)' }], { duration: 240, easing: 'ease-out' });
+        return wait(240);
+      }).finally(() => { turning = null; });
+      return turning;
+    }
+    function pickFace(i) {  // another photograph of the front; from the back, the work turns to it
+      const im = fronts(w)[i];
+      if (!im) return;
+      turn(true);
+      face.querySelector('img').src = full(im[0], 900);
+      root.querySelector('.xp-credit').innerHTML = frontCaption(w, i);
+      root.querySelectorAll('[data-xf]').forEach(x => x.setAttribute('aria-pressed', String(+x.dataset.xf === i)));
+    }
+    view.front = !!face && !opts.back;
+    showSide();
 
     function layout() {  // the slots on a ring around the back, shrunk to K at full explosion
       const [W, H] = DIM[S.back] || [1000, 1000];
@@ -1193,7 +1488,7 @@
     function describe() {
       if (S.piece != null) {
         const p = pieces[S.piece], l = p.label, links = p.links.slice().sort((a, b) => a[0] - b[0]);
-        const how = l ? `${SRC[l.src]} · ${howText(l)}${l.ok ? '' : ' · check'}` : `found again from ${p.hits.map(h => `Inv. ${WORK[LAB[h.q].w].inv}`).join(', ')} (${p.hits[0].n} inliers)`;
+        const how = l ? `${SRC[l.src]} · ${howText(l)}${l.ok ? '' : ' · ' + sure(l)}` : `found again from ${p.hits.map(h => `Inv. ${WORK[LAB[h.q].w].inv}`).join(', ')} (${p.hits[0].n} matching points)`;
         const view = viewer(p.iiif, [p.box], workTitle(w), p.title, l ? COLOUR[l.src] : '30d158', !!l && l.how === 'vision-language model', [p.key]);
         return `<div class="pd"><img alt="" src="${esc(region(p.iiif, p.box))}"><div><b>${esc(p.title)}</b><div class="hintline">${esc(how)}</div>
           ${links.length ? `<ul>${links.map(([i, s, b]) => `<li class="w${s}"><button type="button" data-xe="${i}">${dots(s)}<span>${esc(evLine(evView(w, ev[i])))}</span><span></span><span class="why">${STRENGTH[s]}: ${esc(basisText(p, b))}</span></button></li>`).join('')}</ul>`
@@ -1213,12 +1508,14 @@
         <b>medium</b> for one distinctive feature, <b>weak</b> when several events fit or a name was read only approximately.</p>`;
     }
     function selectPiece(i) {
+      turn(false);
       S.piece = S.piece === i ? null : i;
       S.event = null;
       if (S.piece != null && pieces[i].iiif !== S.back) setBack(pieces[i].iiif);
       marks();
     }
     function selectEvent(i) {
+      turn(false);
       S.event = S.event === i ? null : i;
       S.piece = null;
       if (S.event != null && sup[i].length) {
@@ -1228,20 +1525,24 @@
       marks();
     }
     root.addEventListener('click', e => {
+      const t = e.target.closest('.xp-turn, .xp-front'), f = e.target.closest('[data-xf]');
+      if (t) { turn(!view.front).then(() => { if (!view.front && !view.dead && S.t < 0.5) animate(1); }); return; }  // turned over: the labels lift off
+      if (f) { pickFace(+f.dataset.xf); return; }
       const p = e.target.closest('[data-xp]'), x = e.target.closest('[data-xe]'), b = e.target.closest('[data-xb]');
       if (p) selectPiece(+p.dataset.xp);
       else if (x) selectEvent(+x.dataset.xe);
-      else if (b) { setBack(b.dataset.xb); marks(); }
+      else if (b) { turn(false); setBack(b.dataset.xb); marks(); }
     });
-    range.addEventListener('input', () => { cancelAnimationFrame(S.raf); S.t = range.value / 100; draw(); });
+    range.addEventListener('input', () => { turn(false); cancelAnimationFrame(S.raf); S.t = range.value / 100; draw(); });
     let pending = 0;
     const ro = new ResizeObserver(() => { cancelAnimationFrame(pending); pending = requestAnimationFrame(layout); });
     ro.observe(stage);
     setBack(S.back);
     marks();
     return {
-      destroy() { ro.disconnect(); cancelAnimationFrame(S.raf); cancelAnimationFrame(pending); },
+      destroy() { view.dead = true; ro.disconnect(); cancelAnimationFrame(S.raf); cancelAnimationFrame(pending); if (stage.getAnimations) stage.getAnimations().forEach(a => a.cancel()); },
       feedback() {  // what is selected, for the floating feedback button
+        if (view.front) return { where: 'Work · front' };
         if (S.piece != null) { const p = pieces[S.piece]; return { where: 'Work · exploded back', key: p.key, iiif: p.iiif, box: p.box }; }
         if (S.event != null) return { where: 'Work · timeline', note: `Timeline event ${S.event + 1}: ${evLine(evView(w, ev[S.event]))}` };
         return {};
@@ -1284,6 +1585,8 @@
   headHeight();
   new ResizeObserver(headHeight).observe(head);
   document.addEventListener('click', e => {
+    const fi = e.target.closest('[data-fi]');
+    if (fi) { e.preventDefault(); pickFront(fi); return; }  // another photograph of the front
     const box = e.target.closest('.ov[data-key]');
     if (box) { e.preventDefault(); location.href = formUrl(box.dataset.key); return; }  // a box opens the entry form
     const ov = e.target.closest('.ov[data-label]'), card = e.target.closest('[data-label],[data-work]');
@@ -1296,20 +1599,21 @@
   dlg.addEventListener('cancel', e => { e.preventDefault(); location.hash = current; });
   dlg.addEventListener('click', e => { if (e.target === dlg) location.hash = current; });
   window.addEventListener('hashchange', route);
-  function seg(id, key, render) {
-    $(id).addEventListener('click', e => {
-      const b = e.target.closest('button');
-      if (!b) return;
-      state[key] = b.dataset.v;
-      $(id).querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', x === b));
-      render();
-    });
+  function choice(id, set) {  // a choice with two faces, the buttons #id and the <select> #idsel: `set` takes the chosen value
+    $(id).addEventListener('click', e => { const b = e.target.closest('button'); if (b) set(b.dataset.v); });
+    $(id + 'sel').addEventListener('change', e => set(e.target.value));
   }
-  seg('#lsrc', 'lsrc', () => { state.lpage = 1; renderLabels(); });
-  seg('#aev', 'aev', renderAgain);
+  choice('#lsrc', v => { state.lsrc = v; state.lpage = 1; renderLabels(); });
+  choice('#lshow', v => { setShow(v); state.lpage = 1; renderLabels(); });
+  $('#lmodel').addEventListener('change', e => { setShow(e.target.checked ? 'all' : 'located'); state.lpage = 1; renderLabels(); });  // the hidden mirror, if a script switches it
+  choice('#aev', v => { state.aev = v; renderAgain(); });
   [['#lq', 'lq'], ['#wq', 'wq']].forEach(([id, key]) => $(id).addEventListener('input', e => { state[key] = e.target.value; state.lpage = state.wpage = 1; key === 'lq' ? renderLabels() : renderWorks(); }));
-  [['#lagain', 'lagain'], ['#lok', 'lok'], ['#lmodel', 'lmodel']].forEach(([id, key]) => $(id).addEventListener('change', e => { state[key] = e.target.checked; state.lpage = 1; renderLabels(); }));
+  $('#lagain').addEventListener('change', e => { state.lagain = e.target.checked; state.lpage = 1; renderLabels(); });
   [['#wlab', 'wlab'], ['#wagain', 'wagain']].forEach(([id, key]) => $(id).addEventListener('change', e => { state[key] = e.target.checked; state.wpage = 1; renderWorks(); }));
+  // «Filters» folds and unfolds its region; when the window crosses the phone width the regions start again as they do there
+  $('#lftoggle').addEventListener('click', () => { state.lfopen = !state.lfopen; syncFilters(); });
+  $('#wftoggle').addEventListener('click', () => { state.wfopen = !state.wfopen; syncWorks(); });
+  WIDE.addEventListener?.('change', () => { state.lfopen = state.wfopen = WIDE.matches; syncFilters(); syncWorks(); });
   $('#lmore').addEventListener('click', () => { state.lpage++; renderLabels(); });
   $('#wmore').addEventListener('click', () => { state.wpage++; renderWorks(); });
 
@@ -1325,7 +1629,8 @@
     D.labels.forEach(l => { LAB[l.id] = l; BYKEY[l.key] = l; WORK[l.w].labels.push(l); });
     D.hits.forEach(h => { WORK[h.w].shared = true; WORK[LAB[h.q].w].shared = true; });
     D.labels.forEach(l => { const w = WORK[l.w]; HAY[l.id] = [l.t, l.sub, l.d, l.pos, l.type, w.inv, w.title, w.type, w.actors.join(' ')].join(' ').toLowerCase(); });
-    for (const w of Object.values(WORK)) w.hay = [w.inv, w.title, w.type, w.actors.join(' '), w.ex.join(' '), w.acq, w.labels.map(l => l.t).join(' ')].join(' ').toLowerCase();
+    for (const w of Object.values(WORK)) w.hay = [w.inv, w.title, w.type, w.actors.join(' '), w.ex.join(' '), w.acq, w.labels.map(l => l.t).join(' '), (w.front && w.front.by) || '',
+      (w.tl || []).map(e => typeof e[2] === 'string' ? e[2] : '').join(' ')].join(' ').toLowerCase();
     const n = D.numbers, pct = v => v == null ? '–' : Math.round(v * 100) + ' %';
     const unv = D.labels.filter(unverified).length, works = Object.values(WORK);
     const N = { ...n, labels: D.labels.length, unverified: unv, shown: D.labels.length - unv,  // the About tab's counts, from the data as loaded
@@ -1339,14 +1644,13 @@
       [n.labels_found_again, `labels found again on other works, ${n.hits} hits`],
       [n.hits_backed, `hits backed by the records: ${n.hits_exhibition} by a shared exhibition, ${n.hits_seller} by the same seller`],
       [pct(n.r1), `of label photos find their back at rank 1 among ${n.backs} (${pct(n.r1_coarse)} before LightGlue)`],
-      [n.timeline_works ?? '–', `works with a provenance timeline from SKKG's records; ${n.events_linked ?? '–'} of their ${n.events ?? '–'} events are documented by a label on the back (${n.events_linked_strong ?? '–'} strongly)`],
+      [n.timeline_works ?? '–', `works with a provenance timeline from SKKG's records; ${n.events_linked ?? '–'} of their ${n.events == null ? '–' : num(n.events)} events are documented by a label on the back (${n.events_linked_strong ?? '–'} strongly)`],
       [n.exhibitions, 'exhibitions the works were lent to (knowledge graph)']]
       .map(([v, t]) => `<div class="stat"><b>${esc(v)}</b><span>${esc(t)}</span></div>`).join('');
-    $('#againintro').textContent = `${n.labels_found_again} located labels were found again on the backs of other works (${n.hits} hits). ` +
-      `${n.hits_backed} hits are backed by the records of both works: ${n.hits_exhibition} by an exhibition both were lent to, ${n.hits_seller} by the same seller to SKKG. ` +
-      'Hits without evidence are leads: the same label design of an issuer, or SKKG\'s own documentation.';
+    $('#againintro').textContent = `${num(n.labels_found_again)} labels were found again on the backs of other works: ${num(n.hits)} hits, ` +
+      `${num(n.hits_backed)} of them backed by the records of both works.`;
     $('#foot').innerHTML = `Provenance Pursuit · GLAMhack 2026, challenge 304 · built ${esc(D.built)} · data and images: SKKG Stiftung für Kunst, Kultur und Geschichte, Winterthur ` +
-      '(metadata and backs CC0, data sheets CC BY 4.0) · <a href="provenance_pursuit_results.xlsx">Excel</a> · <a href="#about">About</a> · <a href="how-we-got-here.html">How we got here</a>';
+      '(metadata and backs CC0, data sheets CC BY 4.0, fronts as credited) · <a href="provenance_pursuit_results.xlsx">Excel</a> · <a href="#about">About</a> · <a href="how-we-got-here.html">How we got here</a>';
     route();
   }).catch(() => { document.querySelector('main').innerHTML = '<p class="empty">The data could not be loaded.</p>'; });
 })();

@@ -405,7 +405,7 @@
   $('#next').addEventListener('click', () => { if (at < list.length - 1) { at++; show(); } });
   ['#show', '#type'].forEach(id => $(id).addEventListener('change', () => { at = 0; filter(); show(); }));
   $('#q').addEventListener('input', () => { at = 0; filter(); show(); });
-  $('#who').value = store.get(WHO, '');
+  $('#who').value = store.get(WHO, '') || store.get('pp-label-form-who', '') || '';  // else the initials typed in the entry form
   $('#who').addEventListener('input', e => store.set(WHO, e.target.value.trim()));
   $('#export').addEventListener('click', exportCsv);
   savedNote();

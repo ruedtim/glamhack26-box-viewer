@@ -161,7 +161,7 @@
     dlg.setAttribute('aria-labelledby', 'ppfb-h');
     dlg.innerHTML = `<form method="dialog">
   <h2 id="ppfb-h">Feedback</h2>
-  <p class="ppfb-note">It becomes a <b>public</b> issue on GitHub within about 10 to 20 minutes; you need no GitHub account.
+  <p class="ppfb-note">It becomes a <b>public</b> issue on GitHub when the site's GitHub Action next picks it up, which can take a while; you need no GitHub account.
     Names from the records are fine; please don't write addresses or your own contact details.</p>
   <label>What is it about?<select name="kind" required><option value="">Choose…</option>${KINDS.map(k => `<option>${esc(k)}</option>`).join('')}</select></label>
   <label>What did you see, and what did you expect?<textarea name="details" rows="5" required minlength="5" maxlength="4000"
@@ -223,7 +223,7 @@
       if (!j.ok) throw new Error(j.error || 'The feedback could not be sent.');
       f.details.value = '';
       if (typeof j.url === 'string' && j.url.startsWith(REPO + '/issues/')) status(`Thank you! Sent as issue #${j.number}.`, 'good', j.url);
-      else status('Thank you! It becomes a public GitHub issue within about 10 to 20 minutes.', 'good',
+      else status('Thank you! It is stored and becomes a public GitHub issue when the site\'s Action next picks it up.', 'good',
                   `${REPO}/issues?q=${encodeURIComponent('label:"via form"')}`, 'See the feedback issues');
     } catch (e) {
       button.disabled = false;

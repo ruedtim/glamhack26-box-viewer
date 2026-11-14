@@ -7,7 +7,7 @@
 <meta name="description" content="Entry form for columns F to L of SKKG's label register, prefilled with the results of Provenance Pursuit.">
 <!--
   Record a label – GLAMhack 2026, challenge 304 «Provenance Pursuit».
-  Form draft by Amli (commit 77d0c6a), connected to the results website.
+  Form draft by a teammate, connected to the results website.
 
   Address:  form.html?label=<key>   (keys from data.json: register:<row>, photo:<object>:<IIIF id>,
             sheet:<hash>, box:<IIIF id>:<x>,<y>,<w>,<h>; see build_site.py)
@@ -20,45 +20,91 @@
   The interface is English. What goes into SKKG's German label register stays German: the values of the
   selects and buttons (with English glosses on screen), the column headings F–L, and the row's conventions
   («o. D.», «(Lot …)»).
+  Layout: the site header comes from nav.js (the page's own top line is the fallback without it). One card holds
+  the whole back, the label picture with «Confirm box» / «Redraw box» and the facts from the data; everything that is
+  not needed to fill in the fields sits behind a disclosure (how the form works, ways of seeing, what the data say).
+  The preview with its buttons stays in view: beside the fields on a wide screen, as a bar at the bottom on a phone.
+  Colours and type are those of the results website (index.html).
 -->
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;700&family=Fraunces:opsz,wght@9..144,600&display=swap">
 <script src="feedback.js"></script>
+<script src="nav.js"></script>
 <style>
-:root{--bg:#eef1f4;--card:#fff;--ink:#1d2733;--mute:#5d6b7a;--line:#cfd7df;--blue:#1f4fa3;--red:#c23a2e;--wash:#e3eaf5;--ok:#2f7a4d;
---pfbg:#e6eefb;--pfline:#b4c7ea;--sug:#875800;--sugbg:#fbf0d8;--sugline:#e6cb8f;
+/* colours and type of the results website (index.html): --bg, --card (its --panel), --ink, --mute, --line, --blue (its --accent);
+   --edge is the border of the form controls, a step darker than --line so that 43 of them stay easy to tell apart */
+:root{--bg:#f5f3ef;--card:#fff;--ink:#1d1d1b;--mute:#6b6860;--line:#e2ded6;--edge:#cbc6bb;--blue:#1f4e8c;--red:#c0392b;--wash:#e4ebf4;--ok:#1a7f4b;
+--pfbg:#e9eff7;--pfline:#b9c9e2;--sug:#875800;--sugbg:#fbf0d8;--sugline:#e6cb8f;--shadow:0 1px 2px rgba(0,0,0,.06),0 3px 10px rgba(0,0,0,.05);--fade:rgba(0,0,0,.16);
 box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#12171d;--card:#1a212a;--ink:#e6ebf0;--mute:#98a6b5;--line:#2c3744;--blue:#7ea6ec;--red:#ef7a6e;--wash:#223248;--ok:#6fc28f;--pfbg:#1b2a42;--pfline:#35507f;--sug:#e6b65c;--sugbg:#33290f;--sugline:#6b5523;color-scheme:dark}}
-:root[data-theme="dark"]{--bg:#12171d;--card:#1a212a;--ink:#e6ebf0;--mute:#98a6b5;--line:#2c3744;--blue:#7ea6ec;--red:#ef7a6e;--wash:#223248;--ok:#6fc28f;--pfbg:#1b2a42;--pfline:#35507f;--sug:#e6b65c;--sugbg:#33290f;--sugline:#6b5523;color-scheme:dark}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#171716;--card:#222220;--ink:#ecebe7;--mute:#a8a59d;--line:#36342f;--edge:#4d4a43;--blue:#9cc2ff;--red:#ff8a7a;--wash:#2c3646;--ok:#52c891;--pfbg:#232c3a;--pfline:#44587a;--sug:#e8b54a;--sugbg:#33290f;--sugline:#6b5523;--shadow:none;--fade:rgba(0,0,0,.55);color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#171716;--card:#222220;--ink:#ecebe7;--mute:#a8a59d;--line:#36342f;--edge:#4d4a43;--blue:#9cc2ff;--red:#ff8a7a;--wash:#2c3646;--ok:#52c891;--pfbg:#232c3a;--pfline:#44587a;--sug:#e8b54a;--sugbg:#33290f;--sugline:#6b5523;--shadow:none;--fade:rgba(0,0,0,.55);color-scheme:dark}
 html{scroll-padding-top:env(safe-area-inset-top,0px)}
 *,*::before,*::after{box-sizing:inherit}
 [hidden]{display:none!important}
-body{margin:0;background:var(--bg);color:var(--ink);font:400 15px/1.5 "Hanken Grotesk",system-ui,sans-serif}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
 a{color:var(--blue)}
-.wrap{max-width:1180px;margin:0 auto;padding:20px 16px 72px}
-.crumbs{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:13px;color:var(--mute);margin-bottom:10px}
+.wrap{max-width:1280px;margin:0 auto;padding:16px 16px 72px}
+/* the page's own top line: the fallback when nav.js (the site header) is missing; nav.js hides it */
+.crumbs{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:13px;color:var(--mute);margin-bottom:8px}
 .crumbs a{font-weight:700;text-decoration:none}
-h1{font:600 26px/1.2 Fraunces,Georgia,serif;margin:0 0 4px}
-.sub{color:var(--mute);margin:0 0 18px;max-width:70ch}
-.work{display:flex;flex-wrap:wrap;gap:14px;align-items:center;background:var(--card);border:1px solid var(--line);border-left:6px solid var(--blue);padding:12px 14px;margin-bottom:18px}
+h1{font:700 22px/1.3 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;letter-spacing:-.01em;margin:0}
+/* title, one sentence, and the rest behind «How this form works» (its button stays at the top right, open or closed) */
+.lead{position:relative;display:flex;flex-wrap:wrap;align-items:baseline;gap:0 16px;margin:0 0 12px;padding-right:180px}
+.sub{flex:1 1 320px;color:var(--mute);font-size:14px;margin:0}
+.how{flex:1 1 100%;margin-right:-180px;font-size:14px}
+.how>summary{position:absolute;right:0;top:5px;font-size:13px;font-weight:600;color:var(--blue);cursor:pointer;white-space:nowrap}
+.how>summary:focus-visible,.ways>summary:focus-visible,.known>summary:focus-visible,.kmore>summary:focus-visible,.pv>summary:focus-visible{outline:2px solid var(--blue);outline-offset:2px;border-radius:3px}
+.howbody{margin:8px 0 2px;padding:10px 14px 12px;background:var(--card);border:1px solid var(--line);border-radius:8px;max-width:110ch}
+.howbody ul{margin:0;padding-left:18px}.howbody li{margin:3px 0}
+@media(max-width:700px){.wrap{padding-top:12px}.lead{padding-right:0;margin-bottom:10px}.how{margin-right:0}.how>summary{top:3px}h1{font-size:20px}}
+.work{display:flex;flex-wrap:wrap;gap:14px;align-items:center;background:var(--card);border:1px solid var(--line);border-left:4px solid var(--blue);border-radius:8px;box-shadow:var(--shadow);padding:12px 14px;margin-bottom:14px}
 .ph{width:64px;height:64px;flex:none;border:1px dashed var(--line);display:grid;place-items:center;color:var(--mute);font-size:11px;text-align:center;text-decoration:none;overflow:hidden}
-.work b{display:block}.work span{color:var(--mute)}
-.wtext{flex:1;min-width:220px}.wtext span{display:block}
+.winfo{flex:1;min-width:220px}
+.wtext b{display:block}.wtext span{display:block;color:var(--mute)}
 .wl{margin-top:4px;font-size:13px}
-/* the label picture and its ways of seeing: filters computed in this browser on a canvas, nothing is stored */
-.work.has-pic{display:grid;grid-template-columns:minmax(0,440px) minmax(0,1fr);grid-template-areas:"pic text" "pic ways";align-items:start;gap:12px 20px}
+/* the work's front: the photograph SKKG publishes, credited under it as SKKG gives its rights */
+.wfront{float:right;width:132px;margin:2px 0 6px 14px}
+.wfront a.fimg{display:grid;place-items:center;background:var(--bg);min-height:48px}
+.wfront img{display:block;max-width:100%;max-height:150px;width:auto;height:auto}
+.wfront figcaption{font-size:11px;line-height:1.35;color:var(--mute);margin-top:4px;overflow-wrap:anywhere}
+.wfront figcaption a{color:inherit}
+@media(max-width:700px){.wfront{width:96px}.wfront img{max-height:120px}}
+/* the label card, one compact card above the fields. Wide screen, three columns: the whole back with the box | the label
+   picture, under it «Confirm box» / «Redraw box» and the ways of seeing | the work and what the data already say. The
+   last row (1fr) takes up what the outer columns need beyond the picture, so nothing in the middle is pulled apart.
+   A long strip (.wide) and the enlarged picture (.big) get the whole width, the rest follows below.
+   Phone: work, picture, the back beside the two buttons, ways of seeing, what the data say. */
+.work.has-pic{display:grid;grid-template-columns:150px minmax(0,.8fr) minmax(0,1fr);grid-template-rows:auto auto auto 1fr;
+  grid-template-areas:"back pic info" "back bx info" "back ways info" "back . info";align-items:start;gap:0 18px}
 .work.has-pic .ph{display:none}
-.work.has-pic .wtext{grid-area:text;min-width:0}
-.work.has-pic.wide{grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-areas:"pic pic" "text ways"}
-.work.has-pic.big{grid-template-columns:minmax(0,1fr);grid-template-areas:"pic" "ways" "text"}
-@media(max-width:700px){.work.has-pic,.work.has-pic.wide{grid-template-columns:minmax(0,1fr);grid-template-areas:"text" "pic" "ways"}}
+.work.has-pic .winfo{grid-area:info;min-width:0}
+.work.has-pic.wide,.work.has-pic.big{grid-template-areas:"pic pic pic" "back bx info" "back ways info" "back . info"}
+.work.has-pic.wide .kthumb,.work.has-pic.wide .winfo,.work.has-pic.big .kthumb,.work.has-pic.big .winfo{margin-top:10px}
+@media(max-width:1000px){.work.has-pic{grid-template-columns:110px minmax(0,1fr) minmax(0,1fr);gap:0 14px}}
+@media(max-width:760px){
+  .work.has-pic,.work.has-pic.wide,.work.has-pic.big{grid-template-columns:72px minmax(0,1fr);grid-template-rows:none;
+    grid-template-areas:"text text" "pic pic" "back bx" "ways ways" "known known";gap:0 10px}
+  .work.has-pic .winfo,.work.has-pic .kthumb{display:contents}
+  .work.has-pic .wtext{grid-area:text;min-width:0}
+  .work.has-pic .lv,.work.has-pic .kback{margin-top:8px}
+  .work.has-pic .kback{grid-area:back}
+  .work.has-pic .kthumb>.hint{display:none}
+  .work.has-pic .kpic{grid-column:1/-1;display:flex;gap:10px;align-items:center;margin-top:8px}
+  .work.has-pic .kpic img{max-width:150px;max-height:110px}
+  .work.has-pic .known{grid-area:known}
+}
 .lv{grid-area:pic;margin:0;position:relative;min-width:0}
 .lv canvas{display:block;width:100%;height:auto;max-height:320px;object-fit:contain;background:var(--bg);cursor:zoom-in}
 .work.big .lv canvas{max-height:78vh;cursor:zoom-out}
-.lvbig{position:absolute;top:6px;right:6px;width:32px;height:32px;display:grid;place-items:center;border:1px solid var(--line);border-radius:3px;background:var(--card);color:var(--ink);font-size:16px;line-height:1;font-family:inherit;cursor:pointer;opacity:.9}
+.lvbig{position:absolute;top:6px;right:6px;width:32px;height:32px;display:grid;place-items:center;border:1px solid var(--line);border-radius:6px;background:var(--card);color:var(--ink);font-size:16px;line-height:1;font-family:inherit;cursor:pointer;opacity:.9}
 .lvbig:hover{opacity:1;border-color:var(--blue)}
 .lvmsg{position:absolute;inset:0;display:grid;place-items:center;padding:12px;text-align:center;font-size:13px;color:var(--mute);pointer-events:none}
-.ways{grid-area:ways;min-width:0}
-.ways .wayhead span{font-size:13px}
+/* ways of seeing: closed, one row that names the active way; open, the controls as they were */
+.ways{grid-area:ways;min-width:0;margin-top:6px}
+.ways>summary{font-size:13px;color:var(--mute);cursor:pointer;padding:2px 0}
+.ways>summary b{font-weight:600;color:var(--ink)}
+.ways[open]>summary .waymore{display:none}
+.ways .wayhead{margin-top:4px}
+.ways .wayhead b{display:block}
+.ways .wayhead span{font-size:13px;color:var(--mute)}
 .ways .seg{gap:6px;align-items:center;margin-top:8px}
 .ways .seg span{padding:4px 10px}
 .ways .seg input:checked+span{font-weight:inherit;box-shadow:inset 0 0 0 1px var(--blue)}
@@ -71,65 +117,111 @@ h1{font:600 26px/1.2 Fraunces,Georgia,serif;margin:0 0 4px}
 .wayctl input[type=range]{width:150px;accent-color:var(--blue)}
 .ways .hint{margin:8px 0 0;max-width:70ch}
 .grid{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:20px;align-items:start}
-@media(max-width:860px){.grid{grid-template-columns:1fr}}
-fieldset{border:1px solid var(--line);background:var(--card);margin:0 0 14px;padding:14px 16px 16px;min-width:0}
+@media(max-width:860px){.grid{display:block}}  /* one column; a plain block, so the preview bar can stick anywhere along the fields */
+fieldset{border:1px solid var(--line);border-radius:8px;box-shadow:var(--shadow);background:var(--card);margin:0 0 14px;padding:10px 16px 16px;min-width:0}
 legend{font-weight:700;padding:0 6px;color:var(--blue)}
 legend small{font-weight:400;color:var(--mute);margin-left:6px}
 label{display:block;font-size:13px;color:var(--mute);margin:10px 0 3px}
-input[type=text],select,textarea{width:100%;font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);padding:8px 10px;border-radius:3px}
+input[type=text],select,textarea{width:100%;font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--edge);padding:8px 10px;border-radius:6px}
 textarea{min-height:64px;resize:vertical}
 input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-visible,.pos input:focus-visible+span{outline:2px solid var(--blue);outline-offset:1px}
 .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .pos{display:grid;grid-template-columns:repeat(3,44px);gap:4px;margin-top:4px}
 .pos label{margin:0}
 .pos input{position:absolute;opacity:0}
-.pos span{display:grid;place-items:center;height:36px;border:1px solid var(--line);background:var(--bg);color:var(--mute);font-size:12px;cursor:pointer}
-.pos input:checked+span{background:var(--blue);border-color:var(--blue);color:#fff}
+.pos span{display:grid;place-items:center;height:36px;border:1px solid var(--edge);border-radius:4px;background:var(--bg);color:var(--mute);font-size:12px;cursor:pointer}
+.pos input:checked+span{background:var(--blue);border-color:var(--blue);color:var(--card)}
 .posbox{display:flex;gap:16px;align-items:flex-end;flex-wrap:wrap}
 .seg{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px}
 .seg label{margin:0;position:relative}
 .seg input{position:absolute;opacity:0}
-.seg span{display:block;padding:7px 14px;border:1px solid var(--line);background:var(--bg);color:var(--ink);cursor:pointer}
+.seg span{display:block;padding:7px 14px;border:1px solid var(--edge);border-radius:6px;background:var(--bg);color:var(--ink);cursor:pointer}
 .seg input:checked+span{background:var(--wash);border-color:var(--blue);font-weight:700}
 .seg input:focus-visible+span{outline:2px solid var(--blue)}
 .chk{display:flex;gap:8px;align-items:center;margin-top:8px;color:var(--ink);font-size:14px}
-.tags{display:flex;flex-wrap:wrap;gap:6px;border:1px solid var(--line);background:var(--bg);padding:6px;border-radius:3px}
+.tags{display:flex;flex-wrap:wrap;gap:6px;border:1px solid var(--edge);background:var(--bg);padding:6px;border-radius:6px}
 .tags input{flex:1;min-width:120px;border:0;background:transparent;padding:4px}
-.tag{background:var(--wash);padding:2px 4px 2px 10px;display:flex;gap:4px;align-items:center}
+.tag{background:var(--wash);border-radius:4px;padding:2px 4px 2px 10px;display:flex;gap:4px;align-items:center}
 .tag button{border:0;background:none;color:var(--mute);cursor:pointer;font-size:16px;line-height:1}
 .hint{font-size:12px;color:var(--mute);margin-top:3px}
+/* the preview of the row and its buttons stay in view while the fields are filled in.
+   Wide screen: beside the fields; a long row scrolls inside the panel, so the buttons never leave the window and the
+   panel ends above the floating «Feedback» button (bottom right of every page).
+   Phone: a bar at the bottom of the window while the fields are on screen (.stick, set by the script), the row folded
+   away behind «Preview»: closed, one line of status and «Preview» + «Copy row»; open, the row, «Save» and «Reset» too.
+   The buttons sit on the left of the bar's last line, the «Feedback» button on its right. */
 .side{position:sticky;top:12px}
-@media(max-width:860px){.side{position:static}}
-.prev{background:var(--card);border:1px solid var(--line);padding:14px 16px}
-.prev h2,.store h2,.known h2{font:600 17px/1.2 Fraunces,Georgia,serif;margin:0 0 10px}
-.prev dl{margin:0}
-.prev dt{font-size:12px;color:var(--mute);margin-top:9px}
+.prev{background:var(--card);border:1px solid var(--line);border-radius:8px;box-shadow:var(--shadow);padding:10px 16px 12px}
+.prev .btns{margin-top:10px}
+.prev h2,.store h2{font:700 16px/1.3 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;margin:0 0 10px}
+.pv>summary{cursor:pointer}
+.pv>summary h2{display:inline;margin:0}
+/* where the row scrolls inside the panel, a soft edge at its top or bottom shows that there is more (the edges sit 1px
+   inside, so the covers that scroll with the content hide them completely when there is nothing more) */
+.prev dl{margin:0;background:linear-gradient(var(--card) 50%,transparent) 0 0/100% 20px no-repeat local,linear-gradient(transparent,var(--card) 50%) 0 100%/100% 20px no-repeat local,
+  linear-gradient(var(--fade),transparent) 0 1px/100% 7px no-repeat scroll,linear-gradient(transparent,var(--fade)) 0 calc(100% - 1px)/100% 7px no-repeat scroll}
+.prev dt{font-size:12px;color:var(--mute);margin-top:7px}
 .prev dd{margin:0;min-height:1.4em;overflow-wrap:anywhere}
 .empty{color:var(--mute);font-style:italic}
 .btns{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap;align-items:center}
-button.main{background:var(--blue);color:#fff;border:0;padding:9px 16px;font:700 14px inherit;font-family:inherit;cursor:pointer;border-radius:3px}
-button.alt,label.alt{background:transparent;color:var(--ink);border:1px solid var(--line);padding:9px 16px;font-family:inherit;font-size:14px;cursor:pointer;border-radius:3px}
+button.main{background:var(--blue);color:var(--card);border:0;padding:9px 16px;font:700 14px inherit;font-family:inherit;cursor:pointer;border-radius:6px}
+button.alt,label.alt{background:transparent;color:var(--ink);border:1px solid var(--edge);padding:9px 16px;font-family:inherit;font-size:14px;cursor:pointer;border-radius:6px}
 label.alt{display:inline-block;margin:0;line-height:1.5}
+/* «Load CSV …»: the file input is hidden to the eye only, so the Tab key reaches it; its label, the visible button, shows the focus */
+.vh{position:absolute;width:1px;height:1px;margin:-1px;padding:0;border:0;overflow:hidden;clip-path:inset(50%);white-space:nowrap;opacity:0}
+.vh:focus-visible+label{outline:2px solid var(--blue);outline-offset:1px}
 button:disabled{opacity:.45;cursor:default}
 .msg{font-size:13px;color:var(--ok);margin-top:8px;min-height:1.2em}
 .msg.warn{color:var(--red)}
 .saved{font-size:13px;color:var(--mute);margin-top:4px;min-height:1.2em}
 button.link{border:0;background:none;padding:0;font:inherit;color:var(--blue);text-decoration:underline;cursor:pointer}
 .note{font-size:13px;color:var(--mute);margin-top:12px}
-/* what the data already knows */
-.known{background:var(--card);border:1px solid var(--line);padding:14px 16px;margin:-6px 0 18px}
-.kgrid{display:grid;grid-template-columns:minmax(0,230px) minmax(0,1fr);gap:16px;align-items:start}
-@media(max-width:640px){.kgrid{grid-template-columns:1fr}}
+.prev .note{margin:8px 0 0}
+@media(min-width:861px){.prev dl{max-height:max(160px,calc(100vh - 330px));overflow:auto;overscroll-behavior:contain}}
+@media(max-width:860px){.side{position:static;margin-top:20px}}
+@media(max-width:860px) and (min-height:560px){
+  #fields :is(input,select,textarea,button){scroll-margin-bottom:100px}  /* a field reached with the Tab key stops above the bar */
+  .side{margin:6px -16px 0}
+  .side.stick{position:sticky;bottom:0;z-index:4}
+  .prev{display:flex;flex-wrap:wrap;align-items:center;gap:0 8px;border-width:1px 0 0;border-radius:12px 12px 0 0;box-shadow:0 -6px 18px rgba(0,0,0,.16);
+    padding:8px 16px calc(14px + env(safe-area-inset-bottom,0px))}
+  .pv{order:1}.prev .note{order:2}.prev .msg{order:3}.prev .saved{order:4}.prev .btns{order:5;margin:0}
+  .pv[open],.prev .note,.prev .msg,.prev .saved,.pv[open]~.btns{flex:0 0 100%}
+  .prev .msg,.prev .saved{min-height:0;margin:0 0 6px}
+  .prev .note{margin:6px 0}
+  .prev .msg:empty{display:none}
+  .pv[open] dl{max-height:46vh;overflow:auto;overscroll-behavior:contain}
+  .pv[open]~.btns{padding-right:128px}
+  .prev .btns button{padding:8px 12px;font-size:13px}
+  /* closed: the status (the last message, else the saved line) above «Preview» + «Copy row» */
+  .pv:not([open])~.msg,.pv:not([open])~.saved{order:0}
+  .pv:not([open])~.msg:not(:empty)~.saved,.pv:not([open])~.note,.pv:not([open])~.btns #save,.pv:not([open])~.btns #reset,.pv:not([open]) .pvlong{display:none}
+  .pv:not([open])>summary{border:1px solid var(--edge);border-radius:6px;padding:6px 12px 6px 10px}
+  .pv:not([open])>summary h2{font-size:13px;font-weight:600}
+}
+/* the whole back with the box, small (click: zoomable); under it SKKG's detail photo where there is one */
+.kthumb{grid-area:back;min-width:0}
 .kback{display:block}
-.kback svg{display:block;width:100%;height:auto;background:var(--bg)}
+.kback svg{display:block;width:100%;height:auto;max-height:230px;background:var(--bg);border-radius:4px}
+.kthumb>.hint,.kpic .hint{font-size:11px;line-height:1.35}
 .kbox{fill:none;stroke-width:3;vector-effect:non-scaling-stroke;filter:drop-shadow(0 0 1.5px #000)}
-.kpic{margin-top:10px}.kpic img{display:block;max-width:100%;max-height:220px}
+.kpic{margin-top:10px}.kpic img{display:block;max-width:100%;max-height:150px;border-radius:4px}
 .kdrawn{stroke:#30d158!important;stroke-dasharray:none}
-/* confirm / redraw the box (as on the review page: new box green, in pixels of the original image) */
-.bx .btns{margin-top:8px;gap:6px}
+/* confirm / redraw the box, right under the label picture (as on the review page: new box green, in pixels of the original image) */
+.bx{grid-area:bx;min-width:0;margin-top:8px;display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px}  /* the state beside the buttons where there is room */
+.bx .btns{flex:none;margin-top:0;gap:6px}
 .bx button.alt{padding:6px 10px;font-size:13px}
-.bx button.alt[aria-pressed="true"]{background:var(--ok);border-color:var(--ok);color:#fff;font-weight:700}
-.bx .hint{margin-top:6px}
+.bx button.alt[aria-pressed="true"]{background:var(--ok);border-color:var(--ok);color:var(--card);font-weight:700}
+.bx .hint{flex:1 1 180px;margin:0}
+.bx button.hint{flex:none;font-size:12px}
+/* what the data already say: a disclosure in the card (open on a wide screen, closed on a phone: set at load); the long
+   lists (found again, text read) sit behind a second one, so the card stays short */
+.known{margin-top:8px;font-size:13px}
+.known>summary{cursor:pointer}
+.known h2{display:inline;font:700 13px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;margin:0}
+.known[open]>summary .check{display:none}
+.kmore{margin-top:4px}
+.kmore>summary{cursor:pointer;color:var(--blue)}
 dialog#ed{border:1px solid var(--line);border-radius:10px;padding:14px;background:var(--card);color:var(--ink);max-width:96vw}
 dialog#ed::backdrop{background:rgba(0,0,0,.5)}
 #edwrap{position:relative;display:inline-block;touch-action:none;user-select:none;-webkit-user-select:none;cursor:crosshair;margin:10px 0}
@@ -137,13 +229,13 @@ dialog#ed::backdrop{background:rgba(0,0,0,.5)}
 .edbox{position:absolute;pointer-events:none;box-sizing:border-box}
 .edbox.old{border:2px solid #ff3b30}
 .edbox.new{border:3px solid #30d158;box-shadow:0 0 0 1px rgba(0,0,0,.6)}
-.known dl{display:grid;grid-template-columns:max-content minmax(0,1fr);gap:6px 14px;margin:0;font-size:14px}
+.known dl{display:grid;grid-template-columns:max-content minmax(0,1fr);gap:3px 12px;margin:4px 0 0}
 .known dt{color:var(--mute)}.known dd{margin:0;overflow-wrap:anywhere}
 .known ul{margin:0;padding-left:18px}.known li{margin:2px 0}
 .known li span,.slist span{color:var(--mute);font-size:13px}
-.check{display:inline-block;font-size:11px;font-weight:700;color:var(--sug);border:1px solid var(--sugline);border-radius:99px;padding:0 7px;margin-left:4px}
-/* prefilled values */
-.legend{font-size:13px;color:var(--mute);margin:0 0 12px;max-width:110ch}
+.check{display:inline-block;font-size:11px;font-weight:700;color:var(--sug);border:1px solid var(--sugline);border-radius:99px;padding:0 7px;margin-left:4px;white-space:nowrap}
+/* prefilled values: the key to the markers is part of «How this form works» */
+.legend{font-size:13px;color:var(--mute);margin:8px 0 0}
 .pf{display:inline-flex;align-items:center;gap:3px;margin-left:6px;padding:0 7px;border-radius:99px;font-size:11px;font-weight:700;line-height:17px;background:var(--pfbg);color:var(--blue);border:1px solid var(--pfline);vertical-align:1px;white-space:nowrap;cursor:help}
 .pf.sug{background:var(--sugbg);color:var(--sug);border-color:var(--sugline)}
 .pf.ed{background:transparent;color:var(--mute);border-color:var(--line)}
@@ -152,7 +244,7 @@ dialog#ed::backdrop{background:rgba(0,0,0,.5)}
 .is-sug{background:var(--sugbg)!important;border-color:var(--sugline)!important}
 .src{font-size:12px;color:var(--mute);margin-top:12px;padding-top:8px;border-top:1px dashed var(--line);overflow-wrap:anywhere}
 /* saved entries */
-.store{background:var(--card);border:1px solid var(--line);padding:14px 16px;margin-top:20px}
+.store{background:var(--card);border:1px solid var(--line);border-radius:8px;box-shadow:var(--shadow);padding:14px 16px;margin-top:20px}
 .srow{display:flex;flex-wrap:wrap;gap:6px 20px;align-items:flex-end}
 .srow>div:first-child{width:180px}
 .srow .btns{margin-top:0}
@@ -163,19 +255,46 @@ dialog#ed::backdrop{background:rgba(0,0,0,.5)}
 </head>
 <body>
 <div class="wrap">
-<div class="crumbs"><a href="./" id="back">← Results</a><span>Provenance Pursuit · GLAMhack 2026</span></div>
-<h1>Record a label</h1>
-<p class="sub">Form for columns F to L of SKKG's label register. What the data already know is prefilled and marked: add to it or correct it. The panel on the right shows the row as it will go into the register. The register is German, so the terms you pick (shape, colour, support, event, evidence) and the column headings stay German; the English glosses are for orientation.</p>
+<div class="crumbs" data-ppnav-hide><a href="./" id="back">← Results</a><span>Provenance Pursuit · GLAMhack 2026</span></div>
+<div class="lead">
+  <h1>Record a label</h1>
+  <p class="sub">Columns F to L of SKKG's label register, prefilled from the data: check, correct, add.</p>
+  <details class="how" id="how">
+    <summary>How this form works</summary>
+    <div class="howbody">
+      <ul>
+        <li>What the data already know is prefilled and marked: add to it or correct it. Every change is saved in this browser.</li>
+        <li>The preview (beside the fields; on a phone the bar at the bottom) shows the row as it will go into the register. «Copy row» copies it for pasting into column F of the Excel register.</li>
+        <li>The register is German, so the terms you pick (shape, colour, support, event, evidence) and the column headings stay German; the English glosses are for orientation.</li>
+        <li>The work named at the top (columns A to E) is not edited here.</li>
+        <li>Names appear as the records and labels give them; addresses are masked («[address]»).</li>
+      </ul>
+      <p class="legend" id="legend" hidden>Prefilled fields are marked: <span class="pf">Register</span> or <span class="pf">Data sheet</span> = taken from the data,
+        <span class="pf sug">Suggestion</span> = derived, or found by the image search: to check, <span class="pf ed">edited ↺</span> = changed by hand (↺ restores the value from the data).
+        Where the values come from is shown below each section.</p>
+    </div>
+  </details>
+</div>
 
 <div class="work" id="work">
   <span class="ph" id="ph">Label photo</span>
+  <div class="kthumb" id="kthumb" hidden>
+    <a class="kback" id="kback" target="_blank" rel="noopener" title="Whole back with the box, zoomable"><svg id="ksvg" role="img" aria-label="Back of the work with the box"></svg></a>
+    <div class="hint">Whole back; click to zoom.</div>
+    <div class="kpic" id="kpic" hidden></div>
+  </div>
   <figure class="lv" id="lv" hidden>
     <canvas id="lvc" role="img" aria-label="Label picture"></canvas>
     <div class="lvmsg" id="lvmsg">Loading the picture …</div>
     <button class="lvbig" id="lvbig" type="button" aria-pressed="false" title="Enlarge the picture" aria-label="Enlarge the picture">⤢</button>
   </figure>
-  <div class="wtext"><b id="wt">No label selected</b><span id="ws">Loading the data …</span><span class="wl" id="wl"></span></div>
-  <div class="ways" id="ways" hidden>
+  <div class="bx" id="bx" hidden>
+    <div class="btns"><button class="alt" id="bxok" type="button" aria-pressed="false">✓ Confirm box</button><button class="alt" id="bxdraw" type="button">✎ Redraw box</button></div>
+    <div class="hint" id="bxstate" role="status"></div>
+    <button class="link hint" id="bxorig" type="button" hidden>Restore the box from the data</button>
+  </div>
+  <details class="ways" id="ways" hidden>
+    <summary>Picture: <b id="waynow">Photo</b><span class="waymore"> · ways of seeing (filters)</span></summary>
     <div class="wayhead"><b id="wayslab">Ways of seeing</b><span>Filters that help to read faint pencil, blue crayon and stamps. They are computed in this browser; nothing is saved or uploaded.</span></div>
     <div role="radiogroup" aria-labelledby="wayslab">
       <div class="seg" id="ways1"><small class="waycap">Enhance</small></div>
@@ -187,27 +306,19 @@ dialog#ed::backdrop{background:rgba(0,0,0,.5)}
       <div class="seg" id="waysrc" hidden role="radiogroup" aria-labelledby="waysrcl"><small class="wayin" id="waysrcl">Picture</small><label><input type="radio" name="waysrc" value="back" checked><span>Back photo</span></label><label><input type="radio" name="waysrc" value="photo"><span>SKKG's detail photo</span></label></div>
     </div>
     <p class="hint" id="wayhint" aria-live="polite"></p>
+  </details>
+  <div class="winfo">
+  <div class="wtext"><figure class="wfront" id="wfront" hidden></figure><b id="wt">No label selected</b><span id="ws">Loading the data …</span><span class="wl" id="wl"></span></div>
+    <details class="known" id="known" hidden open>
+      <summary><h2 id="khead">What the data already say</h2><span id="kflag"></span></summary>
+      <dl id="kdl"></dl>
+      <details class="kmore" id="kmore" hidden>
+        <summary id="kmoresum"></summary>
+        <dl id="kdl2"></dl>
+      </details>
+    </details>
   </div>
 </div>
-
-<section class="known" id="known" hidden aria-labelledby="khead">
-  <h2 id="khead">What the data already say</h2>
-  <div class="kgrid">
-    <div><a class="kback" id="kback" target="_blank" rel="noopener" title="Whole back with the box, zoomable"><svg id="ksvg" role="img" aria-label="Back of the work with the box"></svg></a>
-      <div class="hint">Whole back; click to zoom.</div>
-      <div class="bx" id="bx" hidden>
-        <div class="btns"><button class="alt" id="bxok" type="button" aria-pressed="false">✓ Confirm box</button><button class="alt" id="bxdraw" type="button">✎ Redraw box</button></div>
-        <div class="hint" id="bxstate" role="status"></div>
-        <button class="link hint" id="bxorig" type="button" hidden>Restore the box from the data</button>
-      </div>
-      <div class="kpic" id="kpic" hidden></div></div>
-    <dl id="kdl"></dl>
-  </div>
-</section>
-
-<p class="legend" id="legend" hidden>Prefilled fields are marked: <span class="pf">Register</span> or <span class="pf">Data sheet</span> = taken from the data,
-  <span class="pf sug">Suggestion</span> = derived, or found by the image search: please check, <span class="pf ed">edited ↺</span> = changed by hand (↺ restores the value from the data).
-  Where the values come from is shown below each section.</p>
 
 <div class="grid">
 <div id="fields">
@@ -286,17 +397,19 @@ dialog#ed::backdrop{background:rgba(0,0,0,.5)}
   <fieldset><legend>Further details <small>columns K and L</small></legend>
     <label for="tagin" data-f="tags">Other SKKG works with this label</label>
     <div class="tags" id="tags"><input type="text" id="tagin" placeholder="Type an inventory no., press Enter"></div>
-    <div class="hint">Each number becomes an entry. Later the form could check here whether the number exists.</div>
+    <div class="hint">Each number becomes an entry; it is not checked against the collection.</div>
     <label for="komm" data-f="komm">Comment</label>
     <textarea id="komm" placeholder="Reasoning, comparisons with other works, open questions"></textarea>
     <div class="src" id="srcKL" hidden></div>
   </fieldset>
 </div>
 
-<div class="side">
+<div class="side" id="side">
   <div class="prev">
-    <h2>Preview of the register row</h2>
-    <dl id="out"></dl>
+    <details class="pv" id="pv" open>
+      <summary><h2>Preview<span class="pvlong"> of the register row</span></h2></summary>
+      <dl id="out"></dl>
+    </details>
     <div class="btns">
       <button class="main" id="copy" type="button">Copy row</button>
       <button class="alt" id="save" type="button">Save</button>
@@ -304,8 +417,8 @@ dialog#ed::backdrop{background:rgba(0,0,0,.5)}
     </div>
     <div class="msg" id="msg" role="status"></div>
     <div class="saved" id="saved" role="status"></div>
+    <p class="note">«Copy row» copies the row tab-separated: paste it into column F of the Excel register. «Reset» restores the values from the data.</p>
   </div>
-  <p class="note">The row is copied tab-separated and can be pasted straight into column F of the Excel register. The entries are saved in this browser on every change; «Reset» restores the values from the data.</p>
 </div>
 </div>
 
@@ -314,7 +427,7 @@ dialog#ed::backdrop{background:rgba(0,0,0,.5)}
   <p class="note" id="scount" style="margin-top:0">No entries in this browser yet.</p>
   <div class="srow">
     <div><label for="who" style="margin-top:0">Initials (go into the CSV)</label><input type="text" id="who" maxlength="12" autocomplete="off" placeholder="e.g. AM"></div>
-    <div class="btns"><button class="main" id="export" type="button">Download CSV</button><label class="alt" for="import">Load CSV …</label><input type="file" id="import" accept=".csv,text/csv,text/plain" hidden></div>
+    <div class="btns"><button class="main" id="export" type="button">Download CSV</button><input class="vh" type="file" id="import" accept=".csv,text/csv,text/plain"><label class="alt" for="import">Load CSV …</label></div>
   </div>
   <div class="msg" id="smsg" role="status"></div>
   <ol class="slist" id="slist"></ol>
@@ -344,6 +457,7 @@ const HEADS_EN = ['label description / inscription', 'position', 'assigned perso
 const GLOSS = { Spannrahmen: 'strainer', Karton: 'cardboard', Rahmen: 'frame', 'Rückseitenschutz': 'backing board', 'Rückwand': 'back board',
   Holzplatte: 'wooden board', Papier: 'paper', Passepartout: 'mount' };  // English glosses for supports that come from the data
 const STORE = 'pp-label-form-v1', WHO = 'pp-label-form-who';
+const WHO_SHARED = 'pp-model-review-who';  // the initials typed on the review page or in the search by photo (read only)
 const store = {
   get(k, fallback) { try { const v = localStorage.getItem(k); return v === null ? fallback : JSON.parse(v); } catch { return fallback; } },
   set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch { return false; } },
@@ -532,6 +646,30 @@ function viewerUrl(l, drawn) {  // with a redrawn box: that one green, the box f
   return 'viewer.html?' + p;
 }
 const siteUrl = l => l.src === 'hit' ? './#work=' + encodeURIComponent(l.w) : './#label=' + encodeURIComponent(l.key);
+// the work's front (data.json works[].front, build_site.py): the photograph SKKG publishes, credited as SKKG gives its
+// rights («© holder ·» where SKKG names one, then «SKKG» and the licence); click opens it zoomable in the viewer
+const LICENCE = { 'CC BY 4.0': 'https://creativecommons.org/licenses/by/4.0/', 'CC0 1.0': 'https://creativecommons.org/publicdomain/zero/1.0/' };
+const frontLic = (w, im) => im.length > 3 ? im[3] : w.front.lic;  // an image whose rights differ carries them: [.., licence, holder]
+function frontCredit(w, im, html) {
+  const f = w.front, lic = frontLic(w, im), holder = im.length > 3 ? im[4] : (f.c || ''), t = f.t || w.title, url = LICENCE[lic];
+  const c = holder ? `© ${holder} · ` : lic === '©' ? '© all rights reserved · ' : '';
+  return html ? `Front: ${f.by ? esc(f.by) + ', ' : ''}<i>${esc(t)}</i> · ${esc(c)}SKKG${url ? `, <a href="${esc(url)}" target="_blank" rel="license noopener">${esc(lic)}</a>` : ''}`
+    : `Front: ${f.by ? f.by + ', ' : ''}«${t}» · ${c}SKKG${url ? ', ' + lic : ''}`;
+}
+function frontViewer(w, im) {
+  const p = new URLSearchParams({ iiif: im[0], title: `Inv. ${w.inv} · ${w.title}`, note: 'Front', credit: frontCredit(w, im, false),
+    rights: LICENCE[frontLic(w, im)] || '' });
+  if (w.url) p.set('page', w.url);
+  return 'viewer.html?' + p;
+}
+function showFront(w) {  // beside the work's facts; works without a published front show none
+  const el = $('#wfront'), im = w && w.front && w.front.img ? w.front.img[0] : null;
+  if (!im) { el.hidden = true; el.replaceChildren(); el.dataset.iiif = ''; return; }
+  if (el.dataset.iiif === im[0]) return;  // header() runs on every box change
+  el.dataset.iiif = im[0];
+  el.innerHTML = `<a class="fimg" href="${esc(frontViewer(w, im))}" target="_blank" rel="noopener" title="Front of the work, zoomable"><img alt="Front of the work" decoding="async" width="${im[1]}" height="${im[2]}" src="${esc(full(im[0], 300))}"></a><figcaption>${frontCredit(w, im, true)}</figcaption>`;
+  el.hidden = false;
+}
 
 // ---------------------------------------------------------------- Prefill
 const gridOf = (v, h) => v === 'm' && h === 'm' ? 'm.' : v === 'm' ? `m. ${h}.` : `${v}. ${h}.`;
@@ -634,7 +772,8 @@ function parseEvent(text, issuerType) {  // «Auktion 69 10.-19. November 1988 (
   if (out.evbez.toLowerCase() === out.evtyp.toLowerCase()) out.evbez = '';
   return out;
 }
-const issuerOf = s => (s || '').replace(/^(?:Etikett(?:e|en)?|Ausstellungsetikett)\s+(?:(?:der|des)\s+)?/i, '').replace(/[\s,;:]+$/, '');  // «Etiketten der Galerie X,» -> «Galerie X»
+const issuerOf = s => (s || '').replace(/^(?:Etikett(?:e|en)?|Ausstellungsetikett)\s+(?:(?:der|des)\s+)?/i, '')
+  .replace(/[\s,;:]*(?:\d+\w?\s+)?\[address\][\s,;:]*/g, ', ').replace(/^[\s,]+|[\s,;:]+$/g, '');  // the masked address never goes into column H  // «Etiketten der Galerie X,» -> «Galerie X»
 function exhibitionParts(s) {  // «Title (venue, city, 2014)»
   const m = s.match(/^(.*)\s\(([^()]*)\)\s*$/);
   if (!m) return { title: s, venue: '', year: '' };
@@ -765,7 +904,7 @@ function prefill(l) {
   if (l.src === 'hit') parts.push(Object.keys(l.hit.ev).length ? `Beleg in den Akten: ${evTextDe(l.hit.ev)}.` : 'Noch kein Beleg in den Akten.');
   else if (rev.length) parts.push(`Dieselbe Etikette wie auf Inv. ${[...new Set(rev.map(h => invOf(LAB_ID[h.q].w)))].join(', ')} (Bildsuche).`);
   put('komm', parts.join(' '), 'data', 'Box', 'How the box was found (Provenance Pursuit, GLAMhack 2026)');
-  if (l.lc) notes.KL.push('The register already has a comment in column L; it is not shown here because it can contain names of persons. When pasting, keep the existing comment and add to it.');
+  if (l.lc) notes.KL.push('The register already has a comment in column L; it is not part of the data shown here. When pasting, keep the existing comment and add to it.');
   return { v, s, notes };
 }
 
@@ -969,6 +1108,10 @@ function seeControls() {
   if (x.p) { $('#waypn').textContent = x.p; $('#wayp').value = SEE.p[x.id] ?? 50; }
   $('#wayhint').textContent = !SEE.img ? '' : on ? x.hint + (SEE.inv ? ' Inverted: dark becomes light.' : '')
     : 'The filters are not available for this picture: the image server did not let the browser read its pixels.';
+  // the closed row says what the picture shows: the way of seeing (the chosen one while a picture loads; the plain
+  // photo where the filters are not available), and which photo where SKKG has a detail photo too
+  $('#waynow').textContent = (on || !SEE.img ? x.name + (SEE.inv ? ', inverted' : '') : WAY.photo.name)
+    + (L && L.photo ? (SEE.src === 'photo' ? " · SKKG's detail photo" : ' · back photo') : '');
 }
 const seeY = () => SEE.Y || (SEE.Y = IP.luma(SEE.px, SEE.w * SEE.h));
 const seeLab = () => {  // smoothed a little: JPEG stores colour at half resolution, in blocks
@@ -1074,6 +1217,7 @@ function find(k) {
   return h ? { key: k, src: 'hit', w: h.w, iiif: h.iiif, box: h.box, n: h.n, ok: false, how: 'found again', hit: h } : null;
 }
 function header() {
+  showFront(L && WORK[L.w]);
   if (!key) {
     $('#wt').textContent = 'No label selected';
     $('#ws').textContent = 'Open a label on the results website or click a box: the form is then prefilled and your entries are saved.';
@@ -1088,16 +1232,16 @@ function header() {
   const w = WORK[L.w], view = viewerUrl(L, BX.drawn), b = curBox();
   document.title = `Record a label · Inv. ${w.inv} – Provenance Pursuit`;
   $('#wt').textContent = `Inv. ${w.inv} · ${w.title}`;
-  $('#ws').textContent = `${w.type} · work (columns A–E), read-only · ${SRC_DE[L.src]}: ${labelTitle(L)}`;
+  $('#ws').textContent = `${w.type} · ${SRC_DE[L.src]}: ${labelTitle(L)}`;
   seeShow(b);  // the label picture follows the current box
   $('#wl').innerHTML = [`<a href="${esc(view)}" target="_blank" rel="noopener">Whole back (zoomable)</a>`,
     `<a href="${esc(`${L.iiif}/${b.join(',')}/max/0/default.jpg`)}" target="_blank" rel="noopener">Label in full resolution (IIIF)</a>`,
     w.url && `<a href="${esc(w.url)}" target="_blank" rel="noopener">SKKG collection</a>`,
     `<a href="${esc(siteUrl(L))}">On the website</a>`].filter(Boolean).join(' · ');
 }
-function known() {
+function known() {  // the whole back with the box (left of the label picture) and the facts (beside the work)
   if (!L) return;
-  $('#known').hidden = false;
+  $('#known').hidden = $('#kthumb').hidden = false;
   const [W, H] = DIM[L.iiif] || [L.box[0] + L.box[2], L.box[1] + L.box[3]];
   const svg = $('#ksvg');
   svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
@@ -1107,19 +1251,31 @@ function known() {
     $('#kpic').hidden = false;
     $('#kpic').innerHTML = `<a href="${esc(full(L.photo, 2400))}" target="_blank" rel="noopener" title="SKKG's detail photo, large"><img loading="lazy" alt="Detail photo of the label (SKKG)" src="${esc(full(L.photo, 800))}"></a><div class="hint">SKKG's detail photo; click for the large view.</div>`;
   }
-  const rows = [], { fwd, rev } = hitsOf(L);
+  // rows: source and box, always in view; more: the long ones (text read, found again), behind a second disclosure
+  // whose heading says what it holds
+  const rows = [], more = [], { fwd, rev } = hitsOf(L);
   if (L.src === 'register') rows.push(['Source', `Label register, row ${esc(L.row)}` + (L.type ? ` · ${esc(L.type)}` : '')]);
   else if (L.src === 'photo') rows.push(['Source', 'Detail photo of the label (SKKG), found again on the back photo']);
   else if (L.src === 'data sheet') rows.push(['Source', `Provenance data sheet · ${esc(typeDe(L.type))} · ${esc(L.pos)}`]);
-  else if (L.src === 'detected') rows.push(['Source', 'Label detector: newly found label, not recorded in the register or in any data sheet'
-    + (L.type ? ` · kind guessed: ${esc(L.type)}` : '') + (L.iss ? ` · issuer guessed: ${esc(L.iss)}` : '')], ...(L.d ? [['Text read', esc(L.d)]] : []));
-  else { const q = LAB_ID[L.hit.q]; rows.push(['Source', `Image search: the same label as on <a href="${esc(formUrl(q.key))}">Inv. ${esc(invOf(q.w))} · ${esc(labelTitle(q))}</a>`], ['Evidence', esc(evText(L.hit.ev))]); }
-  rows.push(['Box', esc(howShort(L)) + (L.ok ? '' : ' <span class="check">check</span>')]);
+  else if (L.src === 'detected') {
+    rows.push(['Source', 'Label detector: newly found label, not recorded in the register or in any data sheet'
+      + (L.type ? ` · kind guessed: ${esc(L.type)}` : '') + (L.iss ? ` · issuer guessed: ${esc(L.iss)}` : '')]);
+    if (L.d) more.push(['Text read', esc(L.d), 'text read']);
+  } else { const q = LAB_ID[L.hit.q]; rows.push(['Source', `Image search: the same label as on <a href="${esc(formUrl(q.key))}">Inv. ${esc(invOf(q.w))} · ${esc(labelTitle(q))}</a>`], ['Evidence', esc(evText(L.hit.ev))]); }
+  const flag = L.ok ? '' : ' <span class="check">to check</span>';
+  rows.push(['Box', esc(howShort(L)) + flag]);
   const item = (href, text, extra) => `<li><a href="${esc(href)}">${esc(text)}</a> <span>(${esc(extra)})</span></li>`;
   const list = (items, max = 12) => `<ul>${items.slice(0, max).join('')}${items.length > max ? `<li><span>… and ${items.length - max} more</span></li>` : ''}</ul>`;
-  if (fwd.length) rows.push(['Found again on', list(fwd.map(h => item(formUrl(h.key), `Inv. ${invOf(h.w)} · ${WORK[h.w].title}`, `${points(h.n)}; ${evText(h.ev)}`)))]);
-  if (rev.length) rows.push(['Same label as', list(rev.map(h => { const q = LAB_ID[h.q]; return item(formUrl(q.key), `Inv. ${invOf(q.w)} · ${labelTitle(q)}`, `${points(h.n)}; ${evText(h.ev)}`); }))]);
-  $('#kdl').innerHTML = rows.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join('');
+  if (fwd.length) more.push(['Found again on', list(fwd.map(h => item(formUrl(h.key), `Inv. ${invOf(h.w)} · ${WORK[h.w].title}`, `${points(h.n)}; ${evText(h.ev)}`))),
+    `found again on ${fwd.length} ${fwd.length === 1 ? 'work' : 'works'}`]);
+  if (rev.length) more.push(['Same label as', list(rev.map(h => { const q = LAB_ID[h.q]; return item(formUrl(q.key), `Inv. ${invOf(q.w)} · ${labelTitle(q)}`, `${points(h.n)}; ${evText(h.ev)}`); })),
+    `same label as ${rev.length} other${rev.length === 1 ? '' : 's'}`]);
+  const dl = r => r.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join('');
+  $('#kdl').innerHTML = dl(rows);
+  $('#kflag').innerHTML = flag;  // shown in the heading while the facts are folded away (phone)
+  $('#kmore').hidden = !more.length;
+  $('#kmoresum').textContent = cap(more.map(r => r[2]).join(' · '));
+  $('#kdl2').innerHTML = dl(more);
 }
 // ---------------------------------------------------------------- Confirm / redraw the box
 function renderBox() {
@@ -1131,7 +1287,7 @@ function renderBox() {
   $('#bxok').title = BX.ok ? 'Withdraw the confirmation' : 'The box sits correctly on the label';
   $('#bxorig').hidden = !BX.drawn;
   $('#bxstate').textContent = BX.drawn ? `Redrawn box${BX.ok ? ', confirmed' : ''}: x ${b[0]}, y ${b[1]}, w ${b[2]}, h ${b[3]} (pixels of the original image).`
-    : BX.ok ? 'The box from the data is confirmed.' : 'Box from the data, not confirmed yet: does it sit correctly on the label?';
+    : BX.ok ? 'The box from the data is confirmed.' : 'Box from the data, not confirmed yet: does it fit the label?';
   const svg = $('#ksvg');
   let r = svg.querySelector('.kdrawn');
   if (BX.drawn) {
@@ -1372,12 +1528,17 @@ document.addEventListener('click', e => {
   apply(undo.v); BX = { ok: false, drawn: null, ...undo.b }; undo = null; render(); renderBox(); renderList(); savedLine('loaded');
 });
 $('#export').addEventListener('click', exportCsv);
+$('#import').addEventListener('keydown', e => {  // with the keyboard: Space opens the file picker by itself, Enter not in every browser
+  if (e.key === 'Enter') { e.preventDefault(); e.target.click(); }
+});
 $('#import').addEventListener('change', async e => {
   const f = e.target.files[0];
   if (f) { try { await importCsv(f); } catch (err) { smsg(`${f.name} could not be read.`, true); } }
   e.target.value = '';
 });
-$('#who').value = store.get(WHO, '') || '';
+// initials: the form's own; if there are none yet, those already typed on the review page or in the search by photo,
+// so nobody types them twice. The form writes only its own key.
+$('#who').value = store.get(WHO, '') || store.get(WHO_SHARED, '') || '';
 $('#who').addEventListener('input', e => store.set(WHO, e.target.value.trim()));
 window.addEventListener('storage', e => { if (e.key === STORE) renderList(); });
 (() => {  // «← Results»: back to the website if it was the previous page; otherwise to the label on the website
@@ -1391,6 +1552,17 @@ window.addEventListener('storage', e => { if (e.key === STORE) renderList(); });
 // The feedback button (feedback.js) asks what is open when it is clicked. The issue is public: only the label's key,
 // inventory number, title and box from the data go into it, never what the team typed or drew.
 window.ppFeedbackContext = () => L ? { where: 'Entry form', inv: WORK[L.w].inv, title: labelTitle(L), key: L.key, iiif: L.iiif, box: L.box } : {};
+
+// What is not needed to fill in the fields starts folded away where space is short: on a phone the facts from the data
+// (in the card) and the row's preview (in the bar at the bottom); on a wide screen both start open
+const fold = (sel, narrow) => { const m = matchMedia(narrow), set = () => { $(sel).open = !m.matches; }; set(); if (m.addEventListener) m.addEventListener('change', set); };
+fold('#known', '(max-width:760px)');
+fold('#pv', '(max-width:860px) and (min-height:560px)');
+// Phone: the preview bar sticks to the bottom of the window only while the fields are being filled in (their top
+// above the middle of the window), so it does not cover the first field on arrival
+if ('IntersectionObserver' in window) new IntersectionObserver(es => $('#side').classList.toggle('stick', es[es.length - 1].isIntersecting),
+  { rootMargin: '0px 0px -50% 0px' }).observe($('#fields'));
+else $('#side').classList.add('stick');
 
 render(); renderList(); savedLine(null);
 fetch('data.json', { cache: 'no-cache' }).then(r => { if (!r.ok) throw new Error(r.status); return r.json(); }).then(data => {

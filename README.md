@@ -20,6 +20,8 @@ works carry the same label. *Have I seen this label before?*
   SIK-ISEA's records and counts only.
 - **How we got here: [how-we-got-here.html](https://ruedtim.github.io/glamhack26-box-viewer/how-we-got-here.html)** –
   the steps from the challenge's raw material to these results, with the numbers, the decisions and the dead ends.
+- **One header for all pages: `nav.js`** – the site header with a «Tools» menu (entry form, review page, search
+  by photo, SIK-ISEA page, workbook), included after `feedback.js` on every page except the viewer.
 - **Label box viewer: `viewer.html`** – any image straight from a IIIF server with one or more boxes drawn on it.
 - **Feedback** – the «Feedback» button and the «Report a problem» links open a small form; no GitHub account is
   needed. Page, work, label key and box are filled in. The message becomes a public issue in this repository within

@@ -258,7 +258,7 @@ let mine = store.get(KEY, {}); // entry key (search time | IIIF id) -> decision 
 let searchTime = "", hitsNow = [];
 const iiifId = (base) => base.split("/").pop();
 const viewerUrl = (base, r) => `https://ruedtim.github.io/glamhack26-box-viewer/viewer.html?iiif=${base}&xywh=${r.x},${r.y},${r.w},${r.h}`;
-$("who").value = store.get(WHO, "");
+$("who").value = store.get(WHO, "") || store.get("pp-label-form-who", "") || "";  // else the initials typed in the entry form
 $("who").addEventListener("change", () => store.set(WHO, $("who").value.trim()));
 
 function savedNote(ok = true) { // the first sentence of the hand-in hint; «Download them and put the file …» follows it
