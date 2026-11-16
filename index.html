@@ -129,7 +129,7 @@
   .close { font: inherit; font-size: 20px; line-height: 1; border: 0; background: none; color: var(--muted); cursor: pointer; padding: 4px 8px; }
   .dbody { padding: 16px 18px 22px; }
   .two { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 18px; }
-  @media (max-width: 760px) { .two { grid-template-columns: 1fr; } }
+  @media (max-width: 760px) { .two { grid-template-columns: minmax(0, 1fr); } }  /* the shared-labels row scrolls, not the dialog */
   .big { background: var(--chip); border-radius: 6px; display: grid; place-items: center; min-height: 180px; overflow: hidden; }
   .big img { max-width: 100%; max-height: 420px; display: block; }
   dl { display: grid; grid-template-columns: max-content 1fr; gap: 6px 14px; margin: 0; font-size: 14px; }
@@ -954,8 +954,19 @@
   const kind = l => l.how === 'vision-language model' ? 'model' : l.src === 'data sheet' ? 'sheet'
     : l.src === 'detected' && l.st === 'new label without text' ? 'detected weak' : l.src;
   const formUrl = key => 'form.html?label=' + encodeURIComponent(key);  // entry form, by the label's stable key
-  function viewer(iiif, boxes, title, note, colour, dashed, keys) {
+  const keyEnc = k => encodeURIComponent(k).replace(/%3A/gi, ':').replace(/%2C/gi, ',');  // a key in the address, readable
+  const labelHash = l => 'label=' + keyEnc(l.key);  // the address of a label: its stable key, not its position in data.json
+  const workHash = (oid, at) => 'work=' + oid + (at ? '&at=' + keyEnc(at) : '');  // at: the box (label or hit key) to show
+  const norm = s => String(s ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();  // for the search: no accents
+  function matcher(text) {  // the search: «Inv. 595» is that inventory number, the other words must all occur, in any order
+    const inv = [], q = norm(text).replace(/\binv(?:\.|\b)\s*(?:(?:nr|no)\.?\s*)?([\w./-]+)/g, (m, n) => { inv.push(n.replace(/\.$/, '')); return ' '; });
+    const words = q.split(/\s+/).filter(Boolean);
+    if (!inv.length && !words.length) return null;
+    return (hay, invNo) => { const i = norm(invNo); return inv.every(n => i === n || i.startsWith(n + '.')) && words.every(x => hay.includes(x)); };
+  }
+  function viewer(iiif, boxes, title, note, colour, dashed, keys, work) {  // work: the viewer links back to it on this site
     const p = new URLSearchParams({ iiif });
+    if (work) p.set('work', work);
     boxes.forEach(b => p.append('xywh', b.join(',')));
     if (title) p.set('title', title);
     if (note) p.set('note', note);
@@ -1033,7 +1044,7 @@
   function hitCard(h, title) {
     const w = WORK[h.w];
     const ev = Object.entries(h.ev).map(([k, v]) => `<span>${esc({ exhibition: 'Exhibition', seller: 'Same seller', provenance: 'Provenance' }[k])}: ${esc(v.split(' | ')[0])}</span>`).join('');
-    return `<div class="hitc"><button class="card" data-work="${h.w}"><span class="thumb"><img loading="lazy" alt="" src="${esc(region(h.iiif, h.box))}"></span>
+    return `<div class="hitc"><button class="card" data-work="${h.w}" data-at="${esc(h.key)}"><span class="thumb"><img loading="lazy" alt="" src="${esc(region(h.iiif, h.box))}"></span>
       <span class="cap"><b>${esc(title || workTitle(w))}</b><span class="meta">${h.n} matching points</span><span class="ev">${ev || '<i class="meta">no evidence in the records yet</i>'}</span></span></button>${hitFeedback(h)}</div>`;
   }
   function backWithBoxes(iiif, boxes, size = 700) {  // boxes: [{box, cls, label, key, title}] in original pixels; a box with a key opens the form
@@ -1048,10 +1059,10 @@
   const showOf = () => state.lmodel ? 'all' : state.lok ? 'reliable' : 'located';
   function setShow(v) { state.lok = v === 'reliable'; state.lmodel = v === 'all'; }
   function baseLabels() {  // the labels that pass source, «Show», «found on other works» and the search
-    const q = state.lq.toLowerCase().trim();
+    const m = matcher(state.lq);
     return D.labels.filter(l => (state.lsrc === 'all' || l.src === state.lsrc)
       && (state.lmodel || !unverified(l)) && (!state.lagain || (l.hits || []).length)
-      && (!state.lok || l.ok) && (!q || HAY[l.id].includes(q)));
+      && (!state.lok || l.ok) && (!m || m(HAY[l.id], WORK[l.w].inv)));
   }
   const labelList = () => baseLabels().filter(l => facetPass(l));  // … and the further filter groups
   // a choice shown as buttons (wide screens) and as a <select> (narrow screens): mark the chosen value, read its words
@@ -1088,9 +1099,9 @@
 
   // ---------------------------------------------------------------- Works
   function baseWorks() {  // the works that pass the search and the two checkboxes, as [object id, work]; most labels first
-    const q = state.wq.toLowerCase().trim();
+    const m = matcher(state.wq);
     return Object.entries(WORK).filter(([, w]) => (!state.wlab || w.labels.length) && (!state.wagain || w.shared)
-      && (!q || w.hay.includes(q))).sort((a, b) => b[1].labels.length - a[1].labels.length || a[1].inv.localeCompare(b[1].inv));
+      && (!m || m(w.hay, w.inv))).sort((a, b) => b[1].labels.length - a[1].labels.length || a[1].inv.localeCompare(b[1].inv));
   }
   const workList = () => baseWorks().filter(e => workPass(e));  // … and the further filter groups
   function workSummary() {  // what is active on the Works tab, in a few words
@@ -1149,8 +1160,13 @@
     if (XP) { XP.destroy(); XP = null; }
     $('#dtitle').textContent = title;
     $('#dbody').innerHTML = body;
-    $('#dbody').scrollTop = 0;
-    if (!dlg.open) dlg.showModal();
+    if (!dlg.open) dlg.showModal(); else $('#dclose').focus({ preventScroll: true });  // from another dialog: focus into the new one
+    dlg.scrollTop = 0;  // the dialog itself scrolls: every item starts at its top
+  }
+  function notFound(what, id) {  // an address whose label or work is not in the current data (e.g. a link from an older version)
+    OPEN = null;
+    openDialog(`No such ${what}`, `<p class="empty">The ${what} «${esc(id)}» is not in the current data. The address may come from an older
+      version of these results; search for it on the ${what === 'work' ? 'Works' : 'Labels'} tab.</p>`);
   }
   function showLabel(id) {
     const l = LAB[id];
@@ -1159,7 +1175,7 @@
     OPEN = { label: l };
     const typed = l.type && l.src !== 'photo';  // the type has a row of its own
     const sub = l.sub && l.sub !== l.t && l.sub !== SRC[l.src] && !(typed && l.sub === l.type) ? l.sub : '';  // nothing said twice
-    const facts = [['Work', `<a href="#work=${l.w}">${esc(workTitle(w))}</a> (${esc(w.type)}) · <a href="${esc(w.url)}" target="_blank" rel="noopener">SKKG collection</a>`],
+    const facts = [['Work', `<a href="#${esc(workHash(l.w, l.key))}">${esc(workTitle(w))}</a> (${esc(w.type)}) · <a href="${esc(w.url)}" target="_blank" rel="noopener">SKKG collection</a>`],
       fronts(w).length && ['Front', frontSmall(w)],
       ['Source', esc(SRC[l.src]) + (sub ? ` · ${esc(sub)}` : '')],
       ['Located by', esc(howText(l)) + (l.tpl ? ` (template from Inv. ${esc(l.tpl)})` : '') + (l.ok ? '' : ' · ' + sureBadge(l))],
@@ -1168,10 +1184,10 @@
       l.d && [l.src === 'detected' ? 'Text read (OCR)' : 'Description', esc(l.d)],
       window.ppFacets && ppFacets.fact(l, 'labels'),
       (l.tl || []).length && ['Provenance events', l.tl.map(([i, s, b]) => `${dots(s)} ${esc(evLine(evView(w, w.tl[i])))} <span class="mute">(${STRENGTH[s]}: ${esc(basisText({ label: l }, b))})</span>`).join('<br>') +
-        `<br><a href="#work=${l.w}">On the work's exploded back and timeline</a>`]].filter(Boolean);
+        `<br><a href="#${esc(workHash(l.w, l.key))}">On the work's exploded back and timeline</a>`]].filter(Boolean);
     const others = w.labels.filter(o => o.id !== l.id && (state.lmodel || !unverified(o)));
     const hits = (l.hits || []).map(i => D.hits[i]);
-    const view = viewer(l.iiif, [l.box], workTitle(w), `${SRC[l.src]}: ${l.t}`, COLOUR[l.src], l.how === 'vision-language model', [l.key]);
+    const view = viewer(l.iiif, [l.box], workTitle(w), `${SRC[l.src]}: ${l.t}`, COLOUR[l.src], l.how === 'vision-language model', [l.key], l.w);
     // the actions in one row, the primary one first; on a phone they follow the label's picture (CSS order of .ldlg)
     const acts = `<div class="acts"><a class="formbtn" href="${esc(formUrl(l.key))}" title="Open the entry form for SKKG's label register, prefilled with what is known">✎ Record this label</a>
       <a href="${esc(view)}" target="_blank" rel="noopener">Whole back, zoomable</a><a href="${esc(`${l.iiif}/${l.box.join(',')}/max/0/default.jpg`)}" target="_blank" rel="noopener" title="The label in full resolution, from SKKG's IIIF image server">Full resolution</a>${shortLink(feedback({ where: 'Label', inv: w.inv, title: w.title, key: l.key, iiif: l.iiif, box: l.box, kind: 'A box is wrong or missing' }, 'Report a problem with this box'), 'Report a problem')}</div>`;
@@ -1182,18 +1198,19 @@
       ${hits.length ? `<h4>The same label on ${hits.length} other work${hits.length > 1 ? 's' : ''}</h4><div class="row">${hits.map(h => hitCard(h)).join('')}</div>` : ''}
       ${others.length ? `<h4>Other marks on this work</h4><div class="row">${others.slice(0, 20).map(labelCard).join('')}</div>` : ''}`);
   }
-  function showWork(oid) {
+  function showWork(oid, at) {  // at: the key of a box to show (a label of the work, or where a label was found again)
     const w = WORK[oid];
     if (!w) return;
-    const startBack = KEEP_SIDE ? KEEP_SIDE === 'back' : !!(OPEN && OPEN.label && OPEN.label.w === oid);  // from one of its labels: the back first
+    const startBack = KEEP_SIDE ? KEEP_SIDE === 'back' : !!at || !!(OPEN && OPEN.label && OPEN.label.w === oid);  // from one of its labels: the back first
     KEEP_SIDE = null;
     OPEN = { work: oid };
     const hitsHere = D.hits.filter(h => h.w === oid);
+    const hitsOut = D.hits.filter(h => h.w !== oid && LAB[h.q].w === oid);  // its own labels, found again on other works
     const backs = w.backs.map(([iiif]) => {
       const mine = w.labels.filter(l => l.iiif === iiif && (state.lmodel || !unverified(l)));
       const boxes = mine.map(l => ({ box: l.box, cls: kind(l), key: l.key, title: `${l.t} — click to open the entry form` }))
         .concat(hitsHere.filter(h => h.iiif === iiif).map(h => ({ box: h.box, cls: 'hit', key: h.key, title: `same label as on Inv. ${WORK[LAB[h.q].w].inv} — click to open the entry form` })));
-      const all = viewer(iiif, mine.map(l => l.box), workTitle(w), 'all located labels and marks', '762a83', false, mine.map(l => l.key));
+      const all = viewer(iiif, mine.map(l => l.box), workTitle(w), 'all located labels and marks', '762a83', false, mine.map(l => l.key), oid);
       return `${backWithBoxes(iiif, boxes, 900)}<div class="links"><a href="${esc(all)}" target="_blank" rel="noopener">Open zoomable with all boxes</a></div>`;
     }).join('<br>');
     const facts = [['Object type', esc(w.type)], ['Collection', `<a href="${esc(w.url)}" target="_blank" rel="noopener">${esc(w.url)}</a>`],
@@ -1202,7 +1219,8 @@
     const shown = w.labels.filter(l => state.lmodel || !unverified(l));
     const pieces = piecesOf(oid, w);
     const dl = `<dl>${facts.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join('')}</dl>`;
-    const shares = hitsHere.length ? `<h4>Labels it shares with other works</h4><div class="row">${hitsHere.map(h => `<div class="hitc"><button class="card" data-label="${h.q}"><span class="thumb"><img loading="lazy" alt="" src="${esc(region(h.iiif, h.box))}"></span><span class="cap"><b>${esc(LAB[h.q].t)}</b><span class="meta">also on Inv. ${esc(WORK[LAB[h.q].w].inv)}</span></span></button>${hitFeedback(h)}</div>`).join('')}</div>` : '';
+    const shares = hitsHere.length || hitsOut.length ? `<h4>Labels it shares with other works</h4><div class="row">${hitsHere.map(h => `<div class="hitc"><button class="card" data-label="${h.q}"><span class="thumb"><img loading="lazy" alt="" src="${esc(region(h.iiif, h.box))}"></span><span class="cap"><b>${esc(LAB[h.q].t)}</b><span class="meta">also on Inv. ${esc(WORK[LAB[h.q].w].inv)}</span></span></button>${hitFeedback(h)}</div>`).join('')}${
+      hitsOut.map(h => `<div class="hitc"><button class="card" data-work="${h.w}" data-at="${esc(h.key)}"><span class="thumb"><img loading="lazy" alt="" src="${esc(region(h.iiif, h.box))}"></span><span class="cap"><b>${esc(LAB[h.q].t)}</b><span class="meta">found again on Inv. ${esc(WORK[h.w].inv)}</span></span></button>${hitFeedback(h)}</div>`).join('')}</div>` : '';
     const hint = '<p class="hintline">Click a box to open the entry form for that label (for SKKG\'s label register).</p>';
     // with located labels the exploded back comes first and the boxes for the entry form fold away below the facts
     const front = frontHTML(w, oid), xp = xpHTML(oid, w, pieces, front);  // the front: in the turning stage, or beside the timeline
@@ -1211,7 +1229,7 @@
       : `<div class="two"><div>${hint}${backs}</div><div>${xp ? '' : front}${dl}${shares}</div></div>`;
     openDialog(workTitle(w), `${xp}${main}
       <h4>${shown.length} label${shown.length === 1 ? '' : 's'} and marks located${state.lmodel ? '' : ' (without unverified boxes)'}</h4><div class="grid">${shown.map(labelCard).join('') || '<p class="empty">None located yet.</p>'}</div>`);
-    XP = explode($('#dbody').querySelector('.xp'), oid, w, pieces, { back: startBack });
+    XP = explode($('#dbody').querySelector('.xp'), oid, w, pieces, { back: startBack, at });
   }
 
   // ---------------------------------------------------------------- Exploded back and provenance timeline
@@ -1331,7 +1349,10 @@
     const img = stage.querySelector('.xp-back'), svg = stage.querySelector('.xp-lines'), range = root.querySelector('.xp-range');
     const detail = root.querySelector('.xp-detail'), els = [...stage.querySelectorAll('.xp-piece')];
     const count = b => pieces.filter(p => p.iiif === b).length;
-    const S = { back: w.backs.map(b => b[0]).sort((a, b) => count(b) - count(a))[0], t: 0, piece: null, event: null, raf: 0, g: null };
+    const atP = opts.at ? pieces.find(p => p.key === opts.at) : null;  // the box the visitor came for (a label or a hit)
+    const atBack = atP ? atP.iiif : opts.at ? (BYKEY[opts.at] || D.hits.find(h => h.key === opts.at && h.w === oid) || {}).iiif : null;
+    const S = { back: atBack && w.backs.some(b => b[0] === atBack) ? atBack : w.backs.map(b => b[0]).sort((a, b) => count(b) - count(a))[0],
+                t: 0, piece: null, event: null, raf: 0, g: null };
     const linkOf = (p, i) => p.links.find(l => l[0] === i);
 
     // the work turned over: the stage shows the front first and turns around its vertical axis to the back, where the
@@ -1509,11 +1530,11 @@
       if (S.piece != null) {
         const p = pieces[S.piece], l = p.label, links = p.links.slice().sort((a, b) => a[0] - b[0]);
         const how = l ? `${SRC[l.src]} · ${howText(l)}${l.ok ? '' : ' · ' + sure(l)}` : `found again from ${p.hits.map(h => `Inv. ${WORK[LAB[h.q].w].inv}`).join(', ')} (${p.hits[0].n} matching points)`;
-        const view = viewer(p.iiif, [p.box], workTitle(w), p.title, l ? COLOUR[l.src] : '30d158', !!l && l.how === 'vision-language model', [p.key]);
+        const view = viewer(p.iiif, [p.box], workTitle(w), p.title, l ? COLOUR[l.src] : '30d158', !!l && l.how === 'vision-language model', [p.key], oid);
         return `<div class="pd"><img alt="" src="${esc(region(p.iiif, p.box))}"><div><b>${esc(p.title)}</b><div class="hintline">${esc(how)}</div>
           ${links.length ? `<ul>${links.map(([i, s, b]) => `<li class="w${s}"><button type="button" data-xe="${i}">${dots(s)}<span>${esc(evLine(evView(w, ev[i])))}</span><span></span><span class="why">${STRENGTH[s]}: ${esc(basisText(p, b))}</span></button></li>`).join('')}</ul>`
             : `<p class="hintline">No event in SKKG's records matches this label${ev.length ? '' : ' (the records hold none for this work)'}. It may document a station or an exhibition that the records lack.</p>`}
-          <div class="links">${l ? `<a href="#label=${l.id}">Label details</a>` : `<a href="#label=${p.hits[0].q}">The label on Inv. ${esc(WORK[LAB[p.hits[0].q].w].inv)}</a>`}<a href="${esc(formUrl(p.key))}">✎ Record in the entry form</a><a href="${esc(view)}" target="_blank" rel="noopener">Whole back, zoomable</a>${feedback(
+          <div class="links">${l ? `<a href="#${esc(labelHash(l))}">Label details</a>` : `<a href="#${esc(labelHash(LAB[p.hits[0].q]))}">The label on Inv. ${esc(WORK[LAB[p.hits[0].q].w].inv)}</a>`}<a href="${esc(formUrl(p.key))}">✎ Record in the entry form</a><a href="${esc(view)}" target="_blank" rel="noopener">Whole back, zoomable</a>${feedback(
             { where: 'Work · exploded back', inv: w.inv, title: w.title, key: p.key, iiif: p.iiif, box: p.box, kind: 'A box is wrong or missing' }, 'Report a problem with this label or its events')}</div></div></div>`;
       }
       if (S.event != null) {
@@ -1558,7 +1579,9 @@
     const ro = new ResizeObserver(() => { cancelAnimationFrame(pending); pending = requestAnimationFrame(layout); });
     ro.observe(stage);
     setBack(S.back);
+    if (atP) S.piece = atP.i;  // that box selected, its events lit, the labels lifted off
     marks();
+    if (atP) animate(1);
     return {
       destroy() { view.dead = true; ro.disconnect(); cancelAnimationFrame(S.raf); cancelAnimationFrame(pending); if (stage.getAnimations) stage.getAnimations().forEach(a => a.cancel()); },
       feedback() {  // what is selected, for the floating feedback button
@@ -1584,21 +1607,42 @@
   }
   function route() {
     const h = (window.ppFacets ? ppFacets.route : x => x)(decodeURIComponent(location.hash.slice(1)));  // «labels?…»: filters from the address
-    if (h.startsWith('label=')) {  // a label by its id or by its stable key (links from the entry form)
-      if (document.querySelector('main > section:not([hidden])') === null) tab(current);
-      const id = h.slice(6);
-      showLabel(LAB[id] ? id : (BYKEY[id] || {}).id);
+    const under = () => {  // a dialog from a link or a reload lies on the tab it was opened from, else on the tab that fits it
+      if (document.querySelector('main > section:not([hidden])') === null) tab((history.state && history.state.tab) || (h.startsWith('work=') ? 'works' : 'labels'));
+    };
+    if (h.startsWith('label=')) {  // a label by its stable key (or by its id, from older links)
+      under();
+      const id = h.slice(6), l = LAB[id] || BYKEY[id];
+      if (l) showLabel(l.id); else notFound('label', id);
       return;
     }
-    if (h.startsWith('work=')) { if (document.querySelector('main > section:not([hidden])') === null) tab(current); showWork(h.slice(5)); return; }
+    if (h.startsWith('work=')) {  // «work=<object id>», and «&at=<key>» for the box to show
+      under();
+      const [oid, ...more] = h.slice(5).split('&'), at = (more.find(x => x.startsWith('at=')) || '').slice(3);
+      if (WORK[oid]) showWork(oid, at || null); else notFound('work', oid);
+      return;
+    }
+    const wasOpen = dlg.open;
     if (XP) { XP.destroy(); XP = null; }
     OPEN = null;
     if (dlg.open) dlg.close();
     const part = /^about-[a-z]+$/.test(h) ? document.getElementById(h) : null;  // a part of the About tab (#about-form …)
-    const from = current;
-    tab(part ? 'about' : h || 'labels');
+    const from = current, to = part ? 'about' : h || 'labels';
+    if (wasOpen && to === current) return;  // only the dialog closed: the tab stays as it was (its place, the focus)
+    tab(to);
     if (part) part.scrollIntoView();
-    else if (current === 'about' && from !== 'about') scrollTo(0, 0);  // the About tab starts at its top
+    else if (current !== from) scrollTo(0, 0);  // another tab starts at its top
+  }
+  function go(h) {  // a label or a work on top of what is shown: ✕ and Back return there, to the same place
+    const n = (dlg.open && history.state && history.state.dlg) || 0;
+    history.pushState({ dlg: n + 1, tab: current }, '', '#' + h);
+    route();
+  }
+  function closeDialog() {
+    const n = history.state && history.state.dlg;
+    if (n) { history.go(-n); return; }  // opened on this page: back to the list as it was (place, filters)
+    history.replaceState(null, '', '#' + current);  // opened by a link from elsewhere: the tab it lies on
+    route();
   }
   const head = document.querySelector('header');  // the sticky header's height, for the About tab's anchors (scroll-margin-top)
   const headHeight = () => document.documentElement.style.setProperty('--head', head.offsetHeight + 'px');
@@ -1609,15 +1653,20 @@
     if (fi) { e.preventDefault(); pickFront(fi); return; }  // another photograph of the front
     const box = e.target.closest('.ov[data-key]');
     if (box) { e.preventDefault(); location.href = formUrl(box.dataset.key); return; }  // a box opens the entry form
+    const a = e.target.closest('a[href^="#label="], a[href^="#work="]');  // links to a label or a work open it on top, too
+    if (a) { if (!e.ctrlKey && !e.metaKey && !e.shiftKey && !e.altKey && !e.button) { e.preventDefault(); go(a.getAttribute('href').slice(1)); } return; }
     const ov = e.target.closest('.ov[data-label]'), card = e.target.closest('[data-label],[data-work]');
     const el = ov || card;
     if (!el || e.target.closest('a')) return;
     e.preventDefault();
-    location.hash = el.dataset.label ? 'label=' + el.dataset.label : 'work=' + el.dataset.work;
+    const l = el.dataset.label && LAB[el.dataset.label];
+    go(el.dataset.label ? (l ? labelHash(l) : 'label=' + el.dataset.label) : workHash(el.dataset.work, el.dataset.at));
   });
-  $('#dclose').addEventListener('click', () => { location.hash = current; });
-  dlg.addEventListener('cancel', e => { e.preventDefault(); location.hash = current; });
-  dlg.addEventListener('click', e => { if (e.target === dlg) location.hash = current; });
+  $('#dclose').addEventListener('click', closeDialog);
+  dlg.addEventListener('cancel', e => { e.preventDefault(); closeDialog(); });
+  let downOutside = false;  // only a click that starts beside the dialog closes it (not a text selection or a double-click's second click)
+  dlg.addEventListener('pointerdown', e => { downOutside = e.target === dlg; });
+  dlg.addEventListener('click', e => { if (e.target === dlg && downOutside && e.detail < 2) closeDialog(); });
   window.addEventListener('hashchange', route);
   function choice(id, set) {  // a choice with two faces, the buttons #id and the <select> #idsel: `set` takes the chosen value
     $(id).addEventListener('click', e => { const b = e.target.closest('button'); if (b) set(b.dataset.v); });
@@ -1648,9 +1697,9 @@
     }
     D.labels.forEach(l => { LAB[l.id] = l; BYKEY[l.key] = l; WORK[l.w].labels.push(l); });
     D.hits.forEach(h => { WORK[h.w].shared = true; WORK[LAB[h.q].w].shared = true; });
-    D.labels.forEach(l => { const w = WORK[l.w]; HAY[l.id] = [l.t, l.sub, l.d, l.pos, l.type, w.inv, w.title, w.type, w.actors.join(' ')].join(' ').toLowerCase(); });
-    for (const w of Object.values(WORK)) w.hay = [w.inv, w.title, w.type, w.actors.join(' '), w.ex.join(' '), w.acq, w.labels.map(l => l.t).join(' '), (w.front && w.front.by) || '',
-      (w.tl || []).map(e => typeof e[2] === 'string' ? e[2] : '').join(' ')].join(' ').toLowerCase();
+    D.labels.forEach(l => { const w = WORK[l.w]; HAY[l.id] = norm([l.t, l.sub, l.d, l.pos, l.type, w.inv, w.title, w.type, w.actors.join(' ')].join(' ')); });
+    for (const w of Object.values(WORK)) w.hay = norm([w.inv, w.title, w.type, w.actors.join(' '), w.ex.join(' '), w.acq, w.labels.map(l => l.t).join(' '), (w.front && w.front.by) || '',
+      (w.tl || []).map(e => typeof e[2] === 'string' ? e[2] : '').join(' ')].join(' '));
     const n = D.numbers, pct = v => v == null ? '–' : Math.round(v * 100) + ' %';
     const unv = D.labels.filter(unverified).length, works = Object.values(WORK);
     const N = { ...n, labels: D.labels.length, unverified: unv, shown: D.labels.length - unv,  // the About tab's counts, from the data as loaded
