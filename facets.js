@@ -336,8 +336,10 @@
     const by = {};
     o.fv.forEach(x => { const v = CODE[Math.abs(x)]; if (v) (by[v.i] || (by[v.i] = [])).push([v, x < 0]); });
     const hash = T ? T.hash : key;
+    // an unverified label (a model proposal, a detection without text) is listed only with «Show: with unverified leads»
+    const show = key === 'labels' && (o.how === 'vision-language model' || o.st === 'new label without text') ? 'show=all&amp;' : '';
     const rows = F.filter(f => by[f.i]).map(f => `${esc(f.n)}${llm(f)}: ` + by[f.i].map(([v, u]) =>
-      `<a href="#${esc(hash)}?${f.k}=${v.slug}" title="All ${esc(key)} with this value">${esc(v.v)}</a>${v.g && v.g !== v.v ? ` <span class="fx-gl">${esc(v.g)}</span>` : ''}${u ? `<sup class="fx-u" title="${esc(UNSURE)}">?</sup>` : ''}`).join(', '));
+      `<a href="#${esc(hash)}?${show}${f.k}=${v.slug}" title="All ${esc(key)} with this value">${esc(v.v)}</a>${v.g && v.g !== v.v ? ` <span class="fx-gl">${esc(v.g)}</span>` : ''}${u ? `<sup class="fx-u" title="${esc(UNSURE)}">?</sup>` : ''}`).join(', '));
     const how = key === 'works' ? `All the marks of its data sheet, as the ${PARSER} read them`
       : `The data sheet's description${o.src === 'data sheet' ? '' : ' of the same mark'}, as the ${PARSER} read it`;
     return ['Data sheet facets', `${rows.join('<br>')}<br><span class="fx-gl">${how}.</span>`];

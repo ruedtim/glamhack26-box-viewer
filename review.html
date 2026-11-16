@@ -65,6 +65,7 @@
   .btn.on kbd { color: inherit; border-color: currentColor; opacity: .8; }
   .stage { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 18px; align-items: start; }
   .stage[hidden] { display: none; }  /* an empty list shows the note only, not the last proposal */
+  button.undo { font: inherit; border: 0; padding: 0; background: none; color: var(--accent); text-decoration: underline; cursor: pointer; }
   .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 14px; box-shadow: var(--shadow); }
   svg.view { display: block; width: 100%; height: auto; max-height: 62vh; background: var(--chip); border-radius: 6px; }
   /* the picture's area has one height for every proposal, so the buttons under it stay in place and in view
@@ -182,7 +183,8 @@
       <dl id="facts"></dl>
       <p style="margin:12px 0 6px" class="muted wholep">The whole back</p>
       <svg class="view" id="whole" role="img" aria-label="The whole back with the proposed box and the area named in the data sheet"></svg>
-      <p class="muted" style="margin-top:8px"><a id="zoom" target="_blank" rel="noopener">Open the back zoomable</a> · <a id="obj" target="_blank" rel="noopener">SKKG collection</a><span id="fb"></span></p>
+      <p class="muted" style="margin-top:8px"><a id="zoom" target="_blank" rel="noopener">Open the back zoomable</a> · <a id="obj" target="_blank" rel="noopener">SKKG collection</a>
+        · <a id="onsite">The label on the results site</a> · <a id="rec">✎ Record in the entry form</a><span id="fb"></span></p>
     </div>
   </div>
 </main>
@@ -274,7 +276,10 @@
     const ctx = context(it), [W, H] = R.dims[it.iiif] || [ctx[0] + ctx[2], ctx[1] + ctx[3]];
     svg($('#crop'), it.iiif, ctx, ctx, 1000, [['box', it.box], ...(own ? [['drawn', own]] : [])]);
     svg($('#whole'), it.iiif, [0, 0, W, H], null, 700, [['area', it.area], ['box', it.box], ...(own ? [['drawn', own]] : [])]);
-    $('#title').textContent = `Inv. ${w[0]} · ${w[1]}`;
+    $('#title').replaceChildren(Object.assign(document.createElement('a'), { href: './#work=' + encodeURIComponent(it.w), textContent: `Inv. ${w[0]} · ${w[1]}`,
+      title: 'The work on the results site' }));  // the work, its other labels and its timeline
+    $('#onsite').href = './#label=' + encodeURIComponent('sheet:' + it.k);
+    $('#rec').href = 'form.html?label=' + encodeURIComponent('sheet:' + it.k);
     showFront(w);
     const d = decision(it), by = mine[it.k] ? `you${mine[it.k].r ? ' (' + mine[it.k].r + ')' : ''}` : 'the team (merged)';
     $('#status').textContent = d ? `Decided: ${d} — by ${by}` : 'Not reviewed yet';
@@ -301,16 +306,34 @@
   function savedNote(ok = true) {  // the first sentence of the hand-in hint; «Download them and put the file …» follows it
     const n = Object.keys(mine).length;
     $('#saved').innerHTML = !ok ? '<span class="warn">This browser does not keep your decisions: they are lost when you leave the page.</span>'
-      : n ? `${n.toLocaleString('en')} decision${n > 1 ? 's' : ''} saved in this browser.` : 'Your decisions stay in this browser.';
+      : (n ? `${n.toLocaleString('en')} decision${n > 1 ? 's' : ''} saved in this browser.` : 'Your decisions stay in this browser.')
+        + (lastDone ? ' <button type="button" class="undo" id="undo">Undo the last decision</button>' : '');
   }
+  let lastDone = null, lastAt = 0;  // the last decision (for «Undo») and when it was made
   function decide(d, box) {
     if (!list.length) return;
     const it = list[at];
+    mine = store.get(KEY, mine);  // what another tab decided meanwhile stays
+    lastDone = { k: it.k, prev: mine[it.k] }; lastAt = Date.now();
     mine[it.k] = { d, t: new Date().toISOString(), r: $('#who').value.trim(), ...(box ? { box } : {}) };
     savedNote(store.set(KEY, mine));
     if ($('#show').value === 'open') { filter(); } else if (at < list.length - 1) { at++; }
     show();
   }
+  function undoLast() {  // back to how it was before the last decision («not reviewed yet», or the earlier decision), and to that proposal
+    if (!lastDone) return;
+    const { k, prev } = lastDone;
+    mine = store.get(KEY, mine);
+    if (prev) mine[k] = prev; else delete mine[k];
+    lastDone = null;
+    savedNote(store.set(KEY, mine));
+    filter();
+    const i = list.findIndex(x => x.k === k);
+    if (i >= 0) at = i;
+    show();
+  }
+  document.addEventListener('click', e => { if (e.target.id === 'undo') undoLast(); });
+  addEventListener('storage', e => { if (e.key === KEY) { mine = store.get(KEY, {}); savedNote(); show(); } });  // decided in another tab
   function csvCell(v) { v = String(v ?? ''); return /[;"\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; }
   function exportCsv() {
     const by = {}; items.forEach(it => { by[it.k] = it; });
@@ -359,7 +382,8 @@
     e.target.value = '';
     filter(); show();
   });
-  document.querySelectorAll('.decide [data-d]').forEach(b => b.addEventListener('click', () => decide(b.dataset.d)));
+  // a double-click decides once: the buttons keep their place, so its second click would decide the next proposal unseen
+  document.querySelectorAll('.decide [data-d]').forEach(b => b.addEventListener('click', e => { if (e.detail < 2 && Date.now() - lastAt > 350) decide(b.dataset.d); }));
 
   // ---- redraw: drag a new box on the whole back, saved in pixels of the original image
   const ed = $('#ed'), edimg = $('#edimg'), edwrap = $('#edwrap');
@@ -423,12 +447,14 @@
   arrange();
   document.addEventListener('keydown', e => {
     // (the file input behind «Load decisions …» counts as a button, not as a text field: the keys work as before after it)
-    if (e.target.closest('input:not([type=file]), select, textarea') || e.metaKey || e.ctrlKey || e.altKey || ed.open) return;
+    // not while a dialog (box editor, feedback) or the site menu is open: the keys would act on the proposal behind it
+    if (e.target.closest('input:not([type=file]), select, textarea') || e.metaKey || e.ctrlKey || e.altKey
+        || document.querySelector('dialog[open], details.ppnav-tools[open]')) return;
     const k = e.key.toLowerCase();
     if (k === 'r') openEditor();
-    else if (k === 'y' || k === '1') decide('correct');
-    else if (k === 'n' || k === '2') decide('wrong');
-    else if (k === 'u' || k === '3') decide('unsure');
+    else if (k === 'y') decide('correct');
+    else if (k === 'n') decide('wrong');
+    else if (k === 'u') decide('unsure');
     else if (e.key === 'ArrowLeft') $('#prev').click();
     else if (e.key === 'ArrowRight') $('#next').click();
     else return;

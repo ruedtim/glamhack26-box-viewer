@@ -118,6 +118,8 @@
   const keys = params.getAll('label').map(k => k.trim());
   const keyOf = i => (keys.length === boxes.length && keys[i]) || '';
   const formHref = key => 'form.html?label=' + encodeURIComponent(key);
+  // the entry form of a label opens in its own tab, and in the one already open for that label (form.html names its tab so)
+  const openForm = key => { window.open(formHref(key), 'ppform:' + key); };
   const shapes = [...boxes.map((b, i) => [b, dashed, keyOf(i)]), ...areas.map(b => [b, true, ''])];
   if (!focus.length) { $('zoom').hidden = true; $('boxhelp').hidden = true; }  // no box: just the image, zoomable
   const credit = (params.get('credit') || '').trim(), rights = params.get('rights');
@@ -141,9 +143,16 @@
   boxes.forEach((b, i) => addLink(boxes.length > 1 ? `Box ${i + 1} (IIIF region)` : 'Box (IIIF region)',
                                   `${base}/${b.map(Math.round).join(',')}/max/0/default.jpg`));
   addLink('Collection page', params.get('page'));
+  const work = (params.get('work') || '').trim(), one = boxes.length === 1 ? keyOf(0) : '';
+  if (work || keys.length === 1) {  // back to the work or the label on the results site
+    const a = document.createElement('a');
+    a.href = './#' + (work ? 'work=' + encodeURIComponent(work) + (one ? '&at=' + encodeURIComponent(one) : '') : 'label=' + encodeURIComponent(keys[0]));
+    a.textContent = 'On the results site';
+    $('links').append(a);
+  }
   if (boxes.length === 1 && keyOf(0)) {
     const a = document.createElement('a');
-    a.href = formHref(keyOf(0)); a.textContent = 'Record this label in the entry form';
+    a.href = formHref(keyOf(0)); a.target = 'ppform:' + keyOf(0); a.textContent = 'Record this label in the entry form';
     $('links').append(a);
   } else if (boxes.some((b, i) => keyOf(i))) {
     const s = document.createElement('span');
@@ -175,7 +184,7 @@
         el.className = (dash ? 'box dashed' : 'box') + (key ? ' link' : '');
         if (key) {  // a quick click (not a drag) opens the entry form
           el.title = 'Open the entry form for this label';
-          new OpenSeadragon.MouseTracker({ element: el, clickHandler: e => { if (e.quick) location.href = formHref(key); } });
+          new OpenSeadragon.MouseTracker({ element: el, clickHandler: e => { if (e.quick) openForm(key); } });
         }
         viewer.addOverlay({ element: el, location: vp.imageToViewportRectangle(x, y, w, h) });
       }
@@ -206,7 +215,7 @@
         if (key) {  // the whole box is clickable and opens the entry form
           r.setAttribute('fill', 'transparent'); r.style.cursor = 'pointer';
           r.append(el('title', {})); r.lastChild.textContent = 'Open the entry form for this label';
-          r.addEventListener('click', () => { location.href = formHref(key); });
+          r.addEventListener('click', () => openForm(key));
         }
         svg.append(r);
       }

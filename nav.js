@@ -102,8 +102,11 @@ html.ppnav-on [data-ppnav-hide] { display: none !important; }
     for (const [id, text, href, hint, key, word] of TOOLS) {
       const n = key ? stored(key) : 0;
       held += n;
-      kids.push(el('a', { class: 'ppnav-item', href: url(href), 'aria-current': id && id === PAGE ? 'page' : null },
-        el('b', null, text), n ? el('i', null, `${n} ${word} here`) : null, el('small', null, hint)));
+      const a = el('a', { class: 'ppnav-item', href: url(href), 'aria-current': id && id === PAGE ? 'page' : null },
+        el('b', null, text), n ? el('i', null, `${n} ${word} here`) : null, el('small', null, hint));
+      // the page you are on: the menu just closes (a reload would drop the label of the form or the photo of the search)
+      if (id && id === PAGE) a.addEventListener('click', e => { e.preventDefault(); closeAll(); });
+      kids.push(a);
     }
     if (withTabs) {
       kids.push(el('div', { class: 'ppnav-sep' }));

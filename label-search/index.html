@@ -257,7 +257,9 @@ const store = {
 let mine = store.get(KEY, {}); // entry key (search time | IIIF id) -> decision record
 let searchTime = "", hitsNow = [];
 const iiifId = (base) => base.split("/").pop();
-const viewerUrl = (base, r) => `https://ruedtim.github.io/glamhack26-box-viewer/viewer.html?iiif=${base}&xywh=${r.x},${r.y},${r.w},${r.h}`;
+let onSite = document.documentElement.classList.contains("ppnav-on"); // part of the results site (nav.js, or ../data.json found below)
+const viewerUrl = (base, r, b) => `${onSite ? "../viewer.html" : "https://ruedtim.github.io/glamhack26-box-viewer/viewer.html"}?iiif=${base}&xywh=${r.x},${r.y},${r.w},${r.h}`
+  + (b ? `&title=${encodeURIComponent(`Inv. ${b.inv_nr}`)}&work=${encodeURIComponent(b.objekt_id)}` : ""); // the viewer links back to the work
 $("who").value = store.get(WHO, "") || store.get("pp-label-form-who", "") || "";  // else the initials typed in the entry form
 $("who").addEventListener("change", () => store.set(WHO, $("who").value.trim()));
 
@@ -268,6 +270,7 @@ function savedNote(ok = true) { // the first sentence of the hand-in hint; «Dow
 }
 
 function decide(h, d, box = null) {
+  mine = store.get(KEY, mine); // what another tab decided meanwhile stays
   const k = `${searchTime}|${iiifId(h.info.iiif_base)}`, old = mine[k];
   const b = box || (old && old.src === "drawn" ? { x: old.x, y: old.y, w: old.w, h: old.h } : h.box);
   mine[k] = { search_time: searchTime, query_note: $("qnote").value.trim(), inv_nr: h.info.inv_nr, objekt_id: h.info.objekt_id,
@@ -287,7 +290,7 @@ function show(hits) {
   for (const h of hits) {
     const b = h.info, rec = mine[`${searchTime}|${iiifId(b.iiif_base)}`];
     const r = rec ? { x: rec.x, y: rec.y, w: rec.w, h: rec.h } : h.box;
-    const region = `${r.x},${r.y},${r.w},${r.h}`, viewer = viewerUrl(b.iiif_base, r);
+    const region = `${r.x},${r.y},${r.w},${r.h}`, viewer = viewerUrl(b.iiif_base, r, b);
     const card = document.createElement("div");
     card.className = "card " + (rec ? rec.d : "");
     card.innerHTML = `
@@ -297,6 +300,7 @@ function show(hits) {
       <div class="body"><b>${h.rank}. Inv. no. ${b.inv_nr}</b><br>
         <span class="tag">score ${h.score.toFixed(2)}${rec && rec.src === "drawn" ? " · your box" : ""}</span>
         <div class="links"><a href="${viewer}" target="_blank" rel="noopener">Show on the back</a>
+          ${onSite ? `<a href="../#work=${encodeURIComponent(b.objekt_id)}" title="The work on the results site: its labels, found-again hits and timeline">On the results site</a>` : ""}
           <a href="${b.url}" target="_blank" rel="noopener">SKKG record</a></div>
         <div class="decide">
           <button data-d="same" title="The same label is on this back">✓ Same</button>
@@ -399,7 +403,8 @@ savedNote();
 show([]); // decisions from an earlier visit: the hand-in is there from the start
 // link back to the results site when this page is part of it (site/label-search/) and the site header (nav.js) is missing
 if (!document.documentElement.classList.contains("ppnav-on"))
-  fetch("../data.json", { method: "HEAD" }).then((r) => { if (r.ok) $("home").hidden = false; }).catch(() => {});
+  fetch("../data.json", { method: "HEAD" }).then((r) => { if (r.ok) { $("home").hidden = false; onSite = true; show(hitsNow); } }).catch(() => {});
+addEventListener("storage", (e) => { if (e.key === KEY) { mine = store.get(KEY, {}); savedNote(); show(hitsNow); } }); // decided in another tab
 
 // The numbers in the text ([data-m]) come from the index itself, so they cannot go stale; the text in the page is the fallback.
 fetch("data/meta.json", { cache: "no-cache" }).then((r) => (r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`)))).then((m) => {

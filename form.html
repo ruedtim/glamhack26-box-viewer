@@ -255,7 +255,7 @@ dialog#ed::backdrop{background:rgba(0,0,0,.5)}
 </head>
 <body>
 <div class="wrap">
-<div class="crumbs" data-ppnav-hide><a href="./" id="back">← Results</a><span>Provenance Pursuit · GLAMhack 2026</span></div>
+<div class="crumbs"><a href="./" id="back">← Results</a><span data-ppnav-hide>Provenance Pursuit · GLAMhack 2026</span></div>
 <div class="lead">
   <h1>Record a label</h1>
   <p class="sub">Columns F to L of SKKG's label register, prefilled from the data: check, correct, add.</p>
@@ -343,7 +343,7 @@ dialog#ed::backdrop{background:rgba(0,0,0,.5)}
 
   <fieldset><legend>Position <small>column G</small></legend>
     <div class="posbox">
-      <div><label style="margin-top:0" data-f="pos">Position on the support (seen from the front)</label>
+      <div><label style="margin-top:0" data-f="pos">Position on the support (seen from the back)</label>
         <div class="pos" id="pos">
           <label title="oben links · top left"><input type="radio" name="p" value="o. l."><span>o. l.</span></label>
           <label title="oben Mitte · top centre"><input type="radio" name="p" value="o. m."><span>o. m.</span></label>
@@ -513,8 +513,15 @@ function compute(v) {  // the row F to L, composed as in the draft (German regis
   const F = [f, t ? '«' + t + '»' : ''].filter(Boolean).join(', ');
   const G = [v.pos, [v.traeger, v.seite].filter(Boolean).join(' ')].filter(Boolean).join(' ');
   const date = v.od ? 'o. D.' : v.datum;
-  const I = [v.evtyp, v.evbez, date, v.lot ? '(Lot ' + v.lot + ')' : ''].filter(Boolean).join(', ');
-  return [F, G, v.person, I, v.evid, (v.tags || []).join(', '), v.komm];
+  const typeSaid = v.evtyp && v.evbez && v.evbez.toLowerCase().includes(v.evtyp.toLowerCase());  // «Auktion 69»: not «Auktion, Auktion 69»
+  const I = [typeSaid ? '' : v.evtyp, v.evbez, date, v.lot ? '(Lot ' + v.lot + ')' : ''].filter(Boolean).join(', ');
+  const row = [F, G, v.person, I, v.evid, (v.tags || []).join(', '), v.komm];
+  if (L && L.src === 'register') {  // a label from the register: the columns nobody changed go back word for word (F to K)
+    const orig = [L.d, L.pos, /\[address\]/.test(L.iss || '') ? '' : L.iss, L.sub, L.evid, (L.kw || []).join(', ')];
+    [['form', 'farbe', 'tech', 'trans'], ['pos', 'traeger', 'seite'], ['person'], ['evtyp', 'evbez', 'datum', 'od', 'lot'], ['evid'], ['tags']]
+      .forEach((names, i) => { if (orig[i] && names.every(n => same(v[n], n in P.v ? P.v[n] : empty()[n]))) row[i] = orig[i]; });
+  }
+  return row;
 }
 function render() {
   const v = state(), c = compute(v);
@@ -714,7 +721,7 @@ function formOf(desc, kind, cat) {  // shape from the description (suggestion)
   if (/siegel/.test(first) || kind === 'seal') return '';
   if (/malerband|klebstreifen/.test(s) || /klebstreifen/.test(c)) return 'Klebstreifen (Malerband)';
   if (kind === 'stamp' || (/stempel|gestempelt/.test(first) && !/etikett/.test(first))) return 'Stempel';
-  if (kind === 'inscription' || /beschriftung/.test(c) || /^(beschriftung|signatur|handschriftlich|weisses schreibmittel)/.test(s)) return 'Beschriftung direkt auf dem Objekt';
+  if (kind === 'inscription' || /^(beschriftung|signatur|handschriftlich|weisses schreibmittel)/.test(s)) return 'Beschriftung direkt auf dem Objekt';
   if (kind === 'other') return '';
   const opts = [...$('#form').options].map(o => o.value).filter(Boolean).sort((a, b) => b.length - a.length);
   const start = opts.find(o => s.startsWith(o.toLowerCase()));
@@ -725,6 +732,7 @@ function formOf(desc, kind, cat) {  // shape from the description (suggestion)
   if (/langrechteckig/.test(s)) return 'Klebeetikett, langrechteckig';
   if (/(?<![a-zäöü])rund(e|es|er|em)?(?![a-zäöü])/.test(s) || /(?<![a-zäöü])runde/.test(c)) return 'Klebeetikett, rund';
   if (/viereckig|rechteckig/.test(s) || /viereckig/.test(c)) return 'Klebeetikett, viereckig';
+  if (/beschriftung/.test(c)) return 'Beschriftung direkt auf dem Objekt';  // the register's category only when the description names no shape
   return '';
 }
 function colourOf(text) {  // colour of the label from the description (suggestion)
@@ -1220,7 +1228,7 @@ function header() {
   showFront(L && WORK[L.w]);
   if (!key) {
     $('#wt').textContent = 'No label selected';
-    $('#ws').textContent = 'Open a label on the results website or click a box: the form is then prefilled and your entries are saved.';
+    $('#ws').innerHTML = 'Open a label on the <a href="./#labels">results website</a> and click «✎ Record this label» (or click a box there): the form is then prefilled and your entries are saved. Here: your saved entries and their CSV.';
     return;
   }
   if (!L) {
@@ -1299,6 +1307,10 @@ function renderBox() {
 }
 function boxChanged(text) {
   undo = null;
+  if (L && P.s.pos && P.s.pos.t === 'Box position' && same(read('pos'), P.v.pos)) {  // a position computed from the box follows the box
+    const g = boxGrid({ iiif: L.iiif, box: curBox() });
+    if (g) { P.v.pos = g; write('pos', g); render(); }
+  }
   renderBox();
   if (key && D) save();
   if (text) $('#msg').textContent = text;
@@ -1361,22 +1373,36 @@ function meta() {
   return { inv: WORK[L.w].inv, w: L.w, t: labelTitle(L), src: SRC_DE[L.src], iiif: L.iiif, box: L.box,
     region: `${L.iiif}/${L.box.join(',')}/max/0/default.jpg` };
 }
-let timer = 0, touched = false;
+let timer = 0, touched = false, pending = false;
+let base = null, baseB = null;  // the fields and the box as last saved or loaded here: a save keeps what another tab changed meanwhile
+const NOBOX = { ok: false, drawn: null }, sameBox = (a, b) => JSON.stringify({ ...NOBOX, ...a }) === JSON.stringify({ ...NOBOX, ...b });
 function changed() {
   render(); undo = null;
   if (!D) { touched = true; return; }  // what was typed before the data loaded stays
-  if (key) { clearTimeout(timer); timer = setTimeout(save, 400); }
+  if (key) { clearTimeout(timer); pending = true; timer = setTimeout(save, 400); }
 }
 function save() {
-  clearTimeout(timer);
+  clearTimeout(timer); pending = false;
   if (!key) { savedLine(null); return; }
   const v = state();
+  let b = { ok: !!BX.ok, drawn: BX.drawn || null };
   entries = loadEntries();
-  entries[key] = { v, t: new Date().toISOString(), r: $('#who').value.trim(), m: meta(), b: { ok: !!BX.ok, drawn: BX.drawn || null },
+  const theirs = entries[key];  // the same label saved in another tab since: take what it changed and this tab did not
+  if (theirs && theirs.v && base) {
+    const took = NAMES.filter(n => same(v[n], base[n]) && !same(theirs.v[n], base[n]));
+    took.forEach(n => { v[n] = theirs.v[n]; write(n, v[n]); });
+    if (sameBox(b, baseB) && theirs.b && !sameBox(theirs.b, b)) { b = { ...NOBOX, ...theirs.b }; BX = { ...b }; renderBox(); }
+    if (took.length) render();
+  }
+  entries[key] = { v, t: new Date().toISOString(), r: $('#who').value.trim(), m: meta(), b,
     d: NAMES.filter(n => P.s[n] && same(v[n], P.v[n])), e: NAMES.filter(n => P.s[n] ? !same(v[n], P.v[n]) : filled(v[n])) };
+  base = v; baseB = b;
   savedLine(store.set(STORE, entries));
   renderList();
 }
+// leaving the page (a link, Back, closing the tab) within the 400 ms after typing: save at once
+addEventListener('pagehide', () => { if (pending) save(); });
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden' && pending) save(); });
 function savedLine(st) {
   const el = $('#saved'), en = entries[key];
   el.classList.remove('warn');
@@ -1512,12 +1538,11 @@ $('#copy').onclick = async () => {
 };
 $('#save').onclick = () => { save(); if (key) $('#msg').textContent = 'Saved.'; };
 $('#reset').onclick = () => {
-  clearTimeout(timer);
+  clearTimeout(timer); pending = false;
   entries = loadEntries();
-  undo = key && entries[key] ? entries[key] : null;
-  if (undo) { delete entries[key]; store.set(STORE, entries); }
+  if (key && entries[key]) { undo = entries[key]; delete entries[key]; store.set(STORE, entries); }  // a second click keeps the first one's undo
   $('#tagin').value = '';
-  apply(P.v); BX = { ok: false, drawn: null }; $('#msg').textContent = ''; render(); renderBox(); renderList();
+  apply(P.v); BX = { ok: false, drawn: null }; base = P.v; baseB = null; $('#msg').textContent = ''; render(); renderBox(); renderList();
   $('#saved').innerHTML = !key ? 'Reset.' : undo
     ? 'Reset to the values from the data; the saved entries are deleted. <button type="button" class="link" id="undo">Undo</button>'
     : 'Reset to the values from the data.';
@@ -1525,7 +1550,7 @@ $('#reset').onclick = () => {
 document.addEventListener('click', e => {
   if (e.target.id !== 'undo' || !undo) return;
   entries = loadEntries(); entries[key] = undo; store.set(STORE, entries);
-  apply(undo.v); BX = { ok: false, drawn: null, ...undo.b }; undo = null; render(); renderBox(); renderList(); savedLine('loaded');
+  apply(undo.v); BX = { ok: false, drawn: null, ...undo.b }; base = undo.v; baseB = undo.b; undo = null; render(); renderBox(); renderList(); savedLine('loaded');
 });
 $('#export').addEventListener('click', exportCsv);
 $('#import').addEventListener('keydown', e => {  // with the keyboard: Space opens the file picker by itself, Enter not in every browser
@@ -1540,7 +1565,17 @@ $('#import').addEventListener('change', async e => {
 // so nobody types them twice. The form writes only its own key.
 $('#who').value = store.get(WHO, '') || store.get(WHO_SHARED, '') || '';
 $('#who').addEventListener('input', e => store.set(WHO, e.target.value.trim()));
-window.addEventListener('storage', e => { if (e.key === STORE) renderList(); });
+window.addEventListener('storage', e => {  // another tab saved: the list follows, and so do the fields of the same label
+  if (e.key !== STORE) return;
+  renderList();
+  const en = key && entries[key];
+  if (!en || !D || pending || !en.v) return;  // with unsaved typing here, the next save merges (see save())
+  apply(en.v); BX = { ok: false, drawn: null, ...en.b }; base = en.v; baseB = en.b;
+  render(); renderBox(); savedLine('loaded');
+});
+// the viewer opens «Record this label» in the tab already holding this label's form (by this name), not in a second one
+addEventListener('pageshow', () => { if (key) window.name = 'ppform:' + key; });
+addEventListener('pagehide', () => { window.name = ''; });
 (() => {  // «← Results»: back to the website if it was the previous page; otherwise to the label on the website
   try {
     const ref = new URL(document.referrer), dir = location.pathname.replace(/[^/]*$/, '');
@@ -1551,7 +1586,7 @@ window.addEventListener('storage', e => { if (e.key === STORE) renderList(); });
 
 // The feedback button (feedback.js) asks what is open when it is clicked. The issue is public: only the label's key,
 // inventory number, title and box from the data go into it, never what the team typed or drew.
-window.ppFeedbackContext = () => L ? { where: 'Entry form', inv: WORK[L.w].inv, title: labelTitle(L), key: L.key, iiif: L.iiif, box: L.box } : {};
+window.ppFeedbackContext = () => L ? { where: 'Entry form', inv: WORK[L.w].inv, title: WORK[L.w].title, key: L.key, iiif: L.iiif, box: L.box } : {};
 
 // What is not needed to fill in the fields starts folded away where space is short: on a phone the facts from the data
 // (in the card) and the row's preview (in the bar at the bottom); on a wide screen both start open
@@ -1564,18 +1599,29 @@ if ('IntersectionObserver' in window) new IntersectionObserver(es => $('#side').
   { rootMargin: '0px 0px -50% 0px' }).observe($('#fields'));
 else $('#side').classList.add('stick');
 
-render(); renderList(); savedLine(null);
+if (key && entries[key] && entries[key].v) { apply(entries[key].v); base = entries[key].v; baseB = entries[key].b || null; }  // at once, not only after data.json
+if (!key) {  // no label: nothing to fill in here; the saved entries and their CSV stay usable
+  $$('#fields input, #fields select, #fields textarea, #fields button').forEach(x => { x.disabled = true; });
+  ['#copy', '#save', '#reset'].forEach(s => { $(s).disabled = true; });
+}
+render(); renderList(); savedLine(key && entries[key] ? 'loaded' : null);
 fetch('data.json', { cache: 'no-cache' }).then(r => { if (!r.ok) throw new Error(r.status); return r.json(); }).then(data => {
   D = data;
   for (const [oid, w] of Object.entries(D.works)) { WORK[oid] = w; w.backs.forEach(([iiif, W, H]) => { DIM[iiif] = [W, H]; }); }
   D.labels.forEach(l => { LAB_ID[l.id] = l; LAB_KEY[l.key] = l; });
   L = find(key);
-  if (L) { P = prefill(L); $('#back').href = siteUrl(L); }
+  if (L) {  // «←»: back to where the form was opened from (see below), else to the work with this label selected
+    P = prefill(L);
+    $('#back').href = './#work=' + encodeURIComponent(L.w) + '&at=' + encodeURIComponent(L.key);
+    $('#back').textContent = `← Back to Inv. ${WORK[L.w].inv}`;
+  }
   header(); known(); notes();
   const saved = key && entries[key];
-  if (!touched) apply(saved ? saved.v : P.v);
+  if (!touched) { apply(saved ? saved.v : P.v); base = saved ? saved.v : P.v; baseB = saved ? saved.b : null; }
   if (saved && saved.b) BX = { ok: false, drawn: null, ...saved.b };
+  if (L && BX.drawn && P.s.pos && P.s.pos.t === 'Box position') P.v.pos = boxGrid({ iiif: L.iiif, box: BX.drawn }) || P.v.pos;  // from the redrawn box
   render(); renderBox(); renderList(); savedLine(saved ? 'loaded' : null);
+  if (touched && key) { pending = true; timer = setTimeout(save, 400); }  // what was typed while the data loaded
 }).catch(() => {
   $('#ws').textContent = 'The data (data.json) could not be loaded; the form works without prefilling.';
   if (key && entries[key]) { apply(entries[key].v); render(); }

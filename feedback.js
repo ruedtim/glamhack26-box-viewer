@@ -47,8 +47,14 @@
     return `${name} on ${os}, window ${innerWidth} × ${innerHeight}`;
   }
   function address() {  // opened from disk, the address would show a local path (with the user name): use the online one
-    if (location.protocol !== 'file:') return location.href;
-    const rel = ROOT && location.href.startsWith(ROOT) ? location.href.slice(ROOT.length) : location.pathname.split('/').pop();
+    let href = location.href;
+    try {  // the viewer's «note» and «title» can hold a label's text: never into the public issue
+      const u = new URL(href);
+      ['note', 'title'].forEach(k => u.searchParams.delete(k));
+      href = u.href;
+    } catch { /* keep it */ }
+    if (location.protocol !== 'file:') return href;
+    const rel = ROOT && href.startsWith(ROOT) ? href.slice(ROOT.length) : location.pathname.split('/').pop();
     return SITE + rel + ' (offline copy)';
   }
   function pageContext() {
@@ -153,7 +159,7 @@
   }
 
   // ---------------------------------------------------------------- the form (only with a relay)
-  let dlg = null, opened = 0, current = null;
+  let dlg = null, opened = 0, current = null, draftFor = null;  // draftFor: the item the text in the form was written about
   function build() {
     style();
     dlg = document.createElement('dialog');
@@ -185,13 +191,17 @@
     if (!RELAY) { window.open(url(ctx), '_blank', 'noopener'); return; }
     if (!dlg) build();
     current = about(ctx);
-    const f = dlg.querySelector('form');
-    f.kind.value = current.kind;
-    f.context.value = current.lines.join('\n');
+    const f = dlg.querySelector('form'), item = current.lines.filter(x => !x.startsWith('Browser:')).join('\n');
+    if (item !== draftFor) {  // another item: a new message (a draft never goes out under another item's context)
+      draftFor = item;
+      f.details.value = '';
+      f.kind.value = current.kind;
+      f.context.value = current.lines.join('\n');
+    }
+    if (!f.details.value) opened = Date.now();  // the time of writing counts from the first opening of a draft
     dlg.querySelector('.ppfb-gh').href = url(ctx);
     status('', '');
     f.querySelector('.ppfb-send').disabled = false;
-    opened = Date.now();
     dlg.showModal();
     (current.kind ? f.details : f.kind).focus();
   }
@@ -215,6 +225,8 @@
     if (!f.reportValidity()) return;
     button.disabled = true;
     status('Sending…', '');
+    const wait = 2100 - (Date.now() - opened);  // the relay drops what comes in faster than people type (a bot rule) yet answers «ok»
+    if (wait > 0) await new Promise(res => setTimeout(res, wait));
     try {
       const r = await fetch(RELAY, { method: 'POST', body: JSON.stringify({  // text/plain: no preflight request
         kind: f.kind.value, details: f.details.value, context: f.context.value, where: current.where, inv: current.inv,
