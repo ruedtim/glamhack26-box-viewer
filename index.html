@@ -8,6 +8,7 @@
 <script src="feedback.js"></script>
 <script src="facets.js"></script>
 <script src="nav.js"></script>
+<script src="boxzoom.js"></script>
 <style>
   :root { --bg: #f5f3ef; --panel: #fff; --ink: #1d1d1b; --muted: #6b6860; --line: #e2ded6; --accent: #1f4e8c;
           --register: #2166ac; --photo: #c0392b; --sheet: #762a83; --model: #a86b00; --again: #1a7f4b; --detected: #0f7b86;
@@ -110,7 +111,12 @@
   .ov { fill: transparent; stroke: var(--sheet); stroke-width: 2.5; vector-effect: non-scaling-stroke; cursor: pointer; filter: drop-shadow(0 0 1px #fff); }
   .ov.register { stroke: var(--register); } .ov.photo { stroke: var(--photo); } .ov.model { stroke: var(--model); stroke-dasharray: 6 4; }
   .ov.hit { stroke: var(--again); stroke-dasharray: 6 4; } .ov.sel { stroke-width: 4; }
+  .ov.mine { stroke: #30d158; stroke-dasharray: 6 4; }  /* a new label drawn in this browser (in the entry form, not in the data) */
   .ov:hover { stroke-width: 4; }
+  /* «＋ Draw a missing label»: where the back is shown; the new labels drawn in this browser follow it */
+  .drawnew { font: inherit; font-size: 13px; font-weight: 600; padding: 5px 11px; border: 1px solid var(--accent); border-radius: 6px; background: var(--panel); color: var(--accent); cursor: pointer; }
+  .drawnew:hover, .drawnew:focus-visible { background: var(--accent); color: var(--panel); }
+  .minel { font-size: 13px; color: var(--muted); }
   .group { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 12px; margin-bottom: 14px; box-shadow: var(--shadow); }
   .group h3 { margin: 0 0 8px; font-size: 15px; overflow-wrap: anywhere; }
   .group h3 .meta { white-space: normal; }  /* a long title wraps instead of widening the page */
@@ -522,6 +528,10 @@
             form», «Whole back, zoomable» and «Report a problem with this label or its events». A second click deselects.
             Back from a label's dialog (or through its «Work» link), the work opens on its back, exploded, with that label
             picked.</li>
+          <li><b>A label without a box?</b> «＋ Draw a missing label», under the exploded back and beside each back photo,
+            opens that photo zoomable with the boxes already on it: draw the box around the label, then «Record this label →»
+            opens the <a href="#about-form">entry form</a> for it as a new label. New labels drawn in this browser are listed
+            next to the button and shown as dashed green boxes on the back photo until they are merged into the data.</li>
           <li><b>Strong, medium, weak.</b> A link is <b>strong</b> (<span class="dots" role="img" aria-label="strong link">●●●</span>)
             when two features agree: the issuer and the lot, date or year of a sale, or the venue and year of an exhibition. It is
             <b>medium</b> (<span class="dots" role="img" aria-label="medium link">●●○</span>) for one distinctive feature: the issuer
@@ -587,7 +597,8 @@
           the same label on other works, and the other marks on the same work.</dd>
         <dt>How to use</dt>
         <dd>Click any card. «✎ Record this label» opens the <a href="#about-form">entry form</a>, and so does
-          a click on the box on the back. The cut-out and «Whole back, zoomable» open the <a href="#about-viewer">box viewer</a>;
+          a click on the box on the back. «＋ Draw a missing label on this back», under the back, is for a label on the
+          same back that has no box yet: draw it, zoomable, and it opens in the entry form as a new label. The cut-out and «Whole back, zoomable» open the <a href="#about-viewer">box viewer</a>;
           «Full resolution» opens the cut-out itself; «Report a problem» opens the
           <a href="#about-feedback">feedback form</a>. Close with ✕, <kbd>Esc</kbd> or a click beside the dialog. Every dialog
           has its own address: <code>#label=</code> and the label's key (for example
@@ -612,7 +623,9 @@
         <dt>How to use</dt>
         <dd><ul>
           <li><b>Open</b> it from a box (click it), from «✎ Record this label», or from a box in the box viewer.
-            Its address is <code>form.html?label=</code> and the label's key; without a key it is an empty form.</li>
+            Its address is <code>form.html?label=</code> and the label's key; without a key it is an empty form. A label
+            drawn with «＋ Draw a missing label» opens here as a new label (key <code>new:</code>, the back photo and the box);
+            it is kept at once, with its box confirmed, and nothing is prefilled but the position and side.</li>
           <li><b>Prefill</b>: what the data hold is filled in and tagged. A pale blue field tagged «Register», «Data sheet» or
             «Box» comes from the data. A pale amber field tagged «Suggestion», «OCR» or «Image search» is derived: shape, colour
             and lettering from the description, the position from where the box sits, the exhibition or seller shared with the
@@ -623,8 +636,10 @@
             Green, Blue, Blue ink, Red ink. «Invert» combines with any of them. Filters with a parameter get a slider
             (double-click resets it); ⤢ enlarges the picture; each way explains itself in one line. Where SKKG has a detail
             photo of the label, «Picture» switches between the back photo and that photo.</li>
-          <li><b>Confirm or redraw the box</b>: «✓ Confirm box» when it sits on the label. «✎ Redraw box» opens the whole back:
-            drag a new box (red: the box from the data, green: yours). It is kept in pixels of the original image and counts as
+          <li><b>Confirm or redraw the box</b>: «✓ Confirm box» when it sits on the label. «✎ Redraw box», or a click on the
+            small back, opens the whole back zoomable on the box (scroll or pinch to zoom; Space + drag or «Move picture» moves
+            it): fit the box by its corners and edges, or drag a new one (coloured: the box from the data, green: yours);
+            «✓ The box fits» confirms it as it is. It is kept in pixels of the original image and counts as
             confirmed; «Restore the box from the data» undoes it. The picture, the back and the viewer link follow the new box.</li>
           <li><b>Copy row</b> copies the register row, tab-separated, to paste into column F of the Excel register. «Reset»
             restores the values from the data.</li>
@@ -657,7 +672,9 @@
           (white, dashed), and the data sheet's description.</dd>
         <dt>How to use</dt>
         <dd>Decide with ✓ Correct (<kbd>Y</kbd>), ✗ Wrong (<kbd>N</kbd>) or ? Unsure (<kbd>U</kbd>). If the mark is visible
-          but the box is wrong or too loose, ✎ Redraw box (<kbd>R</kbd>) and drag the right one (green). <kbd>←</kbd>
+          but the box is wrong or too loose, ✎ Redraw box (<kbd>R</kbd>): the whole back opens, zoomable, with the box ready to
+          fit by its corners and edges, or drag the right one (green). The picture of the proposal zooms too: + and − in
+          its corner, a double-click, a pinch or Ctrl/⌘ + scroll; drag to move it. <kbd>←</kbd>
           <kbd>→</kbd> move between proposals; after a decision the next open one follows. Filter by status (not yet reviewed,
           all, correct, redrawn, wrong, unsure), by type (labels, stamps, inscriptions, other) or with the search. Enter your
           initials, then «Download my decisions (CSV)» (<code>model_box_review_&lt;initials&gt;_&lt;date&gt;.csv</code>) and
@@ -678,10 +695,11 @@
           of a label, stamp or inscription. Each comes with its best-matching window, cut out by the IIIF server, its rank and
           score, «Show on the back» (box viewer) and «SKKG record».</dd>
         <dt>How to use</dt>
-        <dd>«📷 Take photo» or «Choose image…», drag a box around the label if you want to search only that part, then
+        <dd>«📷 Take photo» or «Choose image…», drag a box around the label if you want to search only that part («🔍 Zoom in
+          to crop» to draw it exactly), then
           «Search». The first search downloads the image model (about 174&nbsp;MB, then cached) and the search index (about
           8&nbsp;MB); after that a search takes a few seconds. To help check the hits: ✓ Same, ✗ Not it, ?, and «Redraw box» to
-          draw the exact box on that back (also when the label sits elsewhere on it). With your initials and a note on what you
+          draw the exact box on that back, zoomable (also when the label sits elsewhere on it). With your initials and a note on what you
           photographed, «Download my decisions (CSV)» (<code>label_search_review_&lt;initials&gt;_&lt;date&gt;.csv</code>)
           for the team folder.</dd>
         <dt>Watch for</dt>
@@ -1100,6 +1118,51 @@
     return `<svg class="back" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Back of the work with the located labels"><image href="${esc(full(iiif, size))}" width="${W}" height="${H}"/>${rects}</svg>`;
   }
 
+  // ---------------------------------------------------------------- A missing label, drawn on the back
+  // A label on a back that no record has a box for: «＋ Draw a missing label» opens the back zoomable (boxzoom.js) with
+  // the boxes already on it; the box drawn there opens the entry form as a new label, key «new:<IIIF id>:<x>,<y>,<w>,<h>».
+  // The form keeps it in this browser like any other entry (and in its CSV); until it is merged into the data, the
+  // site finds such labels only among this browser's form entries.
+  const FORM_STORE = 'pp-label-form-v1';  // the entry form's saved entries (form.html)
+  const iiifId = iiif => String(iiif).split('/').pop();
+  const newKey = (iiif, b) => `new:${iiifId(iiif)}:${b.map(Math.round).join(',')}`;
+  function drawnHere(iiif) {  // the new labels drawn in this browser on this back, newest first: [{ key, box, name }]
+    let all = {};
+    try { all = JSON.parse(localStorage.getItem(FORM_STORE) || '{}') || {}; } catch { /* nothing saved, or no storage */ }
+    const pre = `new:${iiifId(iiif)}:`;
+    return Object.entries(all).filter(([k, en]) => k.startsWith(pre) && en && typeof en === 'object')
+      .sort((a, b) => String(b[1].t || '').localeCompare(String(a[1].t || '')))
+      .map(([k, en]) => {
+        const v = en.v || {}, drawn = en.b && Array.isArray(en.b.drawn) ? en.b.drawn : null;
+        const box = drawn || k.slice(pre.length).split(',').map(Number);
+        return { key: k, box, name: [v.person, v.trans, v.evbez].find(x => x && String(x).trim()) || 'New label' };
+      }).filter(m => m.box.length === 4 && m.box.every(Number.isFinite));
+  }
+  function mineLine(iiif) {  // under the button: the new labels already drawn on this back, each opening its entry
+    const m = drawnHere(iiif);
+    return m.length ? `<span class="minel">Drawn in this browser: ${m.slice(0, 4).map(x => `<a href="${esc(formUrl(x.key))}">${esc(x.name)}</a>`).join(', ')}${m.length > 4 ? ` and ${m.length - 4} more` : ''}</span>` : '';
+  }
+  const drawButton = (oid, iiif, text = '＋ Draw a missing label') => `<button type="button" class="drawnew" data-draw="${esc(oid)}" data-iiif="${esc(iiif)}" title="A label on this back has no box yet: draw it (zoomable), then record it in the entry form">${esc(text)}</button>`;
+  function drawMissing(oid, iiif) {
+    const w = WORK[oid], dim = DIM[iiif];
+    if (!w || !dim || !window.ppBoxZoom) return;
+    const spots = spotsOf(w.labels.filter(l => l.iiif === iiif));
+    const shapes = spots.map(s => ({ box: s.box, color: '#3d9bff', dashed: !s.lead.ok,
+      title: `${s.lead.t} (${SRC[s.lead.src]}${s.lead.ok ? '' : ', ' + sure(s.lead)}${s.labels.length > 1 ? `, +${records(s.labels.length - 1)}` : ''})` }));
+    D.hits.filter(h => h.w === oid && h.iiif === iiif && !spots.some(s => overlap(s.box, h.box) >= SAME_SPOT))
+      .forEach(h => shapes.push({ box: h.box, color: '#3d9bff', dashed: true, title: `Same label as on Inv. ${WORK[LAB[h.q].w].inv} (found again)` }));
+    const mine = drawnHere(iiif);
+    mine.forEach(m => shapes.push({ box: m.box, color: '#30d158', dashed: true, title: `${m.name} (drawn in this browser)` }));
+    ppBoxZoom.edit({
+      iiif, size: dim, title: `Inv. ${w.inv}: draw the missing label`,
+      legend: `<b style="color:#3d9bff">Blue</b>: boxes already on this back (point at one for its label; dashed: not reliable yet)${
+        mine.length ? ' · <b style="color:#30d158">dashed green</b>: drawn earlier in this browser' : ''} · <b style="color:#30d158">green</b>: the new box.`,
+      shapes, box: null, empty: 'Drag a box around the label that has no box yet; zoom in first if it is small.',
+      save: 'Record this label →', ready: b => !!b,
+      onSave: b => { location.href = formUrl(newKey(iiif, b)); },
+    });
+  }
+
   // ---------------------------------------------------------------- Labels
   // «Show» is one scale for how sure a box is: 'reliable' (only reliable boxes), 'located' (the default: reliable and to
   // check), 'all' (with the unverified leads). It lives in state.lok and state.lmodel, which other code reads.
@@ -1246,7 +1309,8 @@
       <a href="${esc(view)}" target="_blank" rel="noopener">Whole back, zoomable</a><a href="${esc(`${l.iiif}/${l.box.join(',')}/max/0/default.jpg`)}" target="_blank" rel="noopener" title="The label in full resolution, from SKKG's IIIF image server">Full resolution</a>${shortLink(feedback({ where: 'Label', inv: w.inv, title: w.title, key: l.key, iiif: l.iiif, box: l.box, kind: 'A box is wrong or missing' }, 'Report a problem with this box'), 'Report a problem')}</div>`;
     openDialog(l.t, `<div class="two ldlg"><div><div class="big lcut"><a href="${esc(view)}" target="_blank" rel="noopener" title="Whole back, zoomable"><img alt="${esc(l.t)}" src="${esc(region(l.iiif, l.box, 900))}"></a></div>
       ${l.photo ? `<div class="lphoto"><h4>SKKG's photograph of this label</h4><div class="big"><img alt="Detail photograph" loading="lazy" src="${esc(full(l.photo, 800))}"></div></div>` : ''}
-      <div class="lback"><h4>Where it sits on the back</h4>${backWithBoxes(l.iiif, [{ box: l.box, cls: kind(l) + ' sel', key: l.key, title: 'Click to open the entry form for this label' }], 700)}</div></div>
+      <div class="lback"><h4>Where it sits on the back</h4>${backWithBoxes(l.iiif, [{ box: l.box, cls: kind(l) + ' sel', key: l.key, title: 'Click to open the entry form for this label' }], 700)}
+        <div class="links">${drawButton(l.w, l.iiif, '＋ Draw a missing label on this back')}${mineLine(l.iiif)}</div></div></div>
       <div>${acts}<dl>${facts.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join('')}</dl></div></div>
       ${hits.length ? `<h4>The same label on ${hits.length} other work${hits.length > 1 ? 's' : ''}</h4><div class="row">${hits.map(h => hitCard(h)).join('')}</div>` : ''}
       ${others.length ? `<h4>Other marks on this work</h4><div class="row">${others.slice(0, 20).map(s => labelCard(s.lead, s.labels.length - 1)).join('')}</div>` : ''}`);
@@ -1264,9 +1328,10 @@
     const pieces = piecesOf(oid, w);  // one per spot: the boxes on the backs, the pieces of the exploded back and the cards
     const backs = w.backs.map(([iiif]) => {
       const here = pieces.filter(p => p.iiif === iiif), mine = here.filter(p => p.label);
-      const boxes = here.map(p => ({ box: p.box, cls: p.label ? kind(p.label) : 'hit', key: p.key, title: `${spotTitle(p)} — click to open the entry form` }));
+      const boxes = here.map(p => ({ box: p.box, cls: p.label ? kind(p.label) : 'hit', key: p.key, title: `${spotTitle(p)} — click to open the entry form` }))
+        .concat(drawnHere(iiif).map(m => ({ box: m.box, cls: 'mine', key: m.key, title: `${m.name}: drawn in this browser, not in the data yet — click to open it in the entry form` })));
       const all = viewer(iiif, mine.map(p => p.box), workTitle(w), 'all located labels and marks', '762a83', false, mine.map(p => p.key), oid);
-      return `${backWithBoxes(iiif, boxes, 900)}<div class="links"><a href="${esc(all)}" target="_blank" rel="noopener">Open zoomable with all boxes</a></div>`;
+      return `${backWithBoxes(iiif, boxes, 900)}<div class="links"><a href="${esc(all)}" target="_blank" rel="noopener">Open zoomable with all boxes</a>${drawButton(oid, iiif)}${mineLine(iiif)}</div>`;
     }).join('<br>');
     const facts = [['Object type', esc(w.type)], ['Collection', `<a href="${esc(w.url)}" target="_blank" rel="noopener">${esc(w.url)}</a>`],
       w.acq && ['Acquired by SKKG', esc(w.acq)], w.actors.length && ['Provenance actors', esc(w.actors.join(', '))],
@@ -1379,7 +1444,8 @@
       ${f0 ? `<p class="credit xp-credit">${frontCaption(w, 0)}</p>${frontStrip(w, 'data-xf', ' xp-fstrip')}` : ''}
       <div class="xp-ctl">${f0 ? '<button type="button" class="xp-turn" aria-pressed="false">Turn over</button>' : ''}<label>Explode <input type="range" class="xp-range" min="0" max="100" value="0" aria-label="Lift the labels off the back"></label>
       ${backs.length > 1 ? `<div class="seg xp-backs" role="group" aria-label="Photograph of the back">${backs.map((b, i) => `<button type="button" data-xb="${esc(b)}" aria-pressed="false">Back ${i + 1}</button>`).join('')}</div>` : ''}
-      ${w.labels.some(unverified) ? `<label class="tg"><input type="checkbox" class="xp-unv"${state.lmodel ? ' checked' : ''}> unverified boxes</label>` : ''}</div>
+      ${w.labels.some(unverified) ? `<label class="tg"><input type="checkbox" class="xp-unv"${state.lmodel ? ' checked' : ''}> unverified boxes</label>` : ''}
+      <button type="button" class="drawnew xp-draw" title="A label on this back has no box yet: draw it (zoomable), then record it in the entry form">＋ Draw a missing label</button><span class="xp-mine"></span></div>
       <p class="xp-legend"><span><i></i>strong</span><span><i class="w2"></i>medium</span><span><i class="w1"></i>weak link</span><span>the number on a label: its events</span></p>
       <div class="xp-detail" aria-live="polite"></div></div>${timeline}</section>`;
   }
@@ -1416,7 +1482,8 @@
     const count = b => pieces.filter(p => p.iiif === b).length;
     const atP = opts.at ? pieces.find(p => p.key === opts.at || (p.labels || []).some(l => l.key === opts.at)
       || (p.hits || []).some(h => h.key === opts.at)) : null;  // the box the visitor came for (a label or a hit; also inside a spot)
-    const atBack = atP ? atP.iiif : opts.at ? (BYKEY[opts.at] || D.hits.find(h => h.key === opts.at && h.w === oid) || {}).iiif : null;
+    const newAt = opts.at && opts.at.startsWith('new:') ? (w.backs.find(b => iiifId(b[0]) === opts.at.split(':')[1]) || [])[0] : null;  // a label drawn in this browser
+    const atBack = atP ? atP.iiif : opts.at ? (BYKEY[opts.at] || D.hits.find(h => h.key === opts.at && h.w === oid) || {}).iiif || newAt : null;
     const S = { back: atBack && w.backs.some(b => b[0] === atBack) ? atBack : w.backs.map(b => b[0]).sort((a, b) => count(b) - count(a))[0],
                 t: 0, piece: null, event: null, raf: 0, g: null };
     const linkOf = (p, i) => p.links.find(l => l[0] === i);
@@ -1578,6 +1645,8 @@
       S.back = b;
       img.src = full(b, 900);
       root.querySelectorAll('[data-xb]').forEach(x => x.setAttribute('aria-pressed', x.dataset.xb === b));
+      const mine = root.querySelector('.xp-mine');  // beside «＋ Draw a missing label»: what was drawn on this back here
+      if (mine) mine.innerHTML = mineLine(b);
       layout();
     }
     function marks() {
@@ -1662,6 +1731,7 @@
       const t = e.target.closest('.xp-turn, .xp-front'), f = e.target.closest('[data-xf]');
       if (t) { turn(!view.front).then(() => { if (!view.front && !view.dead && S.t < 0.5) animate(1); }); return; }  // turned over: the labels lift off
       if (f) { pickFace(+f.dataset.xf); return; }
+      if (e.target.closest('.xp-draw')) { drawMissing(oid, S.back); return; }  // on the photograph of the back shown now
       const p = e.target.closest('[data-xp]'), x = e.target.closest('[data-xe]'), b = e.target.closest('[data-xb]');
       if (p) selectPiece(+p.dataset.xp);
       else if (x) selectEvent(+x.dataset.xe);
@@ -1744,6 +1814,8 @@
   document.addEventListener('click', e => {
     const fi = e.target.closest('[data-fi]');
     if (fi) { e.preventDefault(); pickFront(fi); return; }  // another photograph of the front
+    const dr = e.target.closest('[data-draw]');
+    if (dr) { e.preventDefault(); drawMissing(dr.dataset.draw, dr.dataset.iiif); return; }  // «＋ Draw a missing label»
     const box = e.target.closest('.ov[data-key]');
     if (box) { e.preventDefault(); location.href = formUrl(box.dataset.key); return; }  // a box opens the entry form
     const a = e.target.closest('a[href^="#label="], a[href^="#work="]');  // links to a label or a work open it on top, too

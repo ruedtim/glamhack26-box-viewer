@@ -272,7 +272,8 @@
     });
     document.body.appendChild(a);
     const home = () => {  // into the open modal dialog (the rest of the page is inert then), else the body; move only on change
-      const target = [...document.querySelectorAll('dialog[open]:not(.ppfb-dialog)')].pop() || document.body;
+      // (not into the box editor of boxzoom.js: it fills the window, and its buttons sit where this one would)
+      const target = [...document.querySelectorAll('dialog[open]:not(.ppfb-dialog):not(.ppbz-dlg)')].pop() || document.body;
       if (a.parentNode !== target) target.appendChild(a);
     };
     new MutationObserver(home).observe(document.body, { subtree: true, childList: true, attributes: true, attributeFilter: ['open'] });

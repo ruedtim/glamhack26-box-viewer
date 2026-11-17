@@ -70,15 +70,10 @@
   #review .row + .hint { margin: 8px 0 0; }
   #review input[type=text] { font: inherit; font-size: 14px; padding: 6px 8px; border: 1px solid var(--line); border-radius: 6px; background: var(--bg); color: var(--fg); }
   #review button, #review label.btn { padding: 7px 14px; }
-  dialog { border: 1px solid var(--line); border-radius: 10px; background: var(--card); color: var(--fg); padding: 12px; width: min(96vw, 1000px); }
-  dialog::backdrop { background: rgba(0,0,0,.6); }
-  .ed-wrap { position: relative; display: inline-block; max-width: 100%; touch-action: none; user-select: none; -webkit-user-select: none; overflow: hidden; }
-  .ed-wrap img { display: block; max-width: 100%; max-height: 70vh; }
-  .ed-box { position: absolute; border: 2px solid var(--sel); box-shadow: 0 0 0 1px rgba(0,0,0,.6); pointer-events: none; }
-  .ed-box.old { border: 2px dashed #fff; box-shadow: 0 0 0 1px #000; }
 </style>
 <script src="../feedback.js"></script>  <!-- «Feedback» button: prefilled GitHub issue -->
 <script src="../nav.js"></script>  <!-- the site header -->
+<script src="../boxzoom.js"></script>  <!-- zoomable box editor: redraw a hit's box, crop the photo -->
 </head>
 <body>
 <main>
@@ -123,9 +118,11 @@
 
   <section id="stage">
     <div class="crop-wrap" id="cropWrap"><img id="preview" alt="Your image"><div id="sel"></div></div>
-    <p class="hint">Optional: drag a box around the label to search only that part. Tap without dragging to reset.</p>
+    <p class="hint">Optional: drag a box around the label to search only that part, or zoom in to draw it exactly. Tap
+      without dragging to reset.</p>
     <div class="buttons">
       <button id="go" class="primary">Search</button>
+      <button id="zoomcrop" title="Your photo, zoomable: draw the box around the label exactly">🔍 Zoom in to crop</button>
       <button id="reset">Reset crop</button>
     </div>
   </section>
@@ -134,7 +131,7 @@
   <p id="status" aria-live="polite"></p>
   <section id="review" class="nohits">
     <p class="hint hits-only">Help check the hits: mark a back as <b>same label</b>, <b>not it</b> or <b>unsure</b>;
-      <b>Redraw box</b> draws the exact box around the label, also when it sits elsewhere on that back.</p>
+      <b>Redraw box</b> draws the exact box around the label on that back, zoomable, also when it sits elsewhere on it.</p>
     <div class="row">
       <label class="tag">Your initials <input type="text" id="who" size="5" maxlength="12" autocomplete="off"></label>
       <label class="tag hits-only">What did you photograph? <input type="text" id="qnote" size="28" maxlength="120"
@@ -147,16 +144,6 @@
   </section>
   <div id="results"></div>
 
-  <dialog id="editor">
-    <p style="margin:0 0 8px"><b id="ed-title"></b> <span class="tag">Drag a box around the label. The dashed box is the
-      current one.</span></p>
-    <div class="ed-wrap" id="ed-wrap"><img id="ed-img" alt="Whole back"><div class="ed-box old" id="ed-old"></div>
-      <div class="ed-box" id="ed-new" hidden></div></div>
-    <div class="buttons" style="margin:10px 0 0">
-      <button class="primary" id="ed-save" disabled>Save box (same label)</button>
-      <button id="ed-cancel">Cancel</button>
-    </div>
-  </dialog>
 </main>
 
 <script type="module">
@@ -164,7 +151,7 @@ import { loadIndex, loadModel, decodeImage, squareAndResize, embed, search } fro
 
 const $ = (id) => document.getElementById(id);
 const status = (t) => ($("status").textContent = t);
-let file = null, crop = null, natural = null;
+let file = null, crop = null, natural = null, upright = null;  // upright: the photo turned as its EXIF says (for the zoomable crop)
 let indexP = null, modelP = null;
 
 const getIndex = () => (indexP ??= loadIndex("data/"));
@@ -178,6 +165,7 @@ function pick(e) {
   const f = e.target.files[0];
   if (!f) return;
   file = f; crop = null;
+  if (upright) { URL.revokeObjectURL(upright); upright = null; }
   const url = URL.createObjectURL(f);
   const img = $("preview");
   img.onload = async () => {
@@ -221,6 +209,34 @@ wrap.addEventListener("pointerup", (e) => {
   start = null;
 });
 $("reset").onclick = () => { crop = null; sel.style.display = "none"; };
+// the crop, zoomable (../boxzoom.js): the photo as decodeImage sees it (turned as its EXIF says), the box in its pixels
+function showCrop() {  // the box of `crop` on the preview
+  const img = $("preview"), f = img.clientWidth / natural.w;
+  Object.assign(sel.style, { display: "block", left: `${crop.x * f}px`, top: `${crop.y * f}px`, width: `${crop.w * f}px`, height: `${crop.h * f}px` });
+}
+async function uprightUrl() {
+  if (upright) return upright;
+  const bmp = await createImageBitmap(file, { imageOrientation: "from-image" });
+  const c = document.createElement("canvas");
+  c.width = bmp.width; c.height = bmp.height;
+  c.getContext("2d").drawImage(bmp, 0, 0);
+  bmp.close?.();
+  const blob = await new Promise((res) => c.toBlob(res, "image/jpeg", 0.92));
+  upright = URL.createObjectURL(blob);
+  return upright;
+}
+$("zoomcrop").onclick = async () => {
+  if (!file || !natural || !window.ppBoxZoom) return;
+  let url;
+  try { url = await uprightUrl(); } catch (e) { status("The photo could not be prepared for zooming."); return; }
+  ppBoxZoom.edit({
+    img: url, size: [natural.w, natural.h], title: "Your photo: the part to search",
+    legend: '<b style="color:#30d158">Green</b>: the part that is searched (the rest of the photo is left out).',
+    box: crop ? [crop.x, crop.y, crop.w, crop.h] : null, save: "Use this part", ready: (b) => !!b,
+    empty: "Drag a box around the label.",
+    onSave: (b) => { crop = { x: b[0], y: b[1], w: b[2], h: b[3] }; showCrop(); },
+  });
+};
 
 $("go").onclick = async () => {
   if (!file) return;
@@ -316,37 +332,19 @@ function show(hits) {
   }
 }
 
-// box editor: the whole back as one small IIIF rendering, drag a new box, saved in original pixels
-let edHit = null, edBox = null, edStart = null;
-const edWrap = $("ed-wrap"), edImg = $("ed-img");
-function place(el, r) {
-  const f = edImg.clientWidth / edHit.info.width;
-  Object.assign(el.style, { left: `${r.x * f}px`, top: `${r.y * f}px`, width: `${r.w * f}px`, height: `${r.h * f}px` });
-}
+// box editor: the whole back, zoomable (../boxzoom.js), opened on the current box, which can be fitted by its corners and
+// edges or drawn anew; saved in pixels of the original image
 function openEditor(h, current) {
-  edHit = h; edBox = null;
-  $("ed-title").textContent = `Inv. no. ${h.info.inv_nr}`;
-  $("ed-new").hidden = true; $("ed-save").disabled = true;
-  edImg.onload = () => place($("ed-old"), current);
-  edImg.src = `${h.info.iiif_base}/full/!1000,1000/0/default.jpg`;
-  if (edImg.complete && edImg.naturalWidth) place($("ed-old"), current);
-  $("editor").showModal();
+  if (!window.ppBoxZoom) return;
+  const cur = [current.x, current.y, current.w, current.h];
+  ppBoxZoom.edit({
+    iiif: h.info.iiif_base, size: [h.info.width, h.info.height], title: `Inv. no. ${h.info.inv_nr}`,
+    legend: '<b>Dashed yellow</b>: the current box · <b style="color:#30d158">green</b>: your box. Saving it marks the back as «same label».',
+    shapes: [{ box: cur, color: "#ffd60a", dashed: true, title: "The current box" }],
+    box: cur, save: "Save box (same label)", ready: (b, changed) => !!b && changed,
+    onSave: (b) => decide(h, "same", { x: b[0], y: b[1], w: b[2], h: b[3] }),
+  });
 }
-const edLocal = (e) => { const r = edImg.getBoundingClientRect();
-  return { x: Math.min(Math.max(e.clientX - r.left, 0), r.width), y: Math.min(Math.max(e.clientY - r.top, 0), r.height) }; };
-edWrap.addEventListener("pointerdown", (e) => { edStart = edLocal(e); edWrap.setPointerCapture(e.pointerId); e.preventDefault(); });
-edWrap.addEventListener("pointermove", (e) => {
-  if (!edStart) return;
-  const p = edLocal(e), f = edHit.info.width / edImg.clientWidth;
-  const x0 = Math.min(edStart.x, p.x), y0 = Math.min(edStart.y, p.y), w = Math.abs(p.x - edStart.x), h = Math.abs(p.y - edStart.y);
-  if (w < 4 || h < 4) return;
-  edBox = { x: Math.round(x0 * f), y: Math.round(y0 * f), w: Math.round(w * f), h: Math.round(h * f) };
-  edBox.w = Math.min(edBox.w, edHit.info.width - edBox.x); edBox.h = Math.min(edBox.h, edHit.info.height - edBox.y);
-  $("ed-new").hidden = false; place($("ed-new"), edBox); $("ed-save").disabled = false;
-});
-edWrap.addEventListener("pointerup", () => { edStart = null; });
-$("ed-cancel").onclick = () => $("editor").close();
-$("ed-save").onclick = () => { if (edBox) decide(edHit, "same", edBox); $("editor").close(); };
 
 // CSV export / import (semicolon, UTF-8 with BOM, like the project's other CSVs)
 const csvCell = (v) => { v = String(v ?? ""); return /[;"\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; };

@@ -28,6 +28,7 @@
 -->
 <script src="feedback.js"></script>
 <script src="nav.js"></script>
+<script src="boxzoom.js"></script>
 <style>
 /* colours and type of the results website (index.html): --bg, --card (its --panel), --ink, --mute, --line, --blue (its --accent);
    --edge is the border of the form controls, a step darker than --line so that 43 of them stay easy to tell apart */
@@ -222,13 +223,6 @@ button.link{border:0;background:none;padding:0;font:inherit;color:var(--blue);te
 .known[open]>summary .check{display:none}
 .kmore{margin-top:4px}
 .kmore>summary{cursor:pointer;color:var(--blue)}
-dialog#ed{border:1px solid var(--line);border-radius:10px;padding:14px;background:var(--card);color:var(--ink);max-width:96vw}
-dialog#ed::backdrop{background:rgba(0,0,0,.5)}
-#edwrap{position:relative;display:inline-block;touch-action:none;user-select:none;-webkit-user-select:none;cursor:crosshair;margin:10px 0}
-#edimg{display:block;max-width:min(1000px,90vw);max-height:70vh;background:var(--bg)}
-.edbox{position:absolute;pointer-events:none;box-sizing:border-box}
-.edbox.old{border:2px solid #ff3b30}
-.edbox.new{border:3px solid #30d158;box-shadow:0 0 0 1px rgba(0,0,0,.6)}
 .known dl{display:grid;grid-template-columns:max-content minmax(0,1fr);gap:3px 12px;margin:4px 0 0}
 .known dt{color:var(--mute)}.known dd{margin:0;overflow-wrap:anywhere}
 .known ul{margin:0;padding-left:18px}.known li{margin:2px 0}
@@ -266,6 +260,8 @@ dialog#ed::backdrop{background:rgba(0,0,0,.5)}
         <li>What the data already know is prefilled and marked: add to it or correct it. Every change is saved in this browser.</li>
         <li>The preview (beside the fields; on a phone the bar at the bottom) shows the row as it will go into the register. «Copy row» copies it for pasting into column F of the Excel register.</li>
         <li>The register is German, so the terms you pick (shape, colour, support, event, evidence) and the column headings stay German; the English glosses are for orientation.</li>
+        <li>«✎ Redraw box» and a click on the small back open the whole back, zoomable (scroll or pinch): drag the corners or edges of the box to fit it, or draw a new one; «✓ The box fits» confirms it as it is.</li>
+        <li>A label that has no box yet can be drawn on the results website («＋ Draw a missing label» under a back); it opens here as a new label.</li>
         <li>The work named at the top (columns A to E) is not edited here.</li>
         <li>Names appear as the records and labels give them; addresses are masked («[address]»).</li>
       </ul>
@@ -279,8 +275,8 @@ dialog#ed::backdrop{background:rgba(0,0,0,.5)}
 <div class="work" id="work">
   <span class="ph" id="ph">Label photo</span>
   <div class="kthumb" id="kthumb" hidden>
-    <a class="kback" id="kback" target="_blank" rel="noopener" title="Whole back with the box, zoomable"><svg id="ksvg" role="img" aria-label="Back of the work with the box"></svg></a>
-    <div class="hint">Whole back; click to zoom.</div>
+    <a class="kback" id="kback" target="_blank" rel="noopener" title="Whole back with the box: click to zoom in and check or change the box"><svg id="ksvg" role="img" aria-label="Back of the work with the box"></svg></a>
+    <div class="hint">Whole back; click to zoom in and check the box.</div>
     <div class="kpic" id="kpic" hidden></div>
   </div>
   <figure class="lv" id="lv" hidden>
@@ -435,17 +431,6 @@ dialog#ed::backdrop{background:rgba(0,0,0,.5)}
 </section>
 </div>
 
-<dialog id="ed" aria-labelledby="edtitle">
-  <b id="edtitle">Draw a box around the label</b>
-  <div class="hint">Drag on the image. Red: the box from the data · green: the new box. It is saved in pixels of the original image.</div>
-  <div><div id="edwrap"><img id="edimg" alt="The whole back" draggable="false"><div class="edbox old" id="edold"></div><div class="edbox new" id="ednew" hidden></div></div></div>
-  <div class="btns" style="margin-top:0">
-    <button class="main" id="edsave" type="button" disabled>Save box</button>
-    <button class="alt" id="edcancel" type="button">Cancel</button>
-    <span class="hint" id="edinfo"></span>
-  </div>
-</dialog>
-
 <script>
 (() => {
 'use strict';
@@ -468,7 +453,7 @@ const key = (new URLSearchParams(location.search).get('label') || '').trim();
 let D = null, L = null, P = { v: {}, s: {}, notes: {} }, tags = [], undo = null;
 let BX = { ok: false, drawn: null };  // the box: confirmed? redrawn ([x, y, w, h] in pixels of the original image)?
 const curBox = () => BX.drawn || (L && L.box);
-const WORK = {}, DIM = {}, LAB_ID = {}, LAB_KEY = {};
+const WORK = {}, DIM = {}, LAB_ID = {}, LAB_KEY = {}, BACK_ID = {};  // BACK_ID: IIIF id of a back photo -> [IIIF address, object id]
 
 // ---------------------------------------------------------------- Fields
 const FIELDS = { form: 'select', farbe: 'select', tech: 'checks', trans: 'text', pos: 'radio', traeger: 'select', seite: 'radio',
@@ -575,9 +560,10 @@ $('#tagin').addEventListener('keydown', e => { if (e.key === 'Enter' || e.key ==
 $('#tagin').addEventListener('blur', addTag);
 
 // ---------------------------------------------------------------- What the data know
-const SRC_DE = { register: 'Label register', photo: 'Detail photo', 'data sheet': 'Provenance data sheet', hit: 'Image search (found again)', detected: 'Label detector (newly found)' };  // display names of the sources
+const SRC_DE = { register: 'Label register', photo: 'Detail photo', 'data sheet': 'Provenance data sheet', hit: 'Image search (found again)', detected: 'Label detector (newly found)',
+  new: 'Drawn by hand (new label)' };  // display names of the sources
 const TYPE_DE = { label: 'label', stamp: 'stamp', inscription: 'inscription', seal: 'seal', other: 'other mark' };  // display names of the mark types
-const COLOUR = { register: '3d9bff', photo: 'ff3b30', 'data sheet': 'bf5af2', hit: '1a7f4b', detected: '64d2ff' };
+const COLOUR = { register: '3d9bff', photo: 'ff3b30', 'data sheet': 'bf5af2', hit: '1a7f4b', detected: '64d2ff', new: '30d158' };
 const weak = l => l.how === 'vision-language model' || l.src === 'hit' || l.st === 'new label without text';  // dashed box
 const EV_DE = { exhibition: 'Ausstellung', auction: 'Auktion', dealer: 'Ankauf / Verkauf' };  // kind of label according to the detector -> the register's event (German vocabulary)
 const typeDe = t => (t || '').split(', ').map(x => TYPE_DE[x] || x).join(', ');
@@ -590,6 +576,7 @@ const pointsDe = n => `${n} übereinstimmende Bildpunkte`;  // for the comment i
 const invOf = w => (WORK[w] || {}).inv || '?';
 
 function labelTitle(l) {
+  if (l.src === 'new') return 'New label, drawn by hand';
   if (l.src === 'hit') return `Same label as on Inv. ${invOf(LAB_ID[l.hit.q].w)}`;
   if (l.src === 'photo' && (!l.t || l.t === l.sub)) return l.sub === 'Mark photo' ? 'Mark (detail photo)' : 'Label (detail photo)';
   if (l.src === 'data sheet' && !l.q) return cap(typeDe(l.type)) + (l.pos ? ', ' + l.pos : '');
@@ -597,6 +584,7 @@ function labelTitle(l) {
   return l.t;
 }
 function howShort(l) {
+  if (l.src === 'new') return 'drawn by hand on the back photo';
   if (l.src === 'register') return l.st === 'retrieval only' ? 'only approximate: the window most similar to the picture in the label register'
     : `image matching with the picture in the label register, ${points(l.n)}`;
   if (l.src === 'photo') return `image matching with the detail photo, ${points(l.n)}`;
@@ -613,6 +601,7 @@ function howShort(l) {
 }
 function howSentence(l) {  // the comment for column L, how the box was found: German, like everything the form writes into the register
   const check = l.ok ? '' : ', unsicher, bitte prüfen';
+  if (l.src === 'new') return 'Box: von Hand auf dem Rückseitenfoto eingezeichnet (Provenance Pursuit); die Etikette steht in keinem Register und keinem Datenblatt.';
   if (l.src === 'register') return l.st === 'retrieval only'
     ? 'Box nur ungefähr: ähnlichster Ausschnitt des Rückseitenfotos zum Bild im Etikettenverzeichnis, bitte prüfen.'
     : `Box: Bild aus dem Etikettenverzeichnis auf dem Rückseitenfoto gefunden (Bildabgleich, ${pointsDe(l.n)})${check}.`;
@@ -652,7 +641,8 @@ function viewerUrl(l, drawn) {  // with a redrawn box: that one green, the box f
   if (w.url) p.set('page', w.url);
   return 'viewer.html?' + p;
 }
-const siteUrl = l => l.src === 'hit' ? './#work=' + encodeURIComponent(l.w) : './#label=' + encodeURIComponent(l.key);
+const siteUrl = l => l.src === 'hit' ? './#work=' + encodeURIComponent(l.w) : l.src === 'new' ? './#work=' + encodeURIComponent(l.w) + '&at=' + encodeURIComponent(l.key)
+  : './#label=' + encodeURIComponent(l.key);  // a new label is not on the site: its work opens on that back
 // the work's front (data.json works[].front, build_site.py): the photograph SKKG publishes, credited as SKKG gives its
 // rights («© holder ·» where SKKG names one, then «SKKG» and the licence); click opens it zoomable in the viewer
 const LICENCE = { 'CC BY 4.0': 'https://creativecommons.org/licenses/by/4.0/', 'CC0 1.0': 'https://creativecommons.org/publicdomain/zero/1.0/' };
@@ -1222,7 +1212,13 @@ function find(k) {
   if (!k) return null;
   if (LAB_KEY[k]) return LAB_KEY[k];
   const h = k.startsWith('box:') && D.hits.find(x => x.key === k);
-  return h ? { key: k, src: 'hit', w: h.w, iiif: h.iiif, box: h.box, n: h.n, ok: false, how: 'found again', hit: h } : null;
+  if (h) return { key: k, src: 'hit', w: h.w, iiif: h.iiif, box: h.box, n: h.n, ok: false, how: 'found again', hit: h };
+  // a label drawn on the results website («＋ Draw a missing label»): new:<IIIF id of the back photo>:<x>,<y>,<w>,<h>
+  const m = k.match(/^new:([\w.-]+):(\d+),(\d+),(\d+),(\d+)$/), back = m && BACK_ID[m[1]];
+  if (!back) return null;
+  const box = m.slice(2).map(Number), d = DIM[back[0]];
+  if (!box[2] || !box[3] || (d && (box[0] + box[2] > d[0] || box[1] + box[3] > d[1]))) return null;
+  return { key: k, src: 'new', w: back[1], iiif: back[0], box, ok: true, how: 'drawn by hand' };
 }
 function header() {
   showFront(L && WORK[L.w]);
@@ -1240,7 +1236,7 @@ function header() {
   const w = WORK[L.w], view = viewerUrl(L, BX.drawn), b = curBox();
   document.title = `Record a label · Inv. ${w.inv} – Provenance Pursuit`;
   $('#wt').textContent = `Inv. ${w.inv} · ${w.title}`;
-  $('#ws').textContent = `${w.type} · ${SRC_DE[L.src]}: ${labelTitle(L)}`;
+  $('#ws').textContent = L.src === 'new' ? `${w.type} · a new label, drawn by hand on the back photo` : `${w.type} · ${SRC_DE[L.src]}: ${labelTitle(L)}`;
   seeShow(b);  // the label picture follows the current box
   $('#wl').innerHTML = [`<a href="${esc(view)}" target="_blank" rel="noopener">Whole back (zoomable)</a>`,
     `<a href="${esc(`${L.iiif}/${b.join(',')}/max/0/default.jpg`)}" target="_blank" rel="noopener">Label in full resolution (IIIF)</a>`,
@@ -1269,7 +1265,8 @@ function known() {  // the whole back with the box (left of the label picture) a
     rows.push(['Source', 'Label detector: newly found label, not recorded in the register or in any data sheet'
       + (L.type ? ` · kind guessed: ${esc(L.type)}` : '') + (L.iss ? ` · issuer guessed: ${esc(L.iss)}` : '')]);
     if (L.d) more.push(['Text read', esc(L.d), 'text read']);
-  } else { const q = LAB_ID[L.hit.q]; rows.push(['Source', `Image search: the same label as on <a href="${esc(formUrl(q.key))}">Inv. ${esc(invOf(q.w))} · ${esc(labelTitle(q))}</a>`], ['Evidence', esc(evText(L.hit.ev))]); }
+  } else if (L.src === 'new') rows.push(['Source', 'Drawn by hand on the results website: a label that no register, data sheet or detector has recorded yet']);
+  else { const q = LAB_ID[L.hit.q]; rows.push(['Source', `Image search: the same label as on <a href="${esc(formUrl(q.key))}">Inv. ${esc(invOf(q.w))} · ${esc(labelTitle(q))}</a>`], ['Evidence', esc(evText(L.hit.ev))]); }
   const flag = L.ok ? '' : ' <span class="check">to check</span>';
   rows.push(['Box', esc(howShort(L)) + flag]);
   const item = (href, text, extra) => `<li><a href="${esc(href)}">${esc(text)}</a> <span>(${esc(extra)})</span></li>`;
@@ -1294,8 +1291,11 @@ function renderBox() {
   $('#bxok').textContent = BX.ok ? '✓ Box confirmed' : '✓ Confirm box';
   $('#bxok').title = BX.ok ? 'Withdraw the confirmation' : 'The box sits correctly on the label';
   $('#bxorig').hidden = !BX.drawn;
+  const fresh = L.src === 'new';
   $('#bxstate').textContent = BX.drawn ? `Redrawn box${BX.ok ? ', confirmed' : ''}: x ${b[0]}, y ${b[1]}, w ${b[2]}, h ${b[3]} (pixels of the original image).`
+    : fresh ? `The box as drawn${BX.ok ? '' : ', not confirmed'}: x ${b[0]}, y ${b[1]}, w ${b[2]}, h ${b[3]} (pixels of the original image).`
     : BX.ok ? 'The box from the data is confirmed.' : 'Box from the data, not confirmed yet: does it fit the label?';
+  $('#bxorig').textContent = fresh ? 'Restore the box as first drawn' : 'Restore the box from the data';
   const svg = $('#ksvg');
   let r = svg.querySelector('.kdrawn');
   if (BX.drawn) {
@@ -1316,46 +1316,35 @@ function boxChanged(text) {
   if (text) $('#msg').textContent = text;
 }
 $('#bxok').addEventListener('click', () => { BX = { ...BX, ok: !BX.ok }; boxChanged(BX.ok ? 'Box confirmed.' : 'Confirmation withdrawn.'); });
-$('#bxorig').addEventListener('click', () => { BX = { ok: false, drawn: null }; boxChanged('Box from the data restored.'); });
-// Drawing: the whole back as one IIIF rendering (1000 px); drag a new box, saved in pixels of the original image
-const ed = $('#ed'), edimg = $('#edimg'), edwrap = $('#edwrap');
-let drag = null, drawnNew = null, edW = 1, edH = 1;
-const place = (el, b) => { el.style.left = b[0] / edW * 100 + '%'; el.style.top = b[1] / edH * 100 + '%';
-                           el.style.width = b[2] / edW * 100 + '%'; el.style.height = b[3] / edH * 100 + '%'; };
+$('#bxorig').addEventListener('click', () => { BX = { ok: false, drawn: null }; boxChanged(L && L.src === 'new' ? 'The box as first drawn is restored.' : 'Box from the data restored.'); });
+// Checking and redrawing: the whole back, zoomable (boxzoom.js), opened on the current box, which can be changed at once
+// (its corners and edges) or drawn anew; saved in pixels of the original image. «✓ The box fits» confirms it unchanged.
 function openEditor() {
-  if (!L) return;
-  [edW, edH] = DIM[L.iiif] || [L.box[0] + L.box[2], L.box[1] + L.box[3]];
-  drawnNew = BX.drawn;
-  edimg.src = `${L.iiif}/full/!1000,1000/0/default.jpg`;
-  place($('#edold'), L.box);
-  $('#ednew').hidden = !drawnNew;
-  if (drawnNew) place($('#ednew'), drawnNew);
-  $('#edsave').disabled = !drawnNew;
-  $('#edinfo').textContent = '';
-  ed.showModal();
+  if (!L || !window.ppBoxZoom) return;
+  const dim = DIM[L.iiif] || [L.box[0] + L.box[2], L.box[1] + L.box[3]], fresh = L.src === 'new';
+  const eqBox = (a, b) => !!a && !!b && a.join() === b.join();
+  ppBoxZoom.edit({
+    iiif: L.iiif, size: dim, title: `Inv. ${WORK[L.w].inv} · ${labelTitle(L)}`,
+    legend: (fresh ? '<b>Dashed green</b>: the box as first drawn' : `<b style="color:#${COLOUR[L.src]}">${weak(L) ? 'Dashed, coloured' : 'Coloured'}</b>: the box from the data`)
+      + ' · <b style="color:#30d158">green</b>: the box as you set it.',
+    shapes: [{ box: L.box, color: '#' + COLOUR[L.src], dashed: fresh || weak(L), title: fresh ? 'The box as first drawn' : 'The box from the data' }],
+    box: curBox(),
+    save: (b, changed) => !changed ? '✓ The box fits' : eqBox(b, L.box) ? (fresh ? '✓ Back to the box as first drawn' : '✓ Back to the box from the data') : 'Save the new box',
+    ready: b => !!b,
+    links: [{ text: 'Box viewer ↗', href: viewerUrl(L, BX.drawn), title: 'The whole back in the box viewer, in a new tab' }],
+    onSave: b => {
+      if (eqBox(b, L.box)) { BX = { ok: true, drawn: null }; boxChanged('Box confirmed.'); }
+      else if (eqBox(b, BX.drawn)) { BX = { ...BX, ok: true }; boxChanged('Box confirmed.'); }
+      else { BX = { ok: true, drawn: b }; boxChanged('New box saved and confirmed.'); }
+    },
+  });
 }
-function pointAt(e) {
-  const r = edimg.getBoundingClientRect();
-  return [Math.min(1, Math.max(0, (e.clientX - r.left) / r.width)) * edW, Math.min(1, Math.max(0, (e.clientY - r.top) / r.height)) * edH];
-}
-edwrap.addEventListener('pointerdown', e => { if (!edimg.naturalWidth) return; e.preventDefault(); drag = pointAt(e); edwrap.setPointerCapture(e.pointerId); });
-edwrap.addEventListener('pointermove', e => {
-  if (!drag) return;
-  const [x1, y1] = pointAt(e), [x0, y0] = drag;
-  drawnNew = [Math.min(x0, x1), Math.min(y0, y1), Math.abs(x1 - x0), Math.abs(y1 - y0)].map(Math.round);
-  $('#ednew').hidden = false;
-  place($('#ednew'), drawnNew);
-});
-edwrap.addEventListener('pointerup', () => {
-  if (!drag) return;
-  drag = null;
-  const ok = drawnNew && drawnNew[2] > edW / 200 && drawnNew[3] > edH / 200;
-  $('#edsave').disabled = !ok;
-  $('#edinfo').textContent = ok ? `x ${drawnNew[0]}, y ${drawnNew[1]}, w ${drawnNew[2]}, h ${drawnNew[3]} (pixels of the original image)` : 'Draw a larger box.';
-});
-$('#edsave').addEventListener('click', () => { ed.close(); BX = { ok: true, drawn: drawnNew }; boxChanged('New box saved and confirmed.'); });
-$('#edcancel').addEventListener('click', () => ed.close());
 $('#bxdraw').addEventListener('click', openEditor);
+$('#kback').addEventListener('click', e => {  // the small back: checked zoomable here; with a modifier key the box viewer opens
+  if (e.button || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || !window.ppBoxZoom || !L) return;
+  e.preventDefault();
+  openEditor();
+});
 
 function notes() {
   [['F', '#srcF'], ['G', '#srcG'], ['HJ', '#srcHJ'], ['KL', '#srcKL']].forEach(([k, id]) => {
@@ -1607,7 +1596,7 @@ if (!key) {  // no label: nothing to fill in here; the saved entries and their C
 render(); renderList(); savedLine(key && entries[key] ? 'loaded' : null);
 fetch('data.json', { cache: 'no-cache' }).then(r => { if (!r.ok) throw new Error(r.status); return r.json(); }).then(data => {
   D = data;
-  for (const [oid, w] of Object.entries(D.works)) { WORK[oid] = w; w.backs.forEach(([iiif, W, H]) => { DIM[iiif] = [W, H]; }); }
+  for (const [oid, w] of Object.entries(D.works)) { WORK[oid] = w; w.backs.forEach(([iiif, W, H]) => { DIM[iiif] = [W, H]; BACK_ID[iiif.split('/').pop()] = [iiif, oid]; }); }
   D.labels.forEach(l => { LAB_ID[l.id] = l; LAB_KEY[l.key] = l; });
   L = find(key);
   if (L) {  // «←»: back to where the form was opened from (see below), else to the work with this label selected
@@ -1621,7 +1610,11 @@ fetch('data.json', { cache: 'no-cache' }).then(r => { if (!r.ok) throw new Error
   if (saved && saved.b) BX = { ok: false, drawn: null, ...saved.b };
   if (L && BX.drawn && P.s.pos && P.s.pos.t === 'Box position') P.v.pos = boxGrid({ iiif: L.iiif, box: BX.drawn }) || P.v.pos;  // from the redrawn box
   render(); renderBox(); renderList(); savedLine(saved ? 'loaded' : null);
-  if (touched && key) { pending = true; timer = setTimeout(save, 400); }  // what was typed while the data loaded
+  if (L && L.src === 'new' && !saved) {  // a label just drawn on the website: kept at once (drawn by hand, so its box counts as confirmed)
+    BX = { ok: true, drawn: null };
+    renderBox(); save();
+    $('#msg').textContent = 'New label saved in this browser: now fill in what it says.';
+  } else if (touched && key) { pending = true; timer = setTimeout(save, 400); }  // what was typed while the data loaded
 }).catch(() => {
   $('#ws').textContent = 'The data (data.json) could not be loaded; the form works without prefilling.';
   if (key && entries[key]) { apply(entries[key].v); render(); }

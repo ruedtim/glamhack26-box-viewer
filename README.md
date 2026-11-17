@@ -14,17 +14,22 @@ works carry the same label. *Have I seen this label before?*
 - **Workbook: [provenance_pursuit_results.xlsx](https://ruedtim.github.io/glamhack26-box-viewer/provenance_pursuit_results.xlsx)**
   – all results in one Excel file; its first sheet explains the others.
 - **Review page: [review.html](https://ruedtim.github.io/glamhack26-box-viewer/review.html)** – check the boxes the
-  vision-language model proposed (correct, wrong, unsure) and download your decisions for the team.
+  vision-language model proposed (correct, wrong, unsure, or redraw them) and download your decisions for the team.
 - **Label search: [label-search/](https://ruedtim.github.io/glamhack26-box-viewer/label-search/)** – photograph or upload
   a label; the image model runs in the browser and shows the 20 most similar backs. Nothing is uploaded.
 - **Entry form: `form.html?label=<key>`** – opens from every box: what the data say about the label, and fields for the
-  team to add or correct the details for SKKG's label register (confirm or redraw the box, copy the row, CSV).
+  team to add or correct the details for SKKG's label register (confirm or redraw the box, copy the row, CSV). A label
+  that has no box yet can be drawn on the results site («＋ Draw a missing label» under a back) and opens here as a new
+  label.
 - **What SIK-ISEA adds: [sik_isea.html](https://ruedtim.github.io/glamhack26-box-viewer/sik_isea.html)** – links to
   SIK-ISEA's records and counts only.
 - **How we got here: [how-we-got-here.html](https://ruedtim.github.io/glamhack26-box-viewer/how-we-got-here.html)** –
   the steps from the challenge's raw material to these results, with the numbers, the decisions and the dead ends.
 - **One header for all pages: `nav.js`** – the site header with a «Tools» menu (entry form, review page, search
   by photo, SIK-ISEA page, workbook), included after `feedback.js` on every page except the viewer.
+- **Zoomable box editor: `boxzoom.js`** – wherever a box is drawn, checked or changed (results site, entry form, review
+  page, label search), the photograph zooms straight from the IIIF server: scroll or pinch to zoom, drag to draw, the
+  corners and edges fit the box, Space + drag moves the picture.
 - **Label box viewer: `viewer.html`** – any image straight from a IIIF server with one or more boxes drawn on it.
 - **Feedback** – the «Feedback» button and the «Report a problem» links open a small form; no GitHub account is
   needed. Page, work, label key and box are filled in. The message becomes a public issue in this repository within
