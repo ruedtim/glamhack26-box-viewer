@@ -103,6 +103,7 @@
   .b.detected { background: var(--detected); } .ov.detected { stroke: var(--detected); } .ov.detected.weak { stroke-dasharray: 6 4; }
   .b.model { background: var(--model); } .b.again { background: var(--again); } .b.warn { background: transparent; color: var(--model); border: 1px solid var(--model); }
   .b.warn.unv { border-style: dashed; }  /* «unverified», dashed like its box; «to check» is solid */
+  .b.same { background: var(--chip); color: var(--ink); border: 1px solid var(--line); }  /* «+2 records»: more records placed on the same box */
   .more { display: block; margin: 18px auto 0; font: inherit; padding: 8px 18px; border-radius: 6px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); cursor: pointer; }
   svg.back { display: block; width: 100%; height: auto; background: var(--chip); border-radius: 4px; }
   .wcard svg.back { height: 200px; border-radius: 0; }
@@ -225,6 +226,15 @@
   .xp-badge { position: absolute; right: -6px; top: -8px; min-width: 18px; height: 18px; padding: 0 4px; border-radius: 9px; font: 600 11px/18px system-ui, sans-serif;
               background: var(--accent); color: var(--bg); text-align: center; pointer-events: none; }
   .xp-piece:not(.lifted) .xp-badge { display: none; }
+  /* the picked label's card, beside it on the stage (placed by draw()): its title and the way to its dialog */
+  .xp-pop { position: absolute; left: 0; top: 0; z-index: 35; display: flex; flex-direction: column; gap: 2px; max-width: min(260px, 72%);
+            padding: 6px 10px 7px; border: 1px solid var(--line); border-radius: 7px; background: var(--panel); box-shadow: var(--lift); font-size: 13px; line-height: 1.3; }
+  .xp-pop[hidden] { display: none; }
+  .xp-pop b { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .xp-pop .mute { font-size: 12px; }
+  .xp-pop a { font-weight: 600; text-decoration: none; }
+  .xp-pop a:hover, .xp-pop a:focus-visible { text-decoration: underline; }
+  .xp-detail .same { margin: 6px 0 0; font-size: 13px; }
   .xp-ctl { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; margin: 10px 0 4px; }
   .xp-ctl label { font-size: 13px; color: var(--muted); display: inline-flex; align-items: center; gap: 8px; flex: 1 1 220px; }
   .xp-ctl input[type=range] { flex: 1; min-width: 120px; accent-color: var(--accent); }
@@ -438,7 +448,9 @@
           register's picture with the back; <b>Label photos</b>: <span data-n="photos"></span> detail photographs SKKG took of
           labels, placed the same way; <b>Data sheets</b>: <span data-n="marks_located"></span> of the
           <span data-n="marks"></span> marks described in SKKG's provenance data sheets, placed by their text, by a template or
-          by a model's proposal; <b>Detected</b>: <span data-n="detected"></span> labels and stamps that the label detector
+          by a model's proposal, one box per mark (where several marks of a data sheet landed on the same box, the one with
+          the stronger evidence or the better-fitting text keeps it; marks that cannot be told apart share it, «undecided»);
+          <b>Detected</b>: <span data-n="detected"></span> labels and stamps that the label detector
           found and no record documents.</dd>
         <dt>How to use</dt>
         <dd><ul>
@@ -495,15 +507,21 @@
             beside the <b>Provenance timeline</b>. A work without located labels shows the timeline only.</li>
           <li><b>Explode</b>: drag the slider. The back shrinks to half its size and every label lifts onto a ring around it,
             without overlapping the others; dashed holes and thin lines show where each one sat. Each label is a button with
-            its own cut-out. When there are several photos of the back, «Back 1», «Back 2» … switch between them.</li>
+            its own cut-out. When there are several photos of the back, «Back 1», «Back 2» … switch between them. A label
+            that several records place on the same spot is one piece: the register, a label photo and a data sheet that
+            describe the same label, or several data sheet entries placed on one box (records whose boxes overlap by half or
+            more). The piece shows the box of its most reliable record; its panel lists the others.</li>
           <li><b>Provenance timeline</b>: the stations of the work's provenance as SKKG's records give them, in order (the
             artist, owners, estates, dealers, auction houses, museums), its exhibitions and its acquisition by SKKG. Under an
             event, «<span class="dots" role="img" aria-label="medium link">●●○</span> 2 labels» says how many labels document it
             and how strong the best link is.</li>
           <li>Click an <b>event</b>: its labels light up and the others fade, the back explodes and switches to the photo that
-            holds them, and the panel under the back lists them with the basis of each link. Click a <b>label</b>: its events
-            light up in the timeline, each with its basis, and the panel offers «Label details», «✎ Record in the entry form»,
-            «Whole back, zoomable» and «Report a problem with this label or its events». A second click deselects.</li>
+            holds them, and the panel under the back lists them with the basis of each link. Click a <b>label</b>: a small
+            card beside it leads to its «Label details →»; its events light up in the timeline, each with its basis; and the
+            panel under the back names the other records on the same box and offers «Label details», «✎ Record in the entry
+            form», «Whole back, zoomable» and «Report a problem with this label or its events». A second click deselects.
+            Back from a label's dialog (or through its «Work» link), the work opens on its back, exploded, with that label
+            picked.</li>
           <li><b>Strong, medium, weak.</b> A link is <b>strong</b> (<span class="dots" role="img" aria-label="strong link">●●●</span>)
             when two features agree: the issuer and the lot, date or year of a sale, or the venue and year of an exhibition. It is
             <b>medium</b> (<span class="dots" role="img" aria-label="medium link">●●○</span>) for one distinctive feature: the issuer
@@ -514,8 +532,9 @@
             where the text was read: register, data sheet, OCR of the label photo or OCR of the detected label.</li>
           <li><b>The boxes</b>: below the exploded back come the facts (object type, collection page, acquisition,
             provenance actors, exhibitions) and «Labels it shares with other works». Under them, folded, «Boxes on the back»
-            shows every photo of the back with all its boxes: click a box to open the entry form for that label, or «Open
-            zoomable with all boxes». At the end, every located label as a card.</li>
+            shows every photo of the back with all its boxes, one per spot: click a box to open the entry form for that label,
+            or «Open zoomable with all boxes». At the end, every located label as a card, one per spot; «+2 records» on a
+            card says that more records place a label on the same box.</li>
         </ul></dd>
         <dt>Watch for</dt>
         <dd><span data-n="timeline_works"></span> works have a timeline, with <span data-n="events"></span> events in all;
@@ -563,8 +582,9 @@
         <dd>One label: its cut-out and, where there is one, SKKG's own detail photo; the facts: work (with links to the work
           and to SKKG's collection), source, «Located by» (image match with the number of matching points, the most similar
           window, text read by OCR, a template from another work, the vision-language model, or the detector's score), position,
-          type, description or text read, issuer guess, and the provenance events it is linked to. Below: where it sits on the
-          back, the same label on other works, and the other marks on the same work.</dd>
+          type, description or text read, issuer guess, and the provenance events it is linked to. «Same spot» names the other
+          records that place a label on the same box, which the work's back shows once. Below: where it sits on the back,
+          the same label on other works, and the other marks on the same work.</dd>
         <dt>How to use</dt>
         <dd>Click any card. «✎ Record this label» opens the <a href="#about-form">entry form</a>, and so does
           a click on the box on the back. The cut-out and «Whole back, zoomable» open the <a href="#about-viewer">box viewer</a>;
@@ -977,6 +997,32 @@
   }
   const workTitle = w => `Inv. ${w.inv} · ${w.title}`;
 
+  // ---------------------------------------------------------------- Spots
+  // Several records can place a label at the same spot of a back: the register, SKKG's label photo and a data sheet
+  // describe one label each in their own words; two marks of a data sheet were read in one line of text; a template
+  // fitted several marks of one area. A record whose box overlaps a spot's box by half or more (intersection over union,
+  // on the same photograph) joins that spot, which is drawn once: one box, one piece of the exploded back, with the box of
+  // its most reliable record («lead»: reliable before «to check» before unverified, then register, photo, data sheet,
+  // detected). Every pair of records above that overlap that we looked at was one label; below it, neighbouring labels
+  // also overlap.
+  const SAME_SPOT = 0.5;
+  function overlap(a, b) {  // intersection over union of two boxes [x, y, w, h]
+    const w = Math.min(a[0] + a[2], b[0] + b[2]) - Math.max(a[0], b[0]), h = Math.min(a[1] + a[3], b[1] + b[3]) - Math.max(a[1], b[1]);
+    const i = Math.max(0, w) * Math.max(0, h), u = a[2] * a[3] + b[2] * b[3] - i;
+    return u > 0 ? i / u : 0;
+  }
+  const RANK = { register: 0, photo: 1, 'data sheet': 2, detected: 3 };
+  const rank = l => (l.ok ? 0 : unverified(l) ? 20 : 10) + (RANK[l.src] ?? 4);
+  function spotsOf(labels) {  // [{ iiif, box, lead, labels: [lead, …] }], in the order of the leads in `labels`
+    const spots = [], at = new Map(labels.map((l, i) => [l, i]));
+    labels.slice().sort((a, b) => rank(a) - rank(b) || at.get(a) - at.get(b)).forEach(l => {
+      const s = spots.find(s => s.iiif === l.iiif && overlap(s.box, l.box) >= SAME_SPOT);
+      if (s) s.labels.push(l); else spots.push({ iiif: l.iiif, box: l.box, lead: l, labels: [l] });
+    });
+    return spots.sort((a, b) => at.get(a.lead) - at.get(b.lead));
+  }
+  const records = n => `${n} record${n === 1 ? '' : 's'}`;
+
   // ---------------------------------------------------------------- Fronts
   // works[].front (build_site.py, from fetch_fronts.py): the photographs of the front SKKG publishes, each credited as SKKG
   // gives its rights: «© holder ·» where SKKG names a rights holder, then «SKKG» and the licence, linked (CC BY 4.0, CC0)
@@ -1019,11 +1065,12 @@
     : l.src === 'detected' ? `label detector (OWLv2), score ${l.score}${l.st === 'new label without text' ? ', no text read' : ''}`
     : (l.st === 'retrieval only' ? 'most similar window' : `image match, ${l.n} matching points`);
 
-  function labelCard(l) {
+  function labelCard(l, more = 0) {  // more: the other records on the same spot (the card stands for all of them)
     const w = WORK[l.w], again = (l.hits || []).length;
     return `<button class="card" data-label="${l.id}"><span class="thumb"><img loading="lazy" alt="" src="${esc(region(l.iiif, l.box))}"></span>
       <span class="cap"><b>${esc(l.t)}</b><span class="meta">${esc(workTitle(w))}</span><span class="badges">
-      <i class="b ${kind(l)}">${esc(SRC[l.src])}</i>${sureBadge(l)}${again ? `<i class="b again">on ${again} other work${again > 1 ? 's' : ''}</i>` : ''}</span></span></button>`;
+      <i class="b ${kind(l)}">${esc(SRC[l.src])}</i>${sureBadge(l)}${again ? `<i class="b again">on ${again} other work${again > 1 ? 's' : ''}</i>` : ''}${more
+        ? `<i class="b same" title="${esc(`${more} more record${more === 1 ? '' : 's'} placed on the same spot of the back`)}">+${records(more)}</i>` : ''}</span></span></button>`;
   }
   // feedback (site/feedback.js, the main session's): a public GitHub issue. Only the work's SKKG title, the stable label
   // key and the box go along, never a label's text (it can hold an address that the masking missed)
@@ -1092,7 +1139,7 @@
   function renderLabels() {  // the single place that redraws the list, the count and the filter controls
     syncFilters();
     const list = labelList(), shown = list.slice(0, state.lpage * PAGE);
-    $('#lgrid').innerHTML = shown.map(labelCard).join('') || '<p class="empty">No labels match.</p>';
+    $('#lgrid').innerHTML = shown.map(l => labelCard(l)).join('') || '<p class="empty">No labels match.</p>';
     $('#lcount').textContent = `${num(list.length)} of ${num(D.labels.length)}`;
     $('#lmore').hidden = shown.length >= list.length;
   }
@@ -1109,7 +1156,7 @@
   }
   function workCard([oid, w]) {
     const back = w.backs.map(b => b[0]).sort((a, b) => w.labels.filter(l => l.iiif === b).length - w.labels.filter(l => l.iiif === a).length)[0];
-    const boxes = w.labels.filter(l => l.iiif === back).map(l => ({ box: l.box, cls: kind(l) }));
+    const boxes = spotsOf(w.labels.filter(l => l.iiif === back)).map(s => ({ box: s.box, cls: kind(s.lead) }));  // a spot once
     const f = fronts(w)[0];  // the front beside the title, with a short credit
     const text = `<b>${esc(workTitle(w))}</b>
       <span class="meta">${esc(w.type)} · ${w.labels.length} label${w.labels.length === 1 ? '' : 's'} located</span>
@@ -1175,17 +1222,23 @@
     OPEN = { label: l };
     const typed = l.type && l.src !== 'photo';  // the type has a row of its own
     const sub = l.sub && l.sub !== l.t && l.sub !== SRC[l.src] && !(typed && l.sub === l.type) ? l.sub : '';  // nothing said twice
+    // the spots of the work as its dialog shows them (this label's too, if it is an unverified box): the records on the
+    // same spot as this one, and the other spots
+    const spots = spotsOf(w.labels.filter(o => o === l || state.lmodel || !unverified(o)));
+    const spot = spots.find(s => s.labels.includes(l)), same = spot.labels.filter(o => o !== l), others = spots.filter(s => s !== spot);
     const facts = [['Work', `<a href="#${esc(workHash(l.w, l.key))}">${esc(workTitle(w))}</a> (${esc(w.type)}) · <a href="${esc(w.url)}" target="_blank" rel="noopener">SKKG collection</a>`],
       fronts(w).length && ['Front', frontSmall(w)],
       ['Source', esc(SRC[l.src]) + (sub ? ` · ${esc(sub)}` : '')],
-      ['Located by', esc(howText(l)) + (l.tpl ? ` (template from Inv. ${esc(l.tpl)})` : '') + (l.ok ? '' : ' · ' + sureBadge(l))],
+      ['Located by', esc(howText(l)) + (l.tpl ? ` (template from Inv. ${esc(l.tpl)})` : '') + (l.ok ? '' : ' · ' + sureBadge(l)) +
+        (l.sb ? ` · <span class="mute">undecided: shares the box with ${l.sb} other mark${l.sb > 1 ? 's' : ''} of the data sheet</span>` : '')],
+      same.length && ['Same spot', same.map(o => `<a href="#${esc(labelHash(o))}">${esc(o.t)}</a> <span class="mute">(${esc(SRC[o.src])}${o.ok ? '' : ', ' + sure(o)})</span>`).join('<br>') +
+        `<br><span class="mute">${same.length > 1 ? 'These records place a label' : 'This record places a label'} on the same box; the work's back shows it once.</span>`],
       l.pos && ['Position', esc(l.pos)], typed && [l.src === 'detected' ? 'Kind (guess)' : 'Type', esc(l.type)],
       l.src === 'detected' && l.iss && ['Issuer (guess)', esc(l.iss)],
       l.d && [l.src === 'detected' ? 'Text read (OCR)' : 'Description', esc(l.d)],
       window.ppFacets && ppFacets.fact(l, 'labels'),
       (l.tl || []).length && ['Provenance events', l.tl.map(([i, s, b]) => `${dots(s)} ${esc(evLine(evView(w, w.tl[i])))} <span class="mute">(${STRENGTH[s]}: ${esc(basisText({ label: l }, b))})</span>`).join('<br>') +
         `<br><a href="#${esc(workHash(l.w, l.key))}">On the work's exploded back and timeline</a>`]].filter(Boolean);
-    const others = w.labels.filter(o => o.id !== l.id && (state.lmodel || !unverified(o)));
     const hits = (l.hits || []).map(i => D.hits[i]);
     const view = viewer(l.iiif, [l.box], workTitle(w), `${SRC[l.src]}: ${l.t}`, COLOUR[l.src], l.how === 'vision-language model', [l.key], l.w);
     // the actions in one row, the primary one first; on a phone they follow the label's picture (CSS order of .ldlg)
@@ -1196,28 +1249,29 @@
       <div class="lback"><h4>Where it sits on the back</h4>${backWithBoxes(l.iiif, [{ box: l.box, cls: kind(l) + ' sel', key: l.key, title: 'Click to open the entry form for this label' }], 700)}</div></div>
       <div>${acts}<dl>${facts.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join('')}</dl></div></div>
       ${hits.length ? `<h4>The same label on ${hits.length} other work${hits.length > 1 ? 's' : ''}</h4><div class="row">${hits.map(h => hitCard(h)).join('')}</div>` : ''}
-      ${others.length ? `<h4>Other marks on this work</h4><div class="row">${others.slice(0, 20).map(labelCard).join('')}</div>` : ''}`);
+      ${others.length ? `<h4>Other marks on this work</h4><div class="row">${others.slice(0, 20).map(s => labelCard(s.lead, s.labels.length - 1)).join('')}</div>` : ''}`);
   }
   function showWork(oid, at) {  // at: the key of a box to show (a label of the work, or where a label was found again)
     const w = WORK[oid];
     if (!w) return;
-    const startBack = KEEP_SIDE ? KEEP_SIDE === 'back' : !!at || !!(OPEN && OPEN.label && OPEN.label.w === oid);  // from one of its labels: the back first
+    const from = OPEN && OPEN.label && OPEN.label.w === oid ? OPEN.label : null;  // back from one of its labels (✕, Back)
+    if (!at && from) at = from.key;  // … opens at that label, as its «Work» link does
+    const startBack = KEEP_SIDE ? KEEP_SIDE === 'back' : !!at;  // a box to show: the back first
     KEEP_SIDE = null;
     OPEN = { work: oid };
     const hitsHere = D.hits.filter(h => h.w === oid);
     const hitsOut = D.hits.filter(h => h.w !== oid && LAB[h.q].w === oid);  // its own labels, found again on other works
+    const pieces = piecesOf(oid, w);  // one per spot: the boxes on the backs, the pieces of the exploded back and the cards
     const backs = w.backs.map(([iiif]) => {
-      const mine = w.labels.filter(l => l.iiif === iiif && (state.lmodel || !unverified(l)));
-      const boxes = mine.map(l => ({ box: l.box, cls: kind(l), key: l.key, title: `${l.t} — click to open the entry form` }))
-        .concat(hitsHere.filter(h => h.iiif === iiif).map(h => ({ box: h.box, cls: 'hit', key: h.key, title: `same label as on Inv. ${WORK[LAB[h.q].w].inv} — click to open the entry form` })));
-      const all = viewer(iiif, mine.map(l => l.box), workTitle(w), 'all located labels and marks', '762a83', false, mine.map(l => l.key), oid);
+      const here = pieces.filter(p => p.iiif === iiif), mine = here.filter(p => p.label);
+      const boxes = here.map(p => ({ box: p.box, cls: p.label ? kind(p.label) : 'hit', key: p.key, title: `${spotTitle(p)} — click to open the entry form` }));
+      const all = viewer(iiif, mine.map(p => p.box), workTitle(w), 'all located labels and marks', '762a83', false, mine.map(p => p.key), oid);
       return `${backWithBoxes(iiif, boxes, 900)}<div class="links"><a href="${esc(all)}" target="_blank" rel="noopener">Open zoomable with all boxes</a></div>`;
     }).join('<br>');
     const facts = [['Object type', esc(w.type)], ['Collection', `<a href="${esc(w.url)}" target="_blank" rel="noopener">${esc(w.url)}</a>`],
       w.acq && ['Acquired by SKKG', esc(w.acq)], w.actors.length && ['Provenance actors', esc(w.actors.join(', '))],
       w.ex.length && ['Exhibitions', w.ex.map(esc).join('<br>')], window.ppFacets && ppFacets.fact(w, 'works')].filter(Boolean);
-    const shown = w.labels.filter(l => state.lmodel || !unverified(l));
-    const pieces = piecesOf(oid, w);
+    const shown = pieces.filter(p => p.label), n = shown.reduce((s, p) => s + p.labels.length, 0);
     const dl = `<dl>${facts.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join('')}</dl>`;
     const shares = hitsHere.length || hitsOut.length ? `<h4>Labels it shares with other works</h4><div class="row">${hitsHere.map(h => `<div class="hitc"><button class="card" data-label="${h.q}"><span class="thumb"><img loading="lazy" alt="" src="${esc(region(h.iiif, h.box))}"></span><span class="cap"><b>${esc(LAB[h.q].t)}</b><span class="meta">also on Inv. ${esc(WORK[LAB[h.q].w].inv)}</span></span></button>${hitFeedback(h)}</div>`).join('')}${
       hitsOut.map(h => `<div class="hitc"><button class="card" data-work="${h.w}" data-at="${esc(h.key)}"><span class="thumb"><img loading="lazy" alt="" src="${esc(region(h.iiif, h.box))}"></span><span class="cap"><b>${esc(LAB[h.q].t)}</b><span class="meta">found again on Inv. ${esc(WORK[h.w].inv)}</span></span></button>${hitFeedback(h)}</div>`).join('')}</div>` : '';
@@ -1228,7 +1282,7 @@
       ? `<div class="two"><div>${dl}</div><div>${shares}</div></div><details class="boxes"><summary>Boxes on the back: click a box to open the entry form</summary>${hint}${backs}</details>`
       : `<div class="two"><div>${hint}${backs}</div><div>${xp ? '' : front}${dl}${shares}</div></div>`;
     openDialog(workTitle(w), `${xp}${main}
-      <h4>${shown.length} label${shown.length === 1 ? '' : 's'} and marks located${state.lmodel ? '' : ' (without unverified boxes)'}</h4><div class="grid">${shown.map(labelCard).join('') || '<p class="empty">None located yet.</p>'}</div>`);
+      <h4>${shown.length} label${shown.length === 1 ? '' : 's'} and marks located${n > shown.length ? `, from ${records(n)}` : ''}${state.lmodel ? '' : ' (without unverified boxes)'}</h4><div class="grid">${shown.map(p => labelCard(p.label, p.labels.length - 1)).join('') || '<p class="empty">None located yet.</p>'}</div>`);
     XP = explode($('#dbody').querySelector('.xp'), oid, w, pieces, { back: startBack, at });
   }
 
@@ -1271,23 +1325,34 @@
     return { k, role, what: txt, note: gl, when: when || 'undated', dated: !!when };
   }
   const evLine = v => [v.when, v.role, v.what].filter(Boolean).join(' · ');
-  const basisText = (p, b) => b.startsWith('same label') || !p.label ? b : `${b} · ${VIA[p.label.src] || p.label.src}`;
+  // the basis of a link and where its text was read: by the record that makes the link (l; a spot can hold several),
+  // else by the piece's own label
+  const basisText = (p, b, l = p.label) => b.startsWith('same label') || !l ? b : `${b} · ${VIA[l.src] || l.src}`;
+  const foundFrom = p => [...new Set(p.hits.map(h => `Inv. ${WORK[LAB[h.q].w].inv}`))].join(', ');
+  const spotTitle = p => p.title + (p.label && p.labels.length > 1 ? ` (+${records(p.labels.length - 1)} on this box)` : '')
+    + (p.label && p.hits.length ? ` · same label as on ${foundFrom(p)}` : '');
 
-  function piecesOf(oid, w) {  // the labels on the work's backs, and the boxes where a label of another work was found again
-    const out = [], seen = new Set(), byKey = {};
-    w.labels.filter(l => state.lmodel || !unverified(l)).forEach(l => {
-      seen.add(l.iiif + '|' + l.key);
-      out.push({ iiif: l.iiif, box: l.box, cls: kind(l).split(' ').map(c => 'c-' + c).join(' '), title: l.t, label: l, key: l.key, links: l.tl || [] });
+  function piecesOf(oid, w) {  // one piece per spot of the work's labels (spotsOf), and the boxes where a label of another work was found again
+    const out = spotsOf(w.labels.filter(l => state.lmodel || !unverified(l))).map(s => {
+      const links = [];  // the strongest link to each event among the spot's records, with the record that makes it
+      s.labels.forEach(l => (l.tl || []).forEach(([i, st, b]) => {
+        const o = links.find(y => y[0] === i);
+        if (!o) links.push([i, st, b, l]); else if (st > o[1]) o.splice(0, 4, i, st, b, l);
+      }));
+      return { iiif: s.iiif, box: s.box, cls: kind(s.lead).split(' ').map(c => 'c-' + c).join(' '), title: s.lead.t, label: s.lead,
+               labels: s.labels, key: s.lead.key, links, hits: [] };
     });
     D.hits.forEach(h => {
-      if (h.w !== oid || seen.has(h.iiif + '|' + h.key)) return;
-      let p = byKey[h.iiif + '|' + h.key];
+      if (h.w !== oid) return;
+      // a hit on a label shown here (it carries its key) or on the same spot joins that piece; hits on one box share one
+      let p = out.find(p => p.iiif === h.iiif && (p.key === h.key || (p.labels || []).some(l => l.key === h.key)))
+        || out.find(p => p.iiif === h.iiif && overlap(p.box, h.box) >= SAME_SPOT);
       if (!p) {
-        p = byKey[h.iiif + '|' + h.key] = { iiif: h.iiif, box: h.box, cls: 'c-hit', title: `Same label as on Inv. ${WORK[LAB[h.q].w].inv}`, key: h.key, hits: [], links: [] };
+        p = { iiif: h.iiif, box: h.box, cls: 'c-hit', title: `Same label as on Inv. ${WORK[LAB[h.q].w].inv}`, key: h.key, hits: [], links: [] };
         out.push(p);
       }
       p.hits.push(h);
-      (h.tl || []).forEach(x => { const o = p.links.find(y => y[0] === x[0]); if (!o) p.links.push(x.slice()); else if (x[1] > o[1]) o.splice(0, 3, ...x); });
+      if (!p.label) (h.tl || []).forEach(x => { const o = p.links.find(y => y[0] === x[0]); if (!o) p.links.push(x.slice()); else if (x[1] > o[1]) o.splice(0, 3, ...x); });
     });
     const order = out.slice().sort((a, b) => b.box[2] * b.box[3] - a.box[2] * a.box[3]);
     out.forEach((p, i) => { p.i = i; p.z = 2 + order.indexOf(p); });  // smaller boxes on top of larger ones
@@ -1310,7 +1375,7 @@
     return `<section class="xp" aria-label="Exploded back and provenance timeline"><div>
       ${f0 ? `<h3 class="xp-hf">The front <span>· turn it over: ${n} label${n === 1 ? '' : 's'} and mark${n === 1 ? '' : 's'} on the back</span></h3>` : ''}<h3 class="xp-hb">The back, exploded <span>· ${n} label${n === 1 ? '' : 's'} and mark${n === 1 ? '' : 's'}${state.lmodel ? '' : ', without unverified boxes'}</span></h3>
       <div class="xp-stage" role="group" aria-label="Back of the work; its labels are buttons"><img class="xp-back" alt="Back of the work" decoding="async"><svg class="xp-lines" aria-hidden="true"></svg>
-      ${pieces.map(p => `<button type="button" class="xp-piece ${p.cls}" data-xp="${p.i}" aria-pressed="false" title="${esc(p.title)}" aria-label="${esc(p.title)}${p.links.length ? `, linked to ${p.links.length} event${p.links.length > 1 ? 's' : ''}` : ''}" style="z-index:${p.z}" hidden><img alt="" loading="lazy" src="${esc(region(p.iiif, p.box))}">${p.links.length ? `<span class="xp-badge">${p.links.length}</span>` : ''}</button>`).join('')}${f0 ? `<button type="button" class="xp-front" title="Turn it over" aria-label="Front of the work: turn it over to see the back"><img alt="" decoding="async" src="${esc(full(f0[0], 900))}"></button>` : ''}</div>
+      ${pieces.map(p => `<button type="button" class="xp-piece ${p.cls}" data-xp="${p.i}" aria-pressed="false" title="${esc(spotTitle(p))}" aria-label="${esc(spotTitle(p))}${p.links.length ? `, linked to ${p.links.length} event${p.links.length > 1 ? 's' : ''}` : ''}" style="z-index:${p.z}" hidden><img alt="" loading="lazy" src="${esc(region(p.iiif, p.box))}">${p.links.length ? `<span class="xp-badge">${p.links.length}</span>` : ''}</button>`).join('')}<div class="xp-pop" hidden></div>${f0 ? `<button type="button" class="xp-front" title="Turn it over" aria-label="Front of the work: turn it over to see the back"><img alt="" decoding="async" src="${esc(full(f0[0], 900))}"></button>` : ''}</div>
       ${f0 ? `<p class="credit xp-credit">${frontCaption(w, 0)}</p>${frontStrip(w, 'data-xf', ' xp-fstrip')}` : ''}
       <div class="xp-ctl">${f0 ? '<button type="button" class="xp-turn" aria-pressed="false">Turn over</button>' : ''}<label>Explode <input type="range" class="xp-range" min="0" max="100" value="0" aria-label="Lift the labels off the back"></label>
       ${backs.length > 1 ? `<div class="seg xp-backs" role="group" aria-label="Photograph of the back">${backs.map((b, i) => `<button type="button" data-xb="${esc(b)}" aria-pressed="false">Back ${i + 1}</button>`).join('')}</div>` : ''}
@@ -1324,7 +1389,7 @@
     const view = { front: false, dead: false };  // the side the stage shows
     const ev = w.tl || [], tl = root.querySelector('.tl'), sum = root.querySelector('.tl-sum');
     const sup = ev.map(() => []);  // per event: the pieces that document it
-    pieces.forEach(p => p.links.forEach(([i, s, b]) => { if (sup[i]) sup[i].push({ p, s, b }); }));
+    pieces.forEach(p => p.links.forEach(([i, s, b, l]) => { if (sup[i]) sup[i].push({ p, s, b, l }); }));  // l: the record that makes the link
     sup.forEach(x => x.sort((a, b) => b.s - a.s));
     const hidden = ev.map(() => 0);  // links of the labels hidden as unverified boxes
     if (!state.lmodel) w.labels.filter(unverified).forEach(l => (l.tl || []).forEach(([i]) => { if (i in hidden) hidden[i]++; }));
@@ -1347,9 +1412,10 @@
     const stage = root.querySelector('.xp-stage');
     if (!stage) return { destroy() {} };
     const img = stage.querySelector('.xp-back'), svg = stage.querySelector('.xp-lines'), range = root.querySelector('.xp-range');
-    const detail = root.querySelector('.xp-detail'), els = [...stage.querySelectorAll('.xp-piece')];
+    const detail = root.querySelector('.xp-detail'), els = [...stage.querySelectorAll('.xp-piece')], pop = stage.querySelector('.xp-pop');
     const count = b => pieces.filter(p => p.iiif === b).length;
-    const atP = opts.at ? pieces.find(p => p.key === opts.at) : null;  // the box the visitor came for (a label or a hit)
+    const atP = opts.at ? pieces.find(p => p.key === opts.at || (p.labels || []).some(l => l.key === opts.at)
+      || (p.hits || []).some(h => h.key === opts.at)) : null;  // the box the visitor came for (a label or a hit; also inside a spot)
     const atBack = atP ? atP.iiif : opts.at ? (BYKEY[opts.at] || D.hits.find(h => h.key === opts.at && h.w === oid) || {}).iiif : null;
     const S = { back: atBack && w.backs.some(b => b[0] === atBack) ? atBack : w.backs.map(b => b[0]).sort((a, b) => count(b) - count(a))[0],
                 t: 0, piece: null, event: null, raf: 0, g: null };
@@ -1462,6 +1528,7 @@
         el.style.width = pw + 'px';
         el.style.height = ph + 'px';
         el.style.transform = `translate(${x}px,${y}px)`;
+        p.now = [x, y, pw, ph];  // where it is drawn now, for its card (placePop)
         el.classList.toggle('lifted', lift);
         if (!lift) return;
         const l = S.event != null ? linkOf(p, S.event) : null;
@@ -1470,6 +1537,28 @@
       });
       svg.setAttribute('viewBox', `0 0 ${g.Ws} ${g.Hs}`);
       svg.innerHTML = holes + lines;
+      placePop(g);
+    }
+    // the picked label's card (marks() fills it): beside the piece on the side that faces the middle of the stage, where
+    // it hides the fewest other pieces, and always inside the stage
+    const popHTML = p => p.label
+      ? `<b title="${esc(p.title)}">${esc(p.title)}</b>${p.labels.length > 1 ? `<span class="mute">+${records(p.labels.length - 1)} on this box</span>` : ''}<a href="#${esc(labelHash(p.label))}">Label details →</a>`
+      : `<b title="${esc(p.title)}">${esc(p.title)}</b><a href="#${esc(labelHash(LAB[p.hits[0].q]))}">The label on Inv. ${esc(WORK[LAB[p.hits[0].q].w].inv)} →</a>`;
+    function placePop(g) {
+      const p = S.piece == null ? null : pieces[S.piece];
+      pop.hidden = !p || p.iiif !== S.back || !p.now;
+      if (pop.hidden) return;
+      const [x, y, pw, ph] = p.now, w2 = pop.offsetWidth, h2 = pop.offsetHeight, gap = 6, m = 4;
+      const px = x + pw / 2, py = y + ph / 2, dx = px / g.Ws - 0.5, dy = py / g.Hs - 0.5;
+      const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+      const at = side => side === 'below' || side === 'above'
+        ? [clamp(px - w2 / 2, m, g.Ws - w2 - m), side === 'below' ? y + ph + gap : y - h2 - gap]
+        : [side === 'right' ? x + pw + gap : x - w2 - gap, clamp(py - h2 / 2, m, g.Hs - h2 - m)];
+      const fits = ([l, t]) => l >= m && t >= m && l + w2 <= g.Ws - m && t + h2 <= g.Hs - m;
+      const v = dy < 0 ? ['below', 'above'] : ['above', 'below'], h = dx < 0 ? ['right', 'left'] : ['left', 'right'];
+      const [l, t] = (Math.abs(dy) >= Math.abs(dx) ? v.concat(h) : h.concat(v)).map(at).find(fits)
+        || [clamp(px - w2 / 2, m, g.Ws - w2 - m), clamp(y + ph + gap, m, g.Hs - h2 - m)];
+      pop.style.transform = `translate(${Math.round(l)}px,${Math.round(t)}px)`;
     }
     function animate(to) {
       cancelAnimationFrame(S.raf);
@@ -1510,7 +1599,7 @@
           li.classList.toggle('w1', !!l && l[1] === 1);
           li.classList.toggle('w2', !!l && l[1] === 2);
           li.querySelector('.tl-ev').setAttribute('aria-pressed', e === i);
-          li.querySelector('.tl-why').innerHTML = l ? `${dots(l[1])} ${STRENGTH[l[1]]}: ${esc(basisText(pc, l[2]))}` : '';
+          li.querySelector('.tl-why').innerHTML = l ? `${dots(l[1])} ${STRENGTH[l[1]]}: ${esc(basisText(pc, l[2], l[3]))}` : '';
         });
         tl.classList.toggle('picking', !!pc && pc.links.length > 0);
         const first = pc ? tl.querySelector('.tl-i.lk') : e != null ? tl.children[e] : null;
@@ -1524,6 +1613,7 @@
         x.textContent = `Back ${i + 1}${n ? ` · ${n} linked` : ''}`;
       });
       detail.innerHTML = describe();
+      pop.innerHTML = pc ? popHTML(pc) : '';
       draw();
     }
     function describe() {
@@ -1531,8 +1621,11 @@
         const p = pieces[S.piece], l = p.label, links = p.links.slice().sort((a, b) => a[0] - b[0]);
         const how = l ? `${SRC[l.src]} · ${howText(l)}${l.ok ? '' : ' · ' + sure(l)}` : `found again from ${p.hits.map(h => `Inv. ${WORK[LAB[h.q].w].inv}`).join(', ')} (${p.hits[0].n} matching points)`;
         const view = viewer(p.iiif, [p.box], workTitle(w), p.title, l ? COLOUR[l.src] : '30d158', !!l && l.how === 'vision-language model', [p.key], oid);
-        return `<div class="pd"><img alt="" src="${esc(region(p.iiif, p.box))}"><div><b>${esc(p.title)}</b><div class="hintline">${esc(how)}</div>
-          ${links.length ? `<ul>${links.map(([i, s, b]) => `<li class="w${s}"><button type="button" data-xe="${i}">${dots(s)}<span>${esc(evLine(evView(w, ev[i])))}</span><span></span><span class="why">${STRENGTH[s]}: ${esc(basisText(p, b))}</span></button></li>`).join('')}</ul>`
+        const others = (p.labels || []).slice(1);  // the other records on this spot, each with its own dialog
+        const same = others.length ? `<p class="same">Also on this box: ${others.map(o => `<a href="#${esc(labelHash(o))}">${esc(o.t)}</a> <span class="mute">(${esc(SRC[o.src])}${o.ok ? '' : ', ' + sure(o)})</span>`).join(' · ')}</p>` : '';
+        const again = l && p.hits.length ? `<p class="same">Found again: the same label as on ${esc(foundFrom(p))}.</p>` : '';
+        return `<div class="pd"><img alt="" src="${esc(region(p.iiif, p.box))}"><div><b>${esc(p.title)}</b><div class="hintline">${esc(how)}</div>${same}${again}
+          ${links.length ? `<ul>${links.map(([i, s, b, r]) => `<li class="w${s}"><button type="button" data-xe="${i}">${dots(s)}<span>${esc(evLine(evView(w, ev[i])))}</span><span></span><span class="why">${STRENGTH[s]}: ${esc(basisText(p, b, r))}</span></button></li>`).join('')}</ul>`
             : `<p class="hintline">No event in SKKG's records matches this label${ev.length ? '' : ' (the records hold none for this work)'}. It may document a station or an exhibition that the records lack.</p>`}
           <div class="links">${l ? `<a href="#${esc(labelHash(l))}">Label details</a>` : `<a href="#${esc(labelHash(LAB[p.hits[0].q]))}">The label on Inv. ${esc(WORK[LAB[p.hits[0].q].w].inv)}</a>`}<a href="${esc(formUrl(p.key))}">✎ Record in the entry form</a><a href="${esc(view)}" target="_blank" rel="noopener">Whole back, zoomable</a>${feedback(
             { where: 'Work · exploded back', inv: w.inv, title: w.title, key: p.key, iiif: p.iiif, box: p.box, kind: 'A box is wrong or missing' }, 'Report a problem with this label or its events')}</div></div></div>`;
@@ -1540,7 +1633,7 @@
       if (S.event != null) {
         const v = evView(w, ev[S.event]), list = sup[S.event];
         return `<b>${esc(v.role)}${v.what ? ' · ' + esc(v.what) : ''}</b><div class="hintline">${esc(v.when)}${v.note ? ' · ' + esc(v.note) : ''}</div>
-          ${list.length ? `<ul>${list.map(({ p, s, b }) => `<li class="w${s}"><button type="button" data-xp="${p.i}"><img alt="" loading="lazy" src="${esc(region(p.iiif, p.box))}"><span>${dots(s)} ${esc(p.title)}${p.iiif !== S.back ? ' (other back)' : ''}</span><span class="why">${STRENGTH[s]}: ${esc(basisText(p, b))}</span></button></li>`).join('')}</ul>`
+          ${list.length ? `<ul>${list.map(({ p, s, b, l }) => `<li class="w${s}"><button type="button" data-xp="${p.i}"><img alt="" loading="lazy" src="${esc(region(p.iiif, p.box))}"><span>${dots(s)} ${esc(p.title)}${p.iiif !== S.back ? ' (other back)' : ''}</span><span class="why">${STRENGTH[s]}: ${esc(basisText(p, b, l))}</span></button></li>`).join('')}</ul>`
             : '<p class="hintline">No label on the back has been linked to this event yet.</p>'}
           <div class="links">${feedback({ where: 'Work · timeline', inv: w.inv, title: w.title, kind: 'A text or data value is wrong', note: `Timeline event ${S.event + 1}: ${evLine(v)}` }, 'Report a problem with this event or its links')}</div>`;
       }

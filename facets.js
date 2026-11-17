@@ -4,7 +4,9 @@
    by prov_parser/facets.py. data.json «facets.f» is the dictionary: [[key, English name, parser column, "rule"|"llm",
    note, [[value, gloss, merged spellings], …]], …]; «fv» on labels and works are codes into it, counted from 1 over all
    facets in order, negative = an uncertain value. Values in German as in the data sheets, with English glosses; names
-   (issuer, owner, place) in their most frequent spelling.
+   (issuer, owner, place) in their most frequent spelling. «fx» on a label (16 Nov 2026, prov_parser/extra_facets.py):
+   «register» = by rules from SKKG's label register, «picture» = read from the picture by a local vision-language model
+   (all its values uncertain); no «fx» = the prov-parser.
 
    Hooks in the page (one line each; prov_parser/README.md):
      <script src="facets.js"></script>                         in the head
@@ -29,6 +31,7 @@
   'use strict';
   const PARSER = '<a href="https://github.com/kintopp/glamhack26-prov-parser" target="_blank" rel="noopener">prov-parser</a>';
   const UNSURE = 'Uncertain: inferred while coding, or read from the photo or the provenance chain';
+  const MODEL = 'Qwen3-VL-4B';  // the model of prov_parser/vlm_facets.py --all («fx» = picture)
   const LLMT = 'Filled by a language model from the data sheet\'s description, checked against a quote: verify in the data sheet';
   const LONG = 15, TOP = 8;  // facets with more values (the names) show the TOP most frequent, «Show all» and a find field
   const CSS = `
@@ -77,6 +80,7 @@
   const fold = s => String(s).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
   const obj = e => Array.isArray(e) ? e[1] : e;  // works may come as [id, work] entries
   const has = (set, S) => { for (const c of S) if (set.has(c)) return true; return false; };
+  const VLMT = 'Read from the picture by a vision-language model, not checked: verify on the label';
   const llm = f => f.llm ? ` <i class="fx-llm" title="${esc(LLMT)}">LLM</i>` : '';
   const CODE = {}, TABS = {};
   let F = null, D = null, applying = false;
@@ -158,7 +162,12 @@
     const n = items.filter(x => x.fv).length;
     const note = T.key === 'works'
       ? `${n.toLocaleString('en')} works with a data sheet: all the marks it describes, also those not placed on the back, as the ${PARSER} read them.`
-      : `${n.toLocaleString('en')} of the ${items.length.toLocaleString('en')} labels: the marks the data sheets describe, as the ${PARSER} read the descriptions, and register entries that show such a mark.`;
+      : (() => {
+        const by = s => items.filter(x => x.fv && x.fx === s).length, reg = by('register'), pic = by('picture');
+        return `${n.toLocaleString('en')} of the ${items.length.toLocaleString('en')} labels: ${(n - reg - pic).toLocaleString('en')} marks the data sheets describe, as the ${PARSER} read the descriptions (and register entries that show such a mark)`
+          + (reg ? `; ${reg} register entries by rules from SKKG's label register` : '')
+          + (pic ? `; ${pic.toLocaleString('en')} label photos and detector finds read from the picture by a local vision-language model (${MODEL}): unverified, every value marked <sup class="fx-u">?</sup>` : '') + '.';
+      })();
     const groups = F.map(f => `<details class="fx-g${f.long ? ' fx-long' : ''}" data-i="${f.i}"${!T.inline && f.i < 3 ? ' open' : ''}><summary>${esc(f.n)}${llm(f)}<span class="fx-gn"></span></summary>
       ${f.long ? `<input type="search" class="fx-find" placeholder="Find ${({ issuer: 'a name', owner: 'a name', place: 'a place' })[f.k] || 'a value'} …" aria-label="Find in ${esc(f.n)}">` : ''}
       <ul>${f.v.map(v => { const tip = v.m.length ? (v.v === 'andere' ? '' : 'also written: ') + v.m.join(', ') : f.note;
@@ -168,7 +177,7 @@
       <div class="fx-tools"><label title="${esc(UNSURE)}"><input type="checkbox" class="fx-firm"> only certain values</label><button type="button" class="fx-clear" hidden>Clear facets</button></div>
       <div class="fx-groups">${groups}</div>`;
     spot.innerHTML = T.inline ? `<div class="fx-in">${inner}</div>`
-      : `<details class="fx-box"><summary>Data sheet facets <span class="fx-on"></span></summary><div class="fx-in">${inner}</div></details>`;
+      : `<details class="fx-box"><summary>${T.key === 'works' ? 'Data sheet facets' : 'Facets'} <span class="fx-on"></span></summary><div class="fx-in">${inner}</div></details>`;
     const box = spot.querySelector('.fx-box');
     if (box) {  // beside the grid: on a phone the panel starts folded, above the cards
       const phone = matchMedia('(max-width: 760px)');
@@ -336,13 +345,17 @@
     const by = {};
     o.fv.forEach(x => { const v = CODE[Math.abs(x)]; if (v) (by[v.i] || (by[v.i] = [])).push([v, x < 0]); });
     const hash = T ? T.hash : key;
+    const badge = f => o.fx === 'register' ? '' : o.fx === 'picture' ? (['pos', 'side', 'support'].includes(f.k) ? '' : ` <i class="fx-llm" title="${esc(VLMT)}">VLM</i>`) : llm(f);
     // an unverified label (a model proposal, a detection without text) is listed only with «Show: with unverified leads»
     const show = key === 'labels' && (o.how === 'vision-language model' || o.st === 'new label without text') ? 'show=all&amp;' : '';
-    const rows = F.filter(f => by[f.i]).map(f => `${esc(f.n)}${llm(f)}: ` + by[f.i].map(([v, u]) =>
+    const rows = F.filter(f => by[f.i]).map(f => `${esc(f.n)}${badge(f)}: ` + by[f.i].map(([v, u]) =>
       `<a href="#${esc(hash)}?${show}${f.k}=${v.slug}" title="All ${esc(key)} with this value">${esc(v.v)}</a>${v.g && v.g !== v.v ? ` <span class="fx-gl">${esc(v.g)}</span>` : ''}${u ? `<sup class="fx-u" title="${esc(UNSURE)}">?</sup>` : ''}`).join(', '));
     const how = key === 'works' ? `All the marks of its data sheet, as the ${PARSER} read them`
+      : o.fx === 'register' ? `SKKG's label register entry, by rules`
+      : o.fx === 'picture' ? `Read from the picture and the text recognition by a local vision-language model (${MODEL}), not checked; position from the box`
       : `The data sheet's description${o.src === 'data sheet' ? '' : ' of the same mark'}, as the ${PARSER} read it`;
-    return ['Data sheet facets', `${rows.join('<br>')}<br><span class="fx-gl">${how}.</span>`];
+    const title = key === 'works' || !o.fx ? 'Data sheet facets' : o.fx === 'register' ? 'Register facets' : 'Facets from the picture';
+    return [title, `${rows.join('<br>')}<br><span class="fx-gl">${how}.</span>`];
   }
 
   window.ppFacets = { setup, route, pass, summary, apply, fact };
